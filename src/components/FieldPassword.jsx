@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import FieldText from "./FieldText";
 import { Eye, EyeOff } from "lucide-react";
 
-const FieldPassword = ({ id, name, onChange, maxLength = 20 }) => {
+const FieldPassword = ({ id, name, onChange, maxLength = 30 }) => {
   const [showPassword, setShowPassword] = useState(false);
 
   const toggleShowPassword = () => setShowPassword(p => !p);
