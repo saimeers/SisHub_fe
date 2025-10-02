@@ -48,7 +48,8 @@ const ButtonGoogle = ({ onClick, text = "Continue with Google" }) => {
             />
           </svg>
         </div>
-        <span>{text}</span>
+
+        <span className="hidden sm:inline">{text}</span>
       </span>
     </button>
   );
