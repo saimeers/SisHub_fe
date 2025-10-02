@@ -25,9 +25,9 @@ function Signup() {
   };
 
   return (
-    <div className="flex h-screen bg-[#7DABF7]">
+    <div className="flex h-screen bg-[#C03030]">
       {/* Logo izquierdo */}
-      <div className="hidden md:flex w-1/2 bg-[#7DABF7] justify-center items-center">
+      <div className="hidden md:flex w-1/2 bg-[#C03030] justify-center items-center">
         <img
           src="/img/logo.png"
           alt="Logo SisHub"
