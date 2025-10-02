@@ -12,13 +12,11 @@ function Login() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // Manejo de inputs
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
-    if (error) setError(""); // limpia error al escribir
+    if (error) setError("");
   };
 
-  // Login con correo y contraseña
   const handleEmailLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -30,22 +28,35 @@ function Login() {
         formData.password
       );
 
-      // Guardar datos en localStorage
       localStorage.setItem("firebaseToken", token);
       localStorage.setItem("userName", user.displayName || "");
       localStorage.setItem("userEmail", user.email);
 
-      // Redirigir
-      navigate("/admin/dashboard"); // después al dashboard si ya tiene todo completado
+      navigate("/admin/dashboard");
     } catch (err) {
       console.error("Error login:", err);
-      setError("Correo o contraseña inválidos");
+      
+      // Manejo de errores específicos de Firebase
+      if (err.code === "auth/user-not-found") {
+        setError("No existe una cuenta con ese correo");
+      } else if (err.code === "auth/wrong-password") {
+        setError("Contraseña incorrecta");
+      } else if (err.code === "auth/invalid-credential") {
+        setError("Credenciales inválidas. ¿Registraste una contraseña?");
+      } else if (err.code === "auth/invalid-email") {
+        setError("El formato del correo es inválido");
+      } else if (err.code === "auth/missing-password") {
+        setError("Por favor ingresa tu contraseña");
+      } else if (err.code === "auth/too-many-requests") {
+        setError("Demasiados intentos fallidos. Intenta más tarde");
+      } else {
+        setError("Error al iniciar sesión. Verifica tus credenciales");
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  // Login con Google
   const handleGoogleLogin = async () => {
     setLoading(true);
     setError("");
@@ -53,16 +64,24 @@ function Login() {
     try {
       const { user, token } = await signInWithGoogle();
 
-      // Guardar datos en localStorage
       localStorage.setItem("firebaseToken", token);
       localStorage.setItem("userName", user.displayName || "");
       localStorage.setItem("userEmail", user.email);
 
-      // Redirigir
-      navigate("/admin/dashboard"); // después al dashboard si ya tiene todo completado
+      navigate("/admin/dashboard");
     } catch (err) {
       console.error("Error Google login:", err);
-      setError("No se pudo iniciar sesión con Google");
+      
+      // Manejo de errores específicos de Google
+      if (err.code === "auth/popup-closed-by-user") {
+        setError("Cerraste la ventana de inicio de sesión");
+      } else if (err.code === "auth/cancelled-popup-request") {
+        setError("Operación cancelada");
+      } else if (err.code === "auth/popup-blocked") {
+        setError("El navegador bloqueó la ventana emergente");
+      } else {
+        setError("No se pudo iniciar sesión con Google");
+      }
     } finally {
       setLoading(false);
     }
@@ -73,7 +92,6 @@ function Login() {
       <div className="flex flex-col justify-center items-center w-full md:w-1/2 bg-white px-6 md:px-12 rounded-tr-4xl rounded-br-4xl shadow-lg">
         <h1 className="text-3xl md:text-4xl font-bold mb-6">Iniciar Sesión</h1>
 
-        {/* Mensaje de error */}
         {error && (
           <div className="w-full max-w-sm bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
             {error}
@@ -130,14 +148,14 @@ function Login() {
           </a>
         </p>
 
-        <div className="flex items-center my-4">
+        <div className="flex items-center my-4 w-full max-w-sm">
           <hr className="flex-grow border-gray-300" />
           <span className="px-2 text-sm text-gray-500">o</span>
           <hr className="flex-grow border-gray-300" />
         </div>
 
         <div className="flex justify-center">
-          <ButtonGoogle onClick={handleGoogleLogin} />
+          <ButtonGoogle onClick={handleGoogleLogin} text="Continuar con Google" />
         </div>
       </div>
 

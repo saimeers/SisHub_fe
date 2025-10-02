@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { signOutAccount } from "../../../services/authService";
 import { GoHomeFill } from "react-icons/go";
 import { FaBook, FaFolder, FaSignOutAlt } from "react-icons/fa";
 import { MdGroups2 } from "react-icons/md";
@@ -6,7 +8,8 @@ import { IoIosSchool } from "react-icons/io";
 import { ImStatsDots } from "react-icons/im";
 import { Menu } from "lucide-react";
 
-const Sidebar = ({ onSignOut }) => {
+const Sidebar = () => {
+  const navigate = useNavigate();
   const [collapsed, setCollapsed] = useState(false);
 
   const toggleSidebar = () => setCollapsed(!collapsed);
@@ -19,6 +22,19 @@ const Sidebar = ({ onSignOut }) => {
     { icon: <IoIosSchool size={20} />, label: "Estudiantes" },
     { icon: <ImStatsDots size={20} />, label: "Estadísticas" },
   ];
+
+  const handleSignOut = async () => {
+    try {
+      await signOutAccount();
+      navigate("/login");
+    } catch (error) {
+      console.error("Error al cerrar sesión:", error);
+      alert("Error al cerrar sesión. Intenta de nuevo.");
+    }
+  };
+
+  const userName = localStorage.getItem("userName") || "Usuario";
+  const userEmail = localStorage.getItem("userEmail");
 
   return (
     <div
@@ -81,7 +97,7 @@ const Sidebar = ({ onSignOut }) => {
           )}
 
           <button
-            onClick={onSignOut}
+            onClick={handleSignOut}
             className={`text-white hover:text-gray-200 transition-colors ${collapsed ? "" : "ml-auto"
               }`}
           >

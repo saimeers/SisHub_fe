@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import FieldText from "../../components/FieldText";
+import FieldPassword from "../../components/FieldPassword";
 import Button from "../../components/Button";
 import { registrarUsuario } from "../../services/userServices";
+import { linkPassword } from "../../services/authService";
 
 function FormRegister() {
   const navigate = useNavigate();
@@ -11,6 +13,8 @@ function FormRegister() {
     fechaNacimiento: "",
     documento: "",
     telefono: "",
+    password: "",
+    confirmPassword: "",
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -36,13 +40,26 @@ function FormRegister() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-    
+
     // Validaciones básicas
     if (!formData.documento || !formData.telefono || !formData.codigo) {
       setError("Por favor completa todos los campos obligatorios (*)");
       return;
     }
 
+    // Validar contraseñas obligatorias
+    if (!formData.password || !formData.confirmPassword) {
+      setError("Debes ingresar y confirmar una contraseña");
+      return;
+    }
+    if (formData.password !== formData.confirmPassword) {
+      setError("Las contraseñas no coinciden");
+      return;
+    }
+    if (formData.password.length < 6) {
+      setError("La contraseña debe tener al menos 6 caracteres");
+      return;
+    }
     setLoading(true);
 
     try {
@@ -61,13 +78,24 @@ function FormRegister() {
       });
 
       if (data.ok) {
+
+        if (formData.password) {
+          try {
+            await linkPassword(formData.password);
+            console.log("Contraseña vinculada exitosamente a Firebase");
+          } catch (firebaseError) {
+            console.error("Error al vincular contraseña:", firebaseError);
+            // No bloqueamos el registro si falla vincular contraseña
+            // El usuario puede agregarla después desde su perfil
+          }
+        }
         alert(`¡Registro exitoso! Bienvenido ${data.usuario.nombre}`);
-        
+
         // Limpiar datos temporales del localStorage
         localStorage.removeItem("rolSeleccionado");
         localStorage.removeItem("userName");
         localStorage.removeItem("userEmail");
-        
+
         // Redirigir al dashboard o home
         navigate("/admin/dashboard");
       }
@@ -167,11 +195,42 @@ function FormRegister() {
               required
             />
           </div>
+          {/* Contraseña */}
+          <div>
+            <label className="text-sm font-medium mb-1 block" htmlFor="password">
+              Contraseña
+            </label>
+            <FieldPassword
+              id="password"
+              name="password"
+              placeholder="Mínimo 6 caracteres"
+              value={formData.password}
+              onChange={handleChange}
+              required
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Si agregas una contraseña, podrás iniciar sesión con tu email.
+            </p>
+          </div>
 
+          {/* Confirmar contraseña */}
+          <div>
+            <label className="text-sm font-medium mb-1 block" htmlFor="confirmPassword">
+              Confirmar contraseña
+            </label>
+            <FieldPassword
+              id="confirmPassword"
+              name="confirmPassword"
+              placeholder="Repite tu contraseña"
+              value={formData.confirmPassword}
+              onChange={handleChange}
+              required
+            />
+          </div>
           {/* Botón de registro */}
           <div className="mt-4 flex justify-center">
-            <Button 
-              text={loading ? "Registrando..." : "Registrar"} 
+            <Button
+              text={loading ? "Registrando..." : "Registrar"}
               disabled={loading}
             />
           </div>
