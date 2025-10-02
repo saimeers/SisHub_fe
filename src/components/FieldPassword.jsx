@@ -17,7 +17,7 @@ const FieldPassword = ({ id, name, value, onChange, placeholder, required, maxLe
         placeholder={placeholder || "Introduzca su contraseña aquí"}
         required={required}
         maxLength={maxLength}
-        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+        className="p-3 rounded-md bg-gray-100 w-full focus:outline-none focus:ring-2e focus:ring-2 focus:ring-[#C03030]"
       />
 
       <button
