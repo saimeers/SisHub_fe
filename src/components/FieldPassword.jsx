@@ -1,28 +1,23 @@
-// FieldPassword.jsx
 import React, { useState } from "react";
-import FieldText from "./FieldText";
 import { Eye, EyeOff } from "lucide-react";
 
-const FieldPassword = ({ id, name, onChange, maxLength = 30 }) => {
+const FieldPassword = ({ id, name, value, onChange, placeholder, required, maxLength = 30 }) => {
   const [showPassword, setShowPassword] = useState(false);
 
   const toggleShowPassword = () => setShowPassword(p => !p);
 
-  const handleChange = (e) => {
-    const v = e.target.value.slice(0, maxLength);
-    // reenviamos un "evento" con el valor truncado
-    if (onChange) onChange({ ...e, target: { ...e.target, value: v } });
-  };
-
   return (
     <div className="w-full relative">
-      <FieldText
+      <input
         type={showPassword ? "text" : "password"}
         id={id || "password"}
         name={name || "password"}
-        placeholder="Introduzca su contraseña aquí"
-        onChange={handleChange}
-        maxLength={maxLength} 
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder || "Introduzca su contraseña aquí"}
+        required={required}
+        maxLength={maxLength}
+        className="p-3 rounded-md bg-gray-100 w-full focus:outline-none focus:ring-2e focus:ring-2 focus:ring-[#C03030]"
       />
 
       <button
