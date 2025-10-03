@@ -8,7 +8,7 @@ import {
   sendPasswordResetEmail,
   confirmPasswordReset,
   verifyPasswordResetCode,
-    deleteUser
+  deleteUser
 } from "firebase/auth";
 import { auth, googleProvider } from "../firebaseConfig";
 
@@ -48,6 +48,8 @@ export const signOutAccount = async () => {
     localStorage.removeItem("firebaseToken");
     localStorage.removeItem("userName");
     localStorage.removeItem("userEmail");
+    localStorage.removeItem("rolSeleccionado");
+    localStorage.removeItem("userPhoto");
     return { success: true };
   } catch (error) {
     console.error("Error al cerrar sesión:", error);
@@ -58,7 +60,7 @@ export const signOutAccount = async () => {
 export const sendPasswordReset = async (email) => {
   try {
     await sendPasswordResetEmail(auth, email, {
-      url: "http://localhost:5173/reset-password", // 👈 URL personalizada
+      url: "http://localhost:5173/reset-password",
       handleCodeInApp: true,
     });
     return { success: true };
@@ -93,14 +95,15 @@ export const deleteCurrentUser = async () => {
   try {
     const user = auth.currentUser;
     if (!user) throw new Error("No hay usuario autenticado");
-    
+
     await deleteUser(user);
-    
+
     localStorage.removeItem("firebaseToken");
     localStorage.removeItem("userName");
     localStorage.removeItem("userEmail");
     localStorage.removeItem("rolSeleccionado");
-    
+    localStorage.removeItem("userPhoto");
+
     return { success: true };
   } catch (error) {
     console.error("Error al eliminar usuario:", error);
