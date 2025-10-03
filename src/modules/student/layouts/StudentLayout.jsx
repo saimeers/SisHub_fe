@@ -14,7 +14,7 @@ const ProfessorLayout = ({ children, title }) => {
       <Sidebar />
 
       <div className="flex-1 flex flex-col bg-gray-50">
-        <header className="bg-[#D4ECFF] px-6 py-4">
+        <header className="bg-[#EBEBEB] px-6 py-4">
           <h1 className="text-xl md:text-1xl font-bold text-gray-800">{title}</h1>
         </header>
 
