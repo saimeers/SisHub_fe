@@ -44,7 +44,9 @@ export const linkPassword = async (password) => {
 
 export const signOutAccount = async () => {
   try {
+    
     await signOut(auth);
+
     localStorage.removeItem("firebaseToken");
     localStorage.removeItem("userName");
     localStorage.removeItem("userEmail");

@@ -99,7 +99,7 @@ export const useAuth = () => {
       toast.success(`¡Hasta luego${formatShortName(userName) ? ' ' + formatShortName(userName) : ''}!`);
 
       await signOutAccount();
-      localStorage.clear(); // 👈 Limpieza de datos locales
+      localStorage.clear(); 
       navigate("/login");
     } catch (error) {
       console.error("Error al cerrar sesión:", error);
