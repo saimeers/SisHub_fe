@@ -32,7 +32,7 @@ const Sidebar = () => {
         const userEmail = localStorage.getItem("userEmail");
     return (
         <div
-            className={`h-full min-h-screen bg-[#7DABF7] text-white flex flex-col transition-all duration-300 ${collapsed ? "w-16" : "w-56"
+            className={`h-full min-h-screen bg-[#B70000] text-white flex flex-col transition-all duration-300 ${collapsed ? "w-16" : "w-56"
                 }`}
         >
             <div className="flex flex-col justify-between flex-1">
@@ -63,7 +63,7 @@ const Sidebar = () => {
                             <div
                                 key={idx}
                                 className={`flex items-center ${collapsed ? "justify-center" : "justify-start"
-                                    } gap-3 px-4 py-2 hover:bg-[#92bcff] cursor-pointer rounded-md w-11/12`}
+                                    } gap-3 px-4 py-2 hover:bg-[#CC4040] cursor-pointer rounded-md w-11/12`}
                             >
                                 {item.icon}
                                 {!collapsed && <span>{item.label}</span>}
@@ -73,7 +73,7 @@ const Sidebar = () => {
                 </div>
 
                 <div
-                    className={`bg-[#4285F4] rounded-tl-2xl rounded-tr-2xl flex items-center ${collapsed ? "justify-center" : "justify-between"
+                    className={`bg-[#CC4040] rounded-tl-2xl rounded-tr-2xl flex items-center ${collapsed ? "justify-center" : "justify-between"
                         } px-4 py-3`}
                 >
                     {!collapsed && (
