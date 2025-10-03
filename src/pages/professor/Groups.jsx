@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import AdminLayout from "../../modules/admin/layouts/AdminLayout";
+import AdminLayout from "../../modules/professor/layouts/ProfessorLayout";
 import Button from "../../components/Button";
 import RowItem from "../../components/RowItem";
 
@@ -7,7 +7,7 @@ const Groups = () => {
   const navigate = useNavigate();
 
   const handleCreateGroup = () => {
-    navigate("/admin/create-group");
+    navigate("/docente/crear-grupo");
   };
 
   // Datos de ejemplo
@@ -16,16 +16,9 @@ const Groups = () => {
       "Grupo A | 2025-2",
       "20 participantes",
       "Docente: XXXXXXXX",
-      "clave de acceso",
       "Inhabilitado",
     ],
-    [
-      "Grupo B | 2025-2",
-      "15 participantes",
-      "Docente: XXXXXXXX",
-      "clave de acceso",
-      "Habilitado",
-    ],
+    ["Grupo B | 2025-2", "15 participantes", "Docente: XXXXXXXX", "Habilitado"],
   ];
 
   const handleStatusChange = (index, newStatus) => {
@@ -46,10 +39,10 @@ const Groups = () => {
         {groupsData.map((group, index) => (
           <RowItem
             key={index}
-            columns={group.slice(0, 4)}
-            status={group[4]}
+            columns={group.slice(0, 3)}
+            status={group[3]}
             onStatusChange={(newStatus) => handleStatusChange(index, newStatus)}
-            editable={true}
+            editable={false}
           />
         ))}
       </div>
