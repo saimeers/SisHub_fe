@@ -4,7 +4,10 @@ import {
   createUserWithEmailAndPassword,
   EmailAuthProvider,
   linkWithCredential,
-  signOut 
+  signOut,
+  sendPasswordResetEmail,
+  confirmPasswordReset,
+  verifyPasswordResetCode
 } from "firebase/auth";
 import { auth, googleProvider } from "../firebaseConfig";
 
@@ -32,22 +35,55 @@ export const linkPassword = async (password) => {
   if (!user) throw new Error("No hay usuario autenticado");
 
   const credential = EmailAuthProvider.credential(user.email, password);
-  
+
   await linkWithCredential(user, credential);
-  
+
   return { success: true };
 };
 
 export const signOutAccount = async () => {
   try {
     await signOut(auth);
-    // Limpiar localStorage
     localStorage.removeItem("firebaseToken");
     localStorage.removeItem("userName");
     localStorage.removeItem("userEmail");
     return { success: true };
   } catch (error) {
     console.error("Error al cerrar sesión:", error);
+    throw error;
+  }
+};
+
+export const sendPasswordReset = async (email) => {
+  try {
+    await sendPasswordResetEmail(auth, email, {
+      url: "http://localhost:5173/reset-password", // 👈 URL personalizada
+      handleCodeInApp: true,
+    });
+    return { success: true };
+  } catch (error) {
+    console.error("Error al enviar email de recuperación:", error);
+    throw error;
+  }
+};
+
+export const verifyResetCode = async (oobCode) => {
+  try {
+    const email = await verifyPasswordResetCode(auth, oobCode);
+    return email;
+  } catch (error) {
+    console.error("Error al verificar código:", error);
+    throw error;
+  }
+};
+
+
+export const confirmNewPassword = async (oobCode, newPassword) => {
+  try {
+    await confirmPasswordReset(auth, oobCode, newPassword);
+    return { success: true };
+  } catch (error) {
+    console.error("Error al confirmar nueva contraseña:", error);
     throw error;
   }
 };
