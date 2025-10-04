@@ -11,12 +11,18 @@ import ResetPassword from "./pages/auth/ResetPassword";
 
 // admin
 import AdminDashboard from "./pages/admin/Dashboard";
+import GroupsAdmin from "./pages/admin/Groups";
+import CreateGroupAdmin from "./pages/admin/FormCreateGroup";
 
 // docente
 import DocenteDashboard from "./pages/professor/Dashboard";
+import GroupsProfessor from "./pages/professor/Groups";
+import DashboardProfessor from "./pages/professor/Dashboard";
+import CreateGroupProfessor from "./pages/professor/FormCreateGroup";
 
 // estudiante
 import EstudianteDashboard from "./pages/student/Dashboard";
+import GroupsStudent from "./pages/student/Groups";
 
 // stand by
 import CuentaPendiente from "./pages/standby/CuentaPendiente";
@@ -66,6 +72,8 @@ function App() {
             element={<ProtectedRoute allowedRoles={["ADMIN"]} />}
           >
           <Route path="dashboard" element={<AdminDashboard />} />
+          <Route path="/grupos" element={<GroupsAdmin />} />
+          <Route path="/crear-grupo" element={<CreateGroupAdmin />} />  
           </Route>
 
           {/* ==================== RUTAS DOCENTE ==================== */}
@@ -74,6 +82,8 @@ function App() {
             element={<ProtectedRoute allowedRoles={["DOCENTE"]} />}
           >
             <Route path="dashboard" element={<DocenteDashboard />} />
+        <Route path="/grupos" element={<GroupsProfessor />} />
+        <Route path="/crear-grupo" element={<CreateGroupProfessor />} />
           </Route>
 
           {/* ==================== RUTAS ESTUDIANTE ==================== */}
@@ -82,6 +92,7 @@ function App() {
             element={<ProtectedRoute allowedRoles={["ESTUDIANTE"]} />}
           >
             <Route path="dashboard" element={<EstudianteDashboard />} />
+            <Route path="/grupos" element={<GroupsStudent />} />
           </Route>
 
           {/* ==================== RUTAS ESPECIALES ==================== */}
