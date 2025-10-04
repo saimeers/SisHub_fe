@@ -1,8 +1,8 @@
-import AdminLayout from "../../modules/student/layouts/StudentLayout";
+import AdminLayout from "../../modules/admin/layouts/AdminLayout";
 
 const Dashboard = () => {
   return (
-    <AdminLayout title="Inicio">
+    <AdminLayout title="Inicio Administrador">
     </AdminLayout>
   );
 };

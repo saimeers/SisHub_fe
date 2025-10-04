@@ -1,15 +1,14 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { signOutAccount } from "../../../services/authService";
 import { GoHomeFill } from "react-icons/go";
 import { FaBook, FaFolder, FaSignOutAlt } from "react-icons/fa";
 import { MdGroups2 } from "react-icons/md";
+import UserProfile from "../../../components/ui/UserProfile";
+import { useAuth } from "../../auth/hooks/useAuth";
 import { Menu } from "lucide-react";
 
 const Sidebar = () => {
-    const navigate = useNavigate();
+    const { handleSignOut } = useAuth();
     const [collapsed, setCollapsed] = useState(false);
-
     const toggleSidebar = () => setCollapsed(!collapsed);
 
     const menuItems = [
@@ -19,17 +18,6 @@ const Sidebar = () => {
         { icon: <FaFolder size={20} />, label: "Proyectos" }
     ];
 
-    const handleSignOut = async () => {
-        try {
-            await signOutAccount();
-            navigate("/login");
-        } catch (error) {
-            console.error("Error al cerrar sesión:", error);
-            alert("Error al cerrar sesión. Intenta de nuevo.");
-        }
-    };
-        const userName = localStorage.getItem("userName") || "Usuario";
-        const userEmail = localStorage.getItem("userEmail");
     return (
         <div
             className={`h-full min-h-screen bg-[#B70000] text-white flex flex-col transition-all duration-300 ${collapsed ? "w-16" : "w-56"
@@ -77,23 +65,23 @@ const Sidebar = () => {
                         } px-4 py-3`}
                 >
                     {!collapsed && (
-                        <div className="flex items-center gap-3">
-                            <img
-                                src="https://i.pravatar.cc/40"
-                                alt="User"
-                                className="w-12 h-12 rounded-full"
-                            />
-                            <div className="flex flex-col">
-                                <p className="text-white text-sm font-normal">Nombre</p>
-                                <p className="text-white text-sm font-bold">Estudiante</p>
-                            </div>
-                        </div>
+                        <UserProfile />
                     )}
 
                     <button
                         onClick={handleSignOut}
-                        className={`text-white hover:text-gray-200 transition-colors ${collapsed ? "" : "ml-auto"
-                            }`}
+                        className={`
+                        text-white 
+                        hover:text-gray-200 
+                        hover:scale-110 
+                        hover:rotate-12
+                        active:scale-95
+                        transition-all 
+                        duration-300 
+                        ease-out
+                        ${collapsed ? "" : "ml-auto"}
+                        `}
+                        title="Cerrar sesión"
                     >
                         <FaSignOutAlt size={20} />
                     </button>

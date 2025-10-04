@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { signInWithGoogle } from "../../../services/authService";
+import { signInWithGoogle, deleteCurrentUser } from "../../../services/authService";
 import { isEmailDomainAllowed } from "../utils/emailValidator";
 import { getAuthErrorMessage } from "../utils/authErrorHandler";
 import { useToast } from "../../../hooks/useToast";
@@ -23,9 +23,13 @@ export const useSignup = () => {
     setLoading(true);
 
     try {
-      const { user, token } = await signInWithGoogle();
+      const { user, token, isNewUser } = await signInWithGoogle();
 
+      // Validar dominio del correo
       if (!isEmailDomainAllowed(user.email, ALLOWED_DOMAINS)) {
+
+        await deleteCurrentUser(user);
+
         toast.warning(
           `Solo se permiten correos institucionales`,
           { autoClose: 5000 }
@@ -34,14 +38,25 @@ export const useSignup = () => {
         return;
       }
 
+      // Si el usuario ya existe, eliminar la cuenta creada y redirigir al login
+      if (!isNewUser) {
+        toast.info(
+          'Esta cuenta ya existe. Por favor inicia sesión.',
+          { autoClose: 5000 }
+        );
+        navigate("/login");
+        setLoading(false);
+        return;
+      }
+
       saveUserData(user, token, rol);
-      
+
       toast.info('Completa tu registro para continuar');
-      
+
       navigate("/registro/completar-datos");
     } catch (err) {
       console.error("Error al iniciar sesión:", err);
-      
+
       toast.error(getAuthErrorMessage(err.code));
     } finally {
       setLoading(false);

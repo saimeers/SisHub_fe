@@ -10,4 +10,4 @@ function Button({ onClick, text = "Iniciar" }) {
   )
 }
 
-export default Button
+export default Button;

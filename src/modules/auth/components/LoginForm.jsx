@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import Button from "../../../components/Button";
-import FieldText from "../../../components/FieldText";
-import FieldPassword from "../../../components/FieldPassword";
+import Button from "../../../components/ui/Button";
+import FieldText from "../../../components/ui/FieldText";
+import FieldPassword from "../../../components/ui/FieldPassword";
 import ForgotPasswordModal from "./ForgotPasswordModal";
 
 function LoginForm({ formData, loading, error, onSubmit, onChange }) {

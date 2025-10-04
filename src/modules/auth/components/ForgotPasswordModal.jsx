@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { X } from "lucide-react";
-import FieldText from "../../../components/FieldText";
-import Button from "../../../components/Button";
+import FieldText from "../../../components/ui/FieldText";
+import Button from "../../../components/ui/Button";
 import { sendPasswordReset } from "../../../services/authService";
 import { useToast } from "../../../hooks/useToast";
 

@@ -1,7 +1,7 @@
 import React from "react";
-import FieldText from "../../../components/FieldText";
-import FieldPassword from "../../../components/FieldPassword";
-import Button from "../../../components/Button";
+import FieldText from "../../../components/ui/FieldText";
+import FieldPassword from "../../../components/ui/FieldPassword";
+import Button from "../../../components/ui/Button";
 
 function CompleteDataForm({ formData, loading, onSubmit, onChange }) {
   return (
