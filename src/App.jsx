@@ -9,6 +9,7 @@ import CreateGroupAdmin from "./pages/admin/FormCreateGroup";
 import GroupsProfessor from "./pages/professor/Groups";
 import DashboardProfessor from "./pages/professor/Dashboard";
 import CreateGroupProfessor from "./pages/professor/FormCreateGroup";
+import GroupsStudent from "./pages/student/Groups";
 
 function App() {
   return (
@@ -19,11 +20,12 @@ function App() {
         <Route path="/registro/completar-datos" element={<FormRegister />} />
         <Route path="/admin/dashboard" element={<Dashboard />} />
         <Route path="/reset-password" element={<ResetPassword />} />
-        <Route path="/admin/groups" element={<GroupsAdmin />} />
+        <Route path="/admin/grupos" element={<GroupsAdmin />} />
         <Route path="/admin/crear-grupo" element={<CreateGroupAdmin />} />
         <Route path="/docente/dashboard" element={<DashboardProfessor />} />
         <Route path="/docente/grupos" element={<GroupsProfessor />} />
         <Route path="/docente/crear-grupo" element={<CreateGroupProfessor />} />
+        <Route path="/estudiante/grupos" element={<GroupsStudent />} />
       </Routes>
     </BrowserRouter>
   );
