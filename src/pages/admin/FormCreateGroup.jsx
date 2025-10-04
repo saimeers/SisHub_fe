@@ -1,8 +1,8 @@
 import { useState } from "react";
 import AdminLayout from "../../modules/admin/layouts/AdminLayout";
-import FieldText from "../../components/FieldText";
-import SelectField from "../../components/SelectField";
-import Button from "../../components/Button";
+import FieldText from "../../components/ui/FieldText";
+import SelectField from "../../components/ui/SelectField";
+import Button from "../../components/ui/Button";
 
 const FormCreateGroup = () => {
   const [formData, setFormData] = useState({

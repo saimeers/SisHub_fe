@@ -1,13 +1,13 @@
 import { useNavigate } from "react-router-dom";
 import AdminLayout from "../../modules/professor/layouts/ProfessorLayout";
-import Button from "../../components/Button";
-import RowItem from "../../components/RowItem";
+import Button from "../../components/ui/Button";
+import RowItem from "../../components/ui/RowItem";
 
 const Groups = () => {
   const navigate = useNavigate();
 
   const handleCreateGroup = () => {
-    navigate("/docente/crear-grupo");
+    navigate("/professor/crear-grupo");
   };
 
   // Datos de ejemplo

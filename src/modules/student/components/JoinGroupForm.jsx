@@ -1,6 +1,6 @@
 import { useState } from "react";
-import FieldText from "../../../components/FieldText";
-import Button from "../../../components/Button";
+import FieldText from "../../../components/ui/FieldText";
+import Button from "../../../components/ui/Button";
 
 const JoinGroupForm = ({ onJoin, onCancel }) => {
   const [accessKey, setAccessKey] = useState("");
@@ -17,7 +17,6 @@ const JoinGroupForm = ({ onJoin, onCancel }) => {
 
   return (
     <div className="bg-gray-50 p-4 rounded-lg border-t border-gray-200">
-      
       {/* Input no editable (información) */}
       <div className="mb-3">
         <FieldText
@@ -30,7 +29,10 @@ const JoinGroupForm = ({ onJoin, onCancel }) => {
 
       {/* Label e input para clave de acceso */}
       <div className="mb-4">
-        <label htmlFor="accessKey" className="block text-sm font-medium text-black mb-2">
+        <label
+          htmlFor="accessKey"
+          className="block text-sm font-medium text-black mb-2"
+        >
           Ingresar clave de acceso
         </label>
         <FieldText
@@ -45,11 +47,7 @@ const JoinGroupForm = ({ onJoin, onCancel }) => {
 
       {/* Botones */}
       <div className="flex justify-end space-x-4">
-        <Button
-          type="button"
-          text="Unirme"
-          onClick={handleJoinGroup}
-        />
+        <Button type="button" text="Unirme" onClick={handleJoinGroup} />
         <Button
           type="button"
           text="Cancelar"

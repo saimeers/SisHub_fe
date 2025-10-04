@@ -29,8 +29,12 @@ const RowItem = ({ columns, status, onStatusChange, editable = true }) => {
               : "bg-red-100 text-red-800 border-red-300 hover:bg-red-200 focus:ring-red-400"
           }`}
         >
-          <option value="Habilitado" className="bg-green-50 text-green-800">Habilitado</option>
-          <option value="Inhabilitado" className="bg-red-50 text-red-800">Inhabilitado</option>
+          <option value="Habilitado" className="bg-green-50 text-green-800">
+            Habilitado
+          </option>
+          <option value="Inhabilitado" className="bg-red-50 text-red-800">
+            Inhabilitado
+          </option>
         </select>
       ) : (
         <span

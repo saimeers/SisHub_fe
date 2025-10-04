@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import AdminLayout from "../../modules/professor/layouts/ProfessorLayout";
-import RowItem from "../../components/RowItem";
-import FieldText from "../../components/FieldText";
+import RowItem from "../../components/ui/RowItem";
+import FieldText from "../../components/ui/FieldText";
 import JoinGroupForm from "../../modules/student/components/JoinGroupForm";
 
 const Groups = () => {

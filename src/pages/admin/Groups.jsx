@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import AdminLayout from "../../modules/admin/layouts/AdminLayout";
-import Button from "../../components/Button";
-import RowItem from "../../components/RowItem";
+import Button from "../../components/ui/Button";
+import RowItem from "../../components/ui/RowItem";
 
 const Groups = () => {
   const navigate = useNavigate();
