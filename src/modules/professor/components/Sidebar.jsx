@@ -1,5 +1,4 @@
-
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { GoHomeFill } from "react-icons/go";
 import { FaBook, FaFolder, FaSignOutAlt } from "react-icons/fa";
 import { MdGroups2 } from "react-icons/md";
@@ -11,6 +10,23 @@ import { Menu } from "lucide-react";
 const Sidebar = () => {
     const [collapsed, setCollapsed] = useState(false);
     const { handleSignOut } = useAuth();
+
+    useEffect(() => {
+        const handleResize = () => {
+            if (window.innerWidth < 768) {
+                setCollapsed(true); 
+            } else {
+                setCollapsed(false); 
+            }
+        };
+
+        handleResize();
+
+        window.addEventListener('resize', handleResize);
+        
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
     const toggleSidebar = () => setCollapsed(!collapsed);
 
     const menuItems = [
@@ -23,18 +39,21 @@ const Sidebar = () => {
 
     return (
         <div
-            className={`h-full min-h-screen bg-[#B70000] text-white flex flex-col transition-all duration-300 ${collapsed ? "w-16" : "w-56"
-                }`}
+            className={`h-full min-h-screen bg-[#B70000] text-white flex flex-col transition-all duration-300 ${
+                collapsed ? "w-16" : "w-56"
+            }`}
         >
             <div className="flex flex-col justify-between flex-1">
                 <div>
                     <div
-                        className={`flex items-center ${collapsed ? "justify-center" : "justify-end"
-                            } p-3`}
+                        className={`flex items-center ${
+                            collapsed ? "justify-center" : "justify-end"
+                        } p-3`}
                     >
                         <button
-                            className="text-white hover:text-gray-200"
+                            className="text-white hover:text-gray-200 transition-colors"
                             onClick={toggleSidebar}
+                            aria-label={collapsed ? "Expandir menú" : "Colapsar menú"}
                         >
                             <Menu size={20} />
                         </button>
@@ -44,8 +63,9 @@ const Sidebar = () => {
                         <img
                             src={collapsed ? "/icon.png" : "/img/logo.png"}
                             alt="Logo"
-                            className={`object-contain transition-all duration-300 ${collapsed ? "h-10 w-10" : "h-45 w-45"
-                                }`}
+                            className={`object-contain transition-all duration-300 ${
+                                collapsed ? "h-10 w-10" : "h-45 w-45"
+                            }`}
                         />
                     </div>
 
@@ -53,35 +73,41 @@ const Sidebar = () => {
                         {menuItems.map((item, idx) => (
                             <div
                                 key={idx}
-                                className={`flex items-center ${collapsed ? "justify-center" : "justify-start"
-                                    } gap-3 px-4 py-2 hover:bg-[#CC4040] cursor-pointer rounded-md w-11/12`}
+                                className={`flex items-center ${
+                                    collapsed ? "justify-center" : "justify-start"
+                                } gap-3 px-4 py-2 hover:bg-[#CC4040] cursor-pointer rounded-md w-11/12 transition-colors`}
+                                title={collapsed ? item.label : ""}
                             >
                                 {item.icon}
-                                {!collapsed && <span>{item.label}</span>}
+                                {!collapsed && <span className="whitespace-nowrap">{item.label}</span>}
                             </div>
                         ))}
                     </nav>
                 </div>
 
                 <div
-                    className={`bg-[#CC4040] rounded-tl-2xl rounded-tr-2xl flex items-center ${collapsed ? "justify-center" : "justify-between"
-                        } px-4 py-3`}
+                    className={`bg-[#CC4040] rounded-tl-2xl rounded-tr-2xl flex items-center ${
+                        collapsed ? "justify-center" : "justify-between"
+                    } px-4 py-3`}
                 >
                     {!collapsed && (
-                        <UserProfile />
+                        <div className="flex items-center gap-3 min-w-0">
+                            <UserProfile />
+                        </div>
                     )}
+
                     <button
                         onClick={handleSignOut}
                         className={`
-                        text-white 
-                        hover:text-gray-200 
-                        hover:scale-110 
-                        hover:rotate-12
-                        active:scale-95
-                        transition-all 
-                        duration-300 
-                        ease-out
-                        ${collapsed ? "" : "ml-auto"}
+                            text-white 
+                            hover:text-gray-200 
+                            hover:scale-110 
+                            hover:rotate-12
+                            active:scale-95
+                            transition-all 
+                            duration-300 
+                            ease-out
+                            ${collapsed ? "" : "ml-auto"}
                         `}
                         title="Cerrar sesión"
                     >

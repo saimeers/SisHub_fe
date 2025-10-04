@@ -36,16 +36,20 @@ function App() {
             }
           />
           <Route
-            path="/registro"
+            path="/signup"
             element={
               <PublicRoute>
                 <Signup />
               </PublicRoute>
             }
           />
-          <Route 
-            path="/registro/completar-datos" 
-            element={<FormRegister />} 
+          <Route
+            path="/complete-profile"
+            element={
+              <ProtectedRoute>
+                <FormRegister />
+              </ProtectedRoute>
+            }
           />
           <Route
             path="/reset-password"
@@ -61,12 +65,12 @@ function App() {
             path="/admin"
             element={<ProtectedRoute allowedRoles={["ADMIN"]} />}
           >
-            <Route path="dashboard" element={<AdminDashboard />} />
+          <Route path="dashboard" element={<AdminDashboard />} />
           </Route>
 
           {/* ==================== RUTAS DOCENTE ==================== */}
           <Route
-            path="/docente"
+            path="/professor"
             element={<ProtectedRoute allowedRoles={["DOCENTE"]} />}
           >
             <Route path="dashboard" element={<DocenteDashboard />} />
@@ -74,14 +78,14 @@ function App() {
 
           {/* ==================== RUTAS ESTUDIANTE ==================== */}
           <Route
-            path="/estudiante"
+            path="/student"
             element={<ProtectedRoute allowedRoles={["ESTUDIANTE"]} />}
           >
             <Route path="dashboard" element={<EstudianteDashboard />} />
           </Route>
 
           {/* ==================== RUTAS ESPECIALES ==================== */}
-          <Route path="/cuenta-pendiente" element={<CuentaPendiente />} />
+          <Route path="/account-pending" element={<CuentaPendiente />} />
 
           {/* ==================== REDIRECTS ==================== */}
           <Route path="/" element={<Navigate to="/login" replace />} />
