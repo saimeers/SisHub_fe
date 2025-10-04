@@ -71,8 +71,8 @@ function App() {
             element={<ProtectedRoute allowedRoles={["ADMIN"]} />}
           >
             <Route path="dashboard" element={<AdminDashboard />} />
-            <Route path="grupos" element={<GroupsAdmin />} />
-            <Route path="crear-grupo" element={<CreateGroupAdmin />} />
+            <Route path="groups" element={<GroupsAdmin />} />
+            <Route path="create-group" element={<CreateGroupAdmin />} />
           </Route>
 
           {/* ==================== RUTAS DOCENTE ==================== */}
@@ -81,8 +81,8 @@ function App() {
             element={<ProtectedRoute allowedRoles={["DOCENTE"]} />}
           >
             <Route path="dashboard" element={<DashboardProfessor />} />
-            <Route path="grupos" element={<GroupsProfessor />} />
-            <Route path="crear-grupo" element={<CreateGroupProfessor />} />
+            <Route path="groups" element={<GroupsProfessor />} />
+            <Route path="create-group" element={<CreateGroupProfessor />} />
           </Route>
 
           {/* ==================== RUTAS ESTUDIANTE ==================== */}

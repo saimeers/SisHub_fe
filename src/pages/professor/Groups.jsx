@@ -7,7 +7,7 @@ const Groups = () => {
   const navigate = useNavigate();
 
   const handleCreateGroup = () => {
-    navigate("/professor/crear-grupo");
+    navigate("/professor/create-group");
   };
 
   // Datos de ejemplo
