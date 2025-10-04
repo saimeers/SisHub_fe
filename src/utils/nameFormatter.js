@@ -39,3 +39,13 @@ export const getInitials = (fullName) => {
   
   return `${firstInitial}${lastInitial}`;
 };
+
+export const formatRole = (role) => {
+  if (!role) return "Rol";
+
+  return role
+    .toLowerCase()
+    .split(" ")
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+};

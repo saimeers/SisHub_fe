@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { GoHomeFill } from "react-icons/go";
 import { FaBook, FaFolder, FaSignOutAlt } from "react-icons/fa";
 import { MdGroups2 } from "react-icons/md";
-import UserProfile from "../../../components/UserProfile";
+import UserProfile from "../../../components/ui/UserProfile";
 import { useAuth } from "../../auth/hooks/useAuth";
 import { Menu } from "lucide-react";
 

@@ -1,5 +1,5 @@
 import React from "react";
-import ButtonGoogle from "../../../components/ButtonGoogle";
+import ButtonGoogle from "../../../components/ui/ButtonGoogle";
 
 function RoleSelector({ onRoleSelect, loading }) {
   const roles = [

@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import Avatar, { genConfig } from "react-nice-avatar";
-import { formatShortName } from "../utils/nameFormatter";
+import { formatShortName, formatRole } from "../../utils/nameFormatter";
 
 const UserProfile = () => {
+    const usuarioData = JSON.parse(localStorage.getItem("usuario")) || {};
     const userName = localStorage.getItem("userName") || "Usuario";
     const userPhoto = localStorage.getItem("userPhoto");
 
@@ -25,7 +26,7 @@ const UserProfile = () => {
             <div className="flex flex-col">
                 <p className="text-white text-sm font-normal">{formatShortName(userName)}</p>
                 <p className="text-white text-sm font-bold">
-                    {localStorage.getItem("rolSeleccionado") || "Administrador"}
+                    {formatRole(usuarioData.rol)}
                 </p>
             </div>
         </div>

@@ -10,3 +10,23 @@ export const registrarUsuario = async (userData) => {
     throw error;
   }
 };
+
+export const obtenerUsuario = async () => {
+  try {
+    const response = await axiosInstance.get("/usuarios/me");
+    const { usuario } = response.data;
+
+    localStorage.setItem("usuario", JSON.stringify({
+      documento: usuario.documento,
+      correo: usuario.correo,
+      telefono: usuario.telefono,
+      rol: usuario.Rol?.descripcion,
+      estado: usuario.Estado?.descripcion
+    }));
+
+    return usuario;
+  } catch (error) {
+    console.error("Error al obtener usuario:", error);
+    throw error;
+  }
+};

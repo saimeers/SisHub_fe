@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { signOutAccount, signInWithGoogle, signInWithEmail, deleteCurrentUser } from "../../../services/authService";
+import { obtenerUsuario } from "../../../services/userServices";
 import { getAuthErrorMessage } from "../utils/authErrorHandler";
 import { isEmailDomainAllowed } from "../utils/emailValidator";
 import { useToast } from "../../../hooks/useToast";
@@ -48,13 +49,13 @@ export const useAuth = () => {
       }
 
       saveUserData(user, token);
-
+      await obtenerUsuario();
       toast.success(`¡Bienvenido${formatShortName(user.displayName) ? ' ' + formatShortName(user.displayName) : ''}!`);
 
       navigate("/admin/dashboard");
     } catch (err) {
+      localStorage.clear();
       console.error("Error login:", err);
-
       toast.error(getAuthErrorMessage(err.code));
     } finally {
       setLoading(false);
@@ -80,7 +81,7 @@ export const useAuth = () => {
       }
 
       saveUserData(user, token);
-
+      await obtenerUsuario();
       toast.success(`¡Bienvenido${formatShortName(user.displayName) ? ' ' + formatShortName(user.displayName) : ''}!`);
 
       navigate("/admin/dashboard");

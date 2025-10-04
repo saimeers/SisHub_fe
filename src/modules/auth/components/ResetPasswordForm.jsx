@@ -1,7 +1,7 @@
 import React from "react";
-import FieldPassword from "../../../components/FieldPassword";
+import FieldPassword from "../../../components/ui/FieldPassword";
+import Button from "../../../components/ui/Button";
 import PasswordStrengthValidator from "./PasswordStrengthValidator";
-import Button from "../../../components/Button";
 
 function ResetPasswordForm({ formData, loading, onSubmit, onChange }) {
   return (
