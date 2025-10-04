@@ -4,6 +4,8 @@ import { signInWithGoogle, deleteCurrentUser } from "../../../services/authServi
 import { isEmailDomainAllowed } from "../utils/emailValidator";
 import { getAuthErrorMessage } from "../utils/authErrorHandler";
 import { useToast } from "../../../hooks/useToast";
+import { signOutAccount } from "../../../services/authService";
+import { obtenerUsuario } from "../../../services/userServices";
 
 export const useSignup = () => {
   const navigate = useNavigate();
@@ -27,36 +29,37 @@ export const useSignup = () => {
 
       // Validar dominio del correo
       if (!isEmailDomainAllowed(user.email, ALLOWED_DOMAINS)) {
-
         await deleteCurrentUser(user);
-
-        toast.warning(
-          `Solo se permiten correos institucionales`,
-          { autoClose: 5000 }
-        );
+        toast.warning("Solo se permiten correos institucionales", { autoClose: 5000 });
         setLoading(false);
         return;
       }
 
-      // Si el usuario ya existe, eliminar la cuenta creada y redirigir al login
-      if (!isNewUser) {
-        toast.info(
-          'Esta cuenta ya existe. Por favor inicia sesión.',
-          { autoClose: 5000 }
-        );
-        navigate("/login");
-        setLoading(false);
-        return;
+      if (isNewUser) {
+        // Caso: usuario nuevo -> siempre va a completar perfil
+        saveUserData(user, token, rol);
+        navigate("/complete-profile");
+      } else {
+        // Caso: ya existe en Firebase, verificar si está en la BD
+        try {
+          const usuario = await obtenerUsuario();
+
+          if (usuario) {
+            toast.info("Esta cuenta ya existe. Por favor inicia sesión.");
+            await signOutAccount();
+            localStorage.clear();
+            navigate("/login");
+          } else {
+            saveUserData(user, token, rol);
+            navigate("/complete-profile");
+          }
+        } catch (error) {
+          saveUserData(user, token, rol);
+          navigate("/complete-profile");
+        }
       }
-
-      saveUserData(user, token, rol);
-
-      toast.info('Completa tu registro para continuar');
-
-      navigate("/registro/completar-datos");
     } catch (err) {
-      console.error("Error al iniciar sesión:", err);
-
+      console.error("Error al registrar:", err);
       toast.error(getAuthErrorMessage(err.code));
     } finally {
       setLoading(false);

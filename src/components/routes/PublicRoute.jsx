@@ -14,9 +14,9 @@ export const PublicRoute = ({ children }) => {
       case 'ADMIN':
         return <Navigate to="/admin/dashboard" replace />;
       case 'DOCENTE':
-        return <Navigate to="/docente/dashboard" replace />;
+        return <Navigate to="/professor/dashboard" replace />;
       case 'ESTUDIANTE':
-        return <Navigate to="/estudiante/dashboard" replace />;
+        return <Navigate to="/student/dashboard" replace />;
       default:
         return children;
     }

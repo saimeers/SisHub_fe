@@ -2,26 +2,37 @@ import { Navigate, useLocation, Outlet } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { LoadingScreen } from '../ui/LoadingScreen';
 
-
 export const ProtectedRoute = ({ children, allowedRoles = [] }) => {
-  const { isAuthenticated, rol, estado, loading } = useAuth();
-  const location = useLocation();
+    const { isAuthenticated, rol, estado, loading } = useAuth();
+    const location = useLocation();
 
-  if (loading) {
-    return <LoadingScreen />;
-  }
+    if (loading) {
+        return <LoadingScreen />;
+    }
 
-  if (!isAuthenticated) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
-  }
+    if (!isAuthenticated) {
+        return <Navigate to="/login" state={{ from: location }} replace />;
+    }
 
-  if (estado === 'STAND_BY') {
-    return <Navigate to="/cuenta-pendiente" replace />;
-  }
+    // Si ya está logueado pero no tiene rol -> completar perfil
+    if (!rol && location.pathname !== "/complete-profile") {
+        return <Navigate to="/complete-profile" replace />;
+    }
 
-  if (allowedRoles.length > 0 && !allowedRoles.includes(rol)) {
-    return <Navigate to="/login" replace />;
-  }
+    // Si está en espera
+    if (estado === "STAND_BY") {
+        return <Navigate to="/account-pending" replace />;
+    }
 
-  return children ? children : <Outlet />;
+    // 🔹 Redirigir automáticamente al dashboard de su rol
+    if (rol && location.pathname === "/") {
+        return <Navigate to={`/${rol.toLowerCase()}/dashboard`} replace />;
+    }
+
+    // Validación de roles permitidos
+    if (allowedRoles.length > 0 && !allowedRoles.includes(rol)) {
+        return <Navigate to="/login" replace />;
+    }
+
+    return children ? children : <Outlet />;
 };

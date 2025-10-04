@@ -58,7 +58,7 @@ function LoginForm({ formData, loading, error, onSubmit, onChange }) {
             <p className="text-sm text-gray-600 text-center mt-2">
                 ¿No tienes cuenta?{" "}
                 <a
-                    href="/registro"
+                    href="/signup"
                     className="text-[#C03030] font-medium hover:underline"
                 >
                     Regístrate

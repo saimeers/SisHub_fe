@@ -22,7 +22,7 @@ export const useRegister = () => {
     const token = localStorage.getItem("firebaseToken");
     if (!token) {
       toast.error("Debes iniciar sesión primero");
-      navigate("/registro");
+      navigate("/signup");
     }
   }, [navigate, toast]);
 
@@ -89,7 +89,7 @@ export const useRegister = () => {
         localStorage.removeItem("userEmail");
 
         setTimeout(() => {
-          navigate("/admin/dashboard");
+          navigate("/");
         }, 1500);
       }
     } catch (error) {
