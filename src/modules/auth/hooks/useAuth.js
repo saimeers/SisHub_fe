@@ -94,12 +94,12 @@ export const useAuth = () => {
           verificarEstadoUsuario(usuario, user.displayName);
         } else {
           toast.warning("Debes completar tu registro antes de continuar.");
-          navigate("/complete-profile");
+          navigate("/signup");
         }
       } catch (error) {
         console.error("Error al obtener usuario:", error);
         toast.warning("Debes completar tu registro antes de continuar.");
-        navigate("/complete-profile");
+        navigate("/signup");
       }
 
     } catch (err) {
@@ -136,12 +136,12 @@ export const useAuth = () => {
           verificarEstadoUsuario(usuario, user.displayName);
         } else {
           toast.warning("Debes completar tu registro antes de continuar.");
-          navigate("/complete-profile");
+          navigate("/signup");
         }
       } catch (error) {
         console.error("Error al obtener usuario:", error);
         toast.warning("Debes completar tu registro antes de continuar.");
-        navigate("/complete-profile");
+        navigate("/signup");
       }
 
     } catch (err) {

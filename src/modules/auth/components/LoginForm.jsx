@@ -49,6 +49,7 @@ function LoginForm({ formData, loading, error, onSubmit, onChange }) {
 
                 <div className="mt-6 flex justify-center">
                     <Button
+                        type="submit"
                         text={loading ? "Ingresando..." : "Iniciar Sesión"}
                         disabled={loading}
                     />
