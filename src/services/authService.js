@@ -62,7 +62,7 @@ export const signOutAccount = async () => {
 export const sendPasswordReset = async (email) => {
   try {
     await sendPasswordResetEmail(auth, email, {
-      url: "http://localhost:5173/reset-password",
+      url: "https://sishub-fe.vercel.app/reset-password",
       handleCodeInApp: true,
     });
     return { success: true };
