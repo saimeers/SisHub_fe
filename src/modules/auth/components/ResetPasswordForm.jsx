@@ -40,7 +40,7 @@ function ResetPasswordForm({ formData, loading, onSubmit, onChange }) {
       <PasswordStrengthValidator password={formData.newPassword} />
 
       <div className="mt-6 flex justify-center">
-        <Button text={loading ? "Guardando..." : "Restablecer"} disabled={loading} />
+        <Button type="submit" text={loading ? "Guardando..." : "Restablecer"} disabled={loading} />
       </div>
     </form>
   );

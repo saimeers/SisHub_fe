@@ -105,6 +105,7 @@ function CompleteDataForm({ formData, loading, onSubmit, onChange }) {
 
       <div className="mt-4 flex justify-center">
         <Button
+          type="submit"
           text={loading ? "Registrando..." : "Registrar"}
           disabled={loading}
         />
