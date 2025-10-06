@@ -19,7 +19,6 @@ const FormCreateGroup = () => {
     name: materiaState?.label || "",
     docente: null,
     groupName: "",
-    semestre: "",
     accessKey: "",
   });
   const [isLoading, setIsLoading] = useState(false);
@@ -62,11 +61,9 @@ const FormCreateGroup = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    // Normalizar campo semestre: solo dígitos y máximo 2 caracteres
-    const nextValue = name === "semestre" ? value.replace(/\D/g, "").slice(0, 2) : value;
     setFormData((prev) => ({
       ...prev,
-      [name]: nextValue,
+      [name]: value,
     }));
   };
 
@@ -85,18 +82,16 @@ const FormCreateGroup = () => {
       const payload = {
         nombre: formData.groupName,
         clave_acceso: formData.accessKey,
-        semestre: formData.semestre,
         id_materia: materiaState?.value,
         id_docente: formData.docente?.value,
       };
       await crearGrupo(payload);
       success("Grupo creado correctamente");
-      // limpiar formulario básico antes de navegar
+      // limpiar formulario 
       setFormData({
         name: materiaState?.label || "",
         docente: null,
         groupName: "",
-        semestre: "",
         accessKey: "",
       });
       navigate("/admin/groups", { state: { materia: materiaState } });
@@ -165,23 +160,7 @@ const FormCreateGroup = () => {
             />
           </div>
 
-          <div>
-            <label
-              htmlFor="semestre"
-              className="block text-sm font-medium text-black mb-2"
-            >
-              Semestre
-            </label>
-            <FieldText
-              type="text"
-              id="semestre"
-              name="semestre"
-              value={formData.semestre}
-              onChange={handleInputChange}
-              placeholder="Ej: 1 o 2"
-              maxLength={2}
-            />
-          </div>
+          
 
           <div>
             <label

@@ -98,7 +98,7 @@ function App() {
             element={<ProtectedRoute allowedRoles={["ESTUDIANTE"]} />}
           >
             <Route path="dashboard" element={<DashboardStudent />} />
-            <Route path="grupos" element={<GroupsStudent />} />
+            <Route path="groups" element={<GroupsStudent />} />
             <Route path="subjects" element={<SubjectsStudent />} />
           </Route>
 

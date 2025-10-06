@@ -22,12 +22,12 @@ export const crearGrupo = async (groupData) => {
   }
 };
 
-export const deshabilitarGrupo = async (id_grupo) => {
+export const actualizarEstado = async (id_grupo, nuevoEstado) => {
   try {
-    const response = await axiosInstance.patch(`${GROUPS_BASE}/${id_grupo}/deshabilitar`);
+    const response = await axiosInstance.patch(`${GROUPS_BASE}/${id_grupo}/actualizar-estado`, { nuevoEstado });
     return response.data;
   } catch (error) {
-    console.error("Error al deshabilitar grupo:", error);
+    console.error("Error al actualizar estado del grupo:", error);
     throw error;
   }
 };
@@ -95,7 +95,7 @@ export const listarGruposPorUsuario = async (id_usuario) => {
 export default {
   obtenerGrupos,
   crearGrupo,
-  deshabilitarGrupo,
+  actualizarEstado,
   generarClaveAcceso,
   generarCodigoQR,
   obtenerClaveYCodigoQR,

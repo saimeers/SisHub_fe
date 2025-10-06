@@ -3,21 +3,23 @@ import { useNavigate, useLocation } from "react-router-dom";
 import AdminLayout from "../../modules/admin/layouts/AdminLayout";
 import Button from "../../components/ui/Button";
 import RowItem from "../../components/ui/RowItem";
-import SelectField from "../../components/ui/SelectField";
-import LoadingScreen from "../../components/ui/LoadingScreen";
-import { fetchSubjects } from "../../services/materiaServices";
-import { obtenerGrupos, deshabilitarGrupo, listarGruposPorMateria } from "../../services/groupServices";
+import { obtenerGrupos, actualizarEstado, listarGruposPorMateria } from "../../services/groupServices";
+import ConfirmModal from "../../components/ui/ConfirmModal";
+import { useToast } from "../../hooks/useToast";
 
 const Groups = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [selectedMateria, setSelectedMateria] = useState(null);
   const [materiaInput, setMateriaInput] = useState("");
-  const [materias, setMaterias] = useState([]);
   const [groups, setGroups] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadingGroups, setLoadingGroups] = useState(false);
   const [error, setError] = useState(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [pendingChange, setPendingChange] = useState(null); 
+  const [confirmLoading, setConfirmLoading] = useState(false);
+  const toast = useToast();
 
   const handleCreateGroup = () => {
     if (!selectedMateria) return;
@@ -26,20 +28,13 @@ const Groups = () => {
 
   const fetchMaterias = async () => {
     try {
-      const materiasData = await fetchSubjects();
-      const materiasOptions = materiasData.map((materia) => ({
-        value: materia.id_materia,
-        label: materia.nombre,
-      }));
-      setMaterias(materiasOptions);
-      // preseleccionar si viene desde navegación
       const materiaFromState = location?.state?.materia;
       if (materiaFromState) {
         setSelectedMateria(materiaFromState);
         setMateriaInput(materiaFromState.label || "");
       }
     } catch (error) {
-      console.error("Error al cargar materias:", error);
+      console.error("Error al inicializar materias:", error);
       setError("Error al cargar materias");
     } finally {
       setLoading(false);
@@ -74,34 +69,35 @@ const Groups = () => {
     }
   };
 
-  const handleMateriaChange = (selectedOption) => {
-    setSelectedMateria(selectedOption);
-    setMateriaInput(selectedOption?.label || "");
+  const handleStatusChange = (groupId, newStatus) => {
+    const groupName = groups.find(g => g.id_grupo === groupId)?.nombre || "este grupo";
+    setPendingChange({ groupId, newStatus, groupName });
+    setConfirmOpen(true);
   };
 
-  const handleMateriaInputChange = (e) => {
-    const value = e.target.value;
-    setMateriaInput(value);
-    // cuando teclean, trata de emparejar con la lista existente para setSelectedMateria
-    const match = materias.find((m) => m.label.toLowerCase() === value.toLowerCase());
-    if (match) {
-      setSelectedMateria(match);
-    } else if (!value) {
-      setSelectedMateria(null);
-    }
-  };
-
-  const handleStatusChange = async (groupId, newStatus) => {
+  const confirmStatusChange = async () => {
+    if (!pendingChange) return;
     try {
-      if (newStatus === "Deshabilitado") {
-        await deshabilitarGrupo(groupId);
-        // Recargar la lista de grupos
-        await fetchGroups(false);
-      }
+      setConfirmLoading(true);
+      const nuevoEstadoBool = pendingChange.newStatus === "Habilitado";
+      await actualizarEstado(pendingChange.groupId, nuevoEstadoBool);
+      toast.success(`Grupo "${pendingChange.groupName}" ${pendingChange.newStatus.toLowerCase()} correctamente`);
     } catch (err) {
       console.error("Error al cambiar estado del grupo:", err);
       setError("Error al cambiar el estado del grupo");
+      toast.error(`No se pudo cambiar el estado del grupo "${pendingChange.groupName}"`);
+    } finally {
+      setConfirmLoading(false);
+      setConfirmOpen(false);
+      setPendingChange(null);
+      await fetchGroups(false); // refrescar 
     }
+  };
+
+  const cancelStatusChange = async () => {
+    setConfirmOpen(false);
+    setPendingChange(null);
+    await fetchGroups(false);
   };
 
   useEffect(() => {
@@ -183,7 +179,7 @@ const Groups = () => {
           </p>
         </div>
       ) : (
-        <div className="space-y-2">
+        <div className="space-y-2 max-h-[60vh] overflow-y-auto pr-1">
           {groups.map((group) => (
             <RowItem
               key={group.id_grupo}
@@ -200,6 +196,16 @@ const Groups = () => {
           ))}
         </div>
       )}
+      <ConfirmModal
+        isOpen={confirmOpen}
+        title="Confirmar cambio de estado"
+        message={pendingChange ? `¿Seguro que deseas ${pendingChange.newStatus.toLowerCase()} el grupo "${pendingChange.groupName}"?` : ""}
+        confirmText={pendingChange?.newStatus === "Habilitado" ? "Habilitar" : "Deshabilitar"}
+        cancelText="Cancelar"
+        onConfirm={confirmStatusChange}
+        onCancel={cancelStatusChange}
+        loading={confirmLoading}
+      />
     </AdminLayout>
   );
 };
