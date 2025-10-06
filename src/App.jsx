@@ -13,15 +13,19 @@ import ResetPassword from "./pages/auth/ResetPassword";
 import AdminDashboard from "./pages/admin/Dashboard";
 import GroupsAdmin from "./pages/admin/Groups";
 import CreateGroupAdmin from "./pages/admin/FormCreateGroup";
+import SubjectsAdmin from "./pages/admin/Subjects";
+import FormCreateSubject from "./pages/admin/FormCreateSubject";
 
 // docente
 import GroupsProfessor from "./pages/professor/Groups";
 import DashboardProfessor from "./pages/professor/Dashboard";
 import CreateGroupProfessor from "./pages/professor/FormCreateGroup";
+import SubjectsProfessor from "./pages/professor/Subjects";
 
 // estudiante
 import DashboardStudent from "./pages/student/Dashboard";
 import GroupsStudent from "./pages/student/Groups";
+import SubjectsStudent from "./pages/student/Subjects";
 
 // stand by
 import CuentaPendiente from "./pages/standby/CuentaPendiente";
@@ -73,6 +77,8 @@ function App() {
             <Route path="dashboard" element={<AdminDashboard />} />
             <Route path="groups" element={<GroupsAdmin />} />
             <Route path="create-group" element={<CreateGroupAdmin />} />
+            <Route path="subjects" element={<SubjectsAdmin />} />
+            <Route path="subjects/create" element={<FormCreateSubject />} />
           </Route>
 
           {/* ==================== RUTAS DOCENTE ==================== */}
@@ -83,6 +89,7 @@ function App() {
             <Route path="dashboard" element={<DashboardProfessor />} />
             <Route path="groups" element={<GroupsProfessor />} />
             <Route path="create-group" element={<CreateGroupProfessor />} />
+            <Route path="subjects" element={<SubjectsProfessor />} />
           </Route>
 
           {/* ==================== RUTAS ESTUDIANTE ==================== */}
@@ -91,7 +98,8 @@ function App() {
             element={<ProtectedRoute allowedRoles={["ESTUDIANTE"]} />}
           >
             <Route path="dashboard" element={<DashboardStudent />} />
-            <Route path="grupos" element={<GroupsStudent />} />
+            <Route path="groups" element={<GroupsStudent />} />
+            <Route path="subjects" element={<SubjectsStudent />} />
           </Route>
 
           {/* ==================== RUTAS ESPECIALES ==================== */}

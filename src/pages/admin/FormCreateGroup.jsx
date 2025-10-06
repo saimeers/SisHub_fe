@@ -1,23 +1,63 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import AdminLayout from "../../modules/admin/layouts/AdminLayout";
 import FieldText from "../../components/ui/FieldText";
 import SelectField from "../../components/ui/SelectField";
 import Button from "../../components/ui/Button";
+import { listarDocentes } from "../../services/userServices";
+import { generarClaveAcceso } from "../../services/groupServices";
+import { crearGrupo } from "../../services/groupServices";
+import { useToast } from "../../hooks/useToast";
 
 const FormCreateGroup = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const materiaState = location?.state?.materia || null;
+  const { success, error: toastError } = useToast();
+
   const [formData, setFormData] = useState({
-    name: "",
+    name: materiaState?.label || "",
     docente: null,
     groupName: "",
     accessKey: "",
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [docenteOptions, setDocenteOptions] = useState([]);
 
-  const docenteOptions = [
-    { value: "docente1", label: "Docente 1" },
-    { value: "docente2", label: "Docente 2" },
-    { value: "docente3", label: "Docente 3" },
-  ];
+  useEffect(() => {
+    const loadDocentes = async () => {
+      try {
+        const data = await listarDocentes();
+        const lista = data?.docentes || data?.usuarios || data || [];
+        const options = lista.map((d) => {
+          const raw = d.nombre || "";
+          const formatted = raw
+            .split(" ")
+            .filter(Boolean)
+            .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+            .join(" ");
+          return { value: d.id_usuario, label: formatted };
+        });
+        setDocenteOptions(options);
+      } catch (err) {
+        console.error("Error al cargar docentes:", err);
+      }
+    };
+    loadDocentes();
+  }, []);
+
+  useEffect(() => {
+    const loadAccessKey = async () => {
+      try {
+        const data = await generarClaveAcceso();
+        const generated = data?.clave || data?.clave_acceso || data || "";
+        setFormData((prev) => ({ ...prev, accessKey: generated }));
+      } catch (err) {
+        console.error("Error al generar clave de acceso:", err);
+      }
+    };
+    loadAccessKey();
+  }, []);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -39,10 +79,25 @@ const FormCreateGroup = () => {
     setIsLoading(true);
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      console.log("Form data:", formData);
+      const payload = {
+        nombre: formData.groupName,
+        clave_acceso: formData.accessKey,
+        id_materia: materiaState?.value,
+        id_docente: formData.docente?.value,
+      };
+      await crearGrupo(payload);
+      success("Grupo creado correctamente");
+      // limpiar formulario 
+      setFormData({
+        name: materiaState?.label || "",
+        docente: null,
+        groupName: "",
+        accessKey: "",
+      });
+      navigate("/admin/groups", { state: { materia: materiaState } });
     } catch (error) {
       console.error("Error al registrar:", error);
+      toastError("Error al crear el grupo");
     } finally {
       setIsLoading(false);
     }
@@ -50,9 +105,8 @@ const FormCreateGroup = () => {
 
   return (
     <AdminLayout title="Crear Grupo">
-      <div className="w-full max-w-4xl mx-auto py-8">
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* label con input de Nombre */}
+      <div className="w-full max-w-4xl mx-auto pt-4 pb-6">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label
               htmlFor="name"
@@ -67,10 +121,10 @@ const FormCreateGroup = () => {
               value={formData.name}
               onChange={handleInputChange}
               placeholder="Ingrese el nombre de materia"
+              disabled={!!materiaState}
             />
           </div>
 
-          {/*label con select de Docente */}
           <div>
             <label
               htmlFor="docente"
@@ -89,7 +143,6 @@ const FormCreateGroup = () => {
             />
           </div>
 
-          {/* label e input de nombre del Grupo */}
           <div>
             <label
               htmlFor="groupName"
@@ -107,7 +160,8 @@ const FormCreateGroup = () => {
             />
           </div>
 
-          {/* label e input de clave de acceso */}
+          
+
           <div>
             <label
               htmlFor="accessKey"

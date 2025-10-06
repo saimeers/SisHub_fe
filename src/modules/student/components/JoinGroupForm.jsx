@@ -2,12 +2,14 @@ import { useState } from "react";
 import FieldText from "../../../components/ui/FieldText";
 import Button from "../../../components/ui/Button";
 
-const JoinGroupForm = ({ onJoin, onCancel }) => {
+const JoinGroupForm = ({ onJoin, onCancel, selectedGroupName = "", onAccessKeyChange, loading = false }) => {
   const [accessKey, setAccessKey] = useState("");
 
   const handleJoinGroup = () => {
     onJoin(accessKey);
-    setAccessKey("");
+    if (!loading) {
+      setAccessKey("");
+    }
   };
 
   const handleCancel = () => {
@@ -21,7 +23,7 @@ const JoinGroupForm = ({ onJoin, onCancel }) => {
       <div className="mb-3">
         <FieldText
           type="text"
-          value="Selecciona el grupo al que deseas unirte"
+          value={selectedGroupName || "Selecciona el grupo al que deseas unirte"}
           disabled={true}
           className="text-gray-600 italic text-sm"
         />
@@ -40,19 +42,23 @@ const JoinGroupForm = ({ onJoin, onCancel }) => {
           id="accessKey"
           name="accessKey"
           value={accessKey}
-          onChange={(e) => setAccessKey(e.target.value)}
+          onChange={(e) => {
+            setAccessKey(e.target.value);
+            onAccessKeyChange && onAccessKeyChange(e.target.value);
+          }}
           placeholder="Ingrese la clave de acceso"
         />
       </div>
 
       {/* Botones */}
       <div className="flex justify-end space-x-4">
-        <Button type="button" text="Unirme" onClick={handleJoinGroup} />
+        <Button type="button" text={loading ? "Uniendo..." : "Unirme"} onClick={handleJoinGroup} disabled={loading || !accessKey || !selectedGroupName} />
         <Button
           type="button"
           text="Cancelar"
           variant="secondary"
           onClick={handleCancel}
+          disabled={loading}
         />
       </div>
     </div>

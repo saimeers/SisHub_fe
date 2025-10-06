@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { GoHomeFill } from "react-icons/go";
 import { FaBook, FaFolder, FaSignOutAlt } from "react-icons/fa";
 import { MdGroups2 } from "react-icons/md";
@@ -9,6 +10,7 @@ import { Menu } from "lucide-react";
 
 const Sidebar = () => {
     const [collapsed, setCollapsed] = useState(false);
+    const navigate = useNavigate();
     const { handleSignOut } = useAuth();
 
     useEffect(() => {
@@ -30,8 +32,8 @@ const Sidebar = () => {
     const toggleSidebar = () => setCollapsed(!collapsed);
 
     const menuItems = [
-        { icon: <GoHomeFill size={20} />, label: "Inicio" },
-        { icon: <FaBook size={20} />, label: "Materias" },
+        { icon: <GoHomeFill size={20} />, label: "Inicio", path: "/professor/dashboard" },
+        { icon: <FaBook size={20} />, label: "Materias", path: "/professor/subjects" },
         { icon: <MdGroups2 size={20} />, label: "Grupos" },
         { icon: <FaFolder size={20} />, label: "Proyectos" },
         { icon: <IoIosSchool size={20} />, label: "Estudiantes" }
@@ -77,6 +79,14 @@ const Sidebar = () => {
                                     collapsed ? "justify-center" : "justify-start"
                                 } gap-3 px-4 py-2 hover:bg-[#CC4040] cursor-pointer rounded-md w-11/12 transition-colors`}
                                 title={collapsed ? item.label : ""}
+                                onClick={() => item.path && navigate(item.path)}
+                                role="button"
+                                tabIndex={0}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter' || e.key === ' ') {
+                                        item.path && navigate(item.path);
+                                    }
+                                }}
                             >
                                 {item.icon}
                                 {!collapsed && <span className="whitespace-nowrap">{item.label}</span>}
