@@ -21,22 +21,6 @@ function CompleteDataForm({ formData, loading, onSubmit, onChange }) {
             required
           />
         </div>
-
-        <div className="flex-1">
-          <label
-            className="text-sm font-medium mb-1 block"
-            htmlFor="fechaNacimiento"
-          >
-            Fecha de nacimiento
-          </label>
-          <FieldText
-            type="date"
-            id="fechaNacimiento"
-            name="fechaNacimiento"
-            value={formData.fechaNacimiento}
-            onChange={onChange}
-          />
-        </div>
       </div>
 
       <div>
