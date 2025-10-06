@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { GoHomeFill } from "react-icons/go";
 import { FaBook, FaFolder, FaSignOutAlt } from "react-icons/fa";
 import { MdGroups2 } from "react-icons/md";
@@ -11,29 +12,38 @@ import { Menu } from "lucide-react";
 const Sidebar = () => {
   const [collapsed, setCollapsed] = useState(false);
   const { handleSignOut } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth < 768) {
-        setCollapsed(true); 
+        setCollapsed(true);
       } else {
-        setCollapsed(false); 
+        setCollapsed(false);
       }
     };
 
     handleResize();
 
-    window.addEventListener('resize', handleResize);
-    
-    return () => window.removeEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize);
+
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   const toggleSidebar = () => setCollapsed(!collapsed);
 
+  const handleNavigation = (path) => {
+    navigate(path);
+  };
+
   const menuItems = [
-    { icon: <GoHomeFill size={20} />, label: "Inicio" },
-    { icon: <FaBook size={20} />, label: "Materias" },
-    { icon: <MdGroups2 size={20} />, label: "Grupos" },
+    {
+      icon: <GoHomeFill size={20} />,
+      label: "Inicio",
+      path: "/admin/dashboard",
+    },
+    { icon: <FaBook size={20} />, label: "Materias", path: "/admin/subjects" },
+    { icon: <MdGroups2 size={20} />, label: "Grupos", path: "/admin/groups" },
     { icon: <FaFolder size={20} />, label: "Proyectos" },
     { icon: <IoIosSchool size={20} />, label: "Estudiantes" },
     { icon: <ImStatsDots size={20} />, label: "Estadísticas" },
@@ -75,13 +85,16 @@ const Sidebar = () => {
             {menuItems.map((item, idx) => (
               <div
                 key={idx}
+                onClick={() => handleNavigation(item.path)}
                 className={`flex items-center ${
                   collapsed ? "justify-center" : "justify-start"
                 } gap-3 px-4 py-2 hover:bg-[#CC4040] cursor-pointer rounded-md w-11/12 transition-colors`}
                 title={collapsed ? item.label : ""}
               >
                 {item.icon}
-                {!collapsed && <span className="whitespace-nowrap">{item.label}</span>}
+                {!collapsed && (
+                  <span className="whitespace-nowrap">{item.label}</span>
+                )}
               </div>
             ))}
           </nav>

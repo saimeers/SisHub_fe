@@ -46,21 +46,33 @@ const SelectField = ({
     }),
     menu: (provided) => ({
       ...provided,
-      backgroundColor: "#f3f4f6",
+      backgroundColor: "#ffffff",
       border: "1px solid #e5e7eb",
-      borderRadius: "6px",
-      boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+      borderRadius: "8px",
+      boxShadow: "0 8px 16px -4px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.05)",
+      marginTop: "4px",
+      zIndex: 1000,
+    }),
+    menuList: (provided) => ({
+      ...provided,
+      padding: "4px",
+      maxHeight: "200px",
     }),
     option: (provided, state) => ({
       ...provided,
       backgroundColor: state.isSelected
         ? "#C03030"
         : state.isFocused
-        ? "#fceded"
-        : "#f3f4f6",
+        ? "#fef2f2"
+        : "transparent",
       color: state.isSelected ? "#ffffff" : "#374151",
+      padding: "10px 12px",
+      borderRadius: "6px",
+      margin: "1px 0",
+      cursor: "pointer",
+      transition: "background-color 0.15s ease",
       "&:hover": {
-        backgroundColor: state.isSelected ? "#C03030" : "#fecaca",
+        backgroundColor: state.isSelected ? "#C03030" : "#fef2f2",
         color: state.isSelected ? "#ffffff" : "#374151",
       },
     }),
