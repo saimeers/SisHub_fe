@@ -12,7 +12,7 @@ const RowItem = ({ columns, status, onStatusChange, editable = true }) => {
   };
 
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center bg-gray-100 p-3 sm:p-4 rounded-md mb-2 gap-3 sm:gap-4">
+    <div className="flex flex-col sm:flex-row sm:items-center bg-gray-100 p-3 sm:p-4 rounded-md mb-2 gap-3 sm:gap-4 cursor-pointer hover:bg-gray-200 transition-colors">
       {/* Contenido de las columnas */}
       <div className="flex flex-col sm:flex-row sm:items-center flex-1 gap-2 sm:gap-4">
         {columns.map((col, index) => (

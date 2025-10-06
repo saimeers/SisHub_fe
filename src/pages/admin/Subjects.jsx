@@ -58,7 +58,16 @@ const Subjects = () => {
           <div className="text-center text-red-600 py-6">{error}</div>
         )}
         {!isLoading && !error && (
-          <SubjectGrid subjects={subjects} onDetails={() => {}} />
+          <SubjectGrid
+            subjects={subjects}
+            onDetails={(subject) =>
+              navigate("/admin/groups", {
+                state: {
+                  materia: { value: subject?.id_materia, label: subject?.nombre },
+                },
+              })
+            }
+          />
         )}
       </div>
     </AdminLayout>

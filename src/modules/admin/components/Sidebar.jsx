@@ -43,7 +43,7 @@ const Sidebar = () => {
       path: "/admin/dashboard",
     },
     { icon: <FaBook size={20} />, label: "Materias", path: "/admin/subjects" },
-    { icon: <MdGroups2 size={20} />, label: "Grupos", path: "/admin/groups" },
+    { icon: <MdGroups2 size={20} />, label: "Grupos"},
     { icon: <FaFolder size={20} />, label: "Proyectos" },
     { icon: <IoIosSchool size={20} />, label: "Estudiantes" },
     { icon: <ImStatsDots size={20} />, label: "Estadísticas" },

@@ -12,6 +12,7 @@ const Groups = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [selectedMateria, setSelectedMateria] = useState(null);
+  const [materiaInput, setMateriaInput] = useState("");
   const [materias, setMaterias] = useState([]);
   const [groups, setGroups] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -35,6 +36,7 @@ const Groups = () => {
       const materiaFromState = location?.state?.materia;
       if (materiaFromState) {
         setSelectedMateria(materiaFromState);
+        setMateriaInput(materiaFromState.label || "");
       }
     } catch (error) {
       console.error("Error al cargar materias:", error);
@@ -74,6 +76,19 @@ const Groups = () => {
 
   const handleMateriaChange = (selectedOption) => {
     setSelectedMateria(selectedOption);
+    setMateriaInput(selectedOption?.label || "");
+  };
+
+  const handleMateriaInputChange = (e) => {
+    const value = e.target.value;
+    setMateriaInput(value);
+    // cuando teclean, trata de emparejar con la lista existente para setSelectedMateria
+    const match = materias.find((m) => m.label.toLowerCase() === value.toLowerCase());
+    if (match) {
+      setSelectedMateria(match);
+    } else if (!value) {
+      setSelectedMateria(null);
+    }
   };
 
   const handleStatusChange = async (groupId, newStatus) => {
@@ -127,22 +142,20 @@ const Groups = () => {
   return (
     <AdminLayout title="Grupos">
       <div className="mb-4 flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
-        {/* Filtro por Materia */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
           <label className="text-bm font-medium text-gray-700 whitespace-nowrap">
             Materia
           </label>
-          <div className="w-80 sm:w-96 md:w-120">
-            <SelectField
-              value={selectedMateria}
-              onChange={handleMateriaChange}
-              options={materias}
-              placeholder="Seleccionar materia..."
-              isClearable={true}
-            />
-          </div>
+          <input
+            type="text"
+            className="w-96 sm:w-120 md:w-120 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-300 bg-gray-50"
+            placeholder="Materia seleccionada"
+            value={materiaInput}
+            readOnly
+            aria-readonly="true"
+          />
         </div>
-        <Button onClick={handleCreateGroup} text="+ Crear Grupo" disabled={!selectedMateria} />
+        <Button onClick={handleCreateGroup} text="+ Crear Grupo" />
       </div>
       <hr className="border-gray-300 mb-4" />
 
