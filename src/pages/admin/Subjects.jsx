@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import AdminLayout from "../../modules/admin/layouts/AdminLayout";
 import Button from "../../components/ui/Button";
+import { useNavigate } from "react-router-dom";
 import SubjectGrid from "../../modules/admin/components/SubjectGrid";
 import { fetchSubjects } from "../../services/materiaServices";
 
@@ -8,6 +9,7 @@ const Subjects = () => {
   const [subjects, setSubjects] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const navigate = useNavigate();
 
   const loadSubjects = async () => {
     setIsLoading(true);
@@ -30,7 +32,7 @@ const Subjects = () => {
     <AdminLayout title="Materias">
       <div className="flex flex-col gap-4">
         <div className="flex justify-end">
-          <Button text="+ Crear Materias" onClick={() => {}} />
+          <Button text="+ Crear Materias" onClick={() => navigate("/admin/subjects/create")} />
         </div>
         <hr className="border-gray-300" />
 

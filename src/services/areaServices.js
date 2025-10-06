@@ -9,3 +9,13 @@ export const crearArea = async (nombre) => {
     throw error;
   }
 };
+
+export const listarAreas = async () => {
+  try {
+    const response = await axiosInstance.get("/areas/listar");
+    return response.data;
+  } catch (error) {
+    console.error("Error al listar áreas:", error);
+    throw error;
+  }
+};
