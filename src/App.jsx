@@ -15,6 +15,7 @@ import GroupsAdmin from "./pages/admin/Groups";
 import CreateGroupAdmin from "./pages/admin/FormCreateGroup";
 import SubjectsAdmin from "./pages/admin/Subjects";
 import FormCreateSubject from "./pages/admin/FormCreateSubject";
+import FormEditSubject from "./pages/admin/FormEditSubject";
 
 // docente
 import GroupsProfessor from "./pages/professor/Groups";
@@ -79,6 +80,7 @@ function App() {
             <Route path="create-group" element={<CreateGroupAdmin />} />
             <Route path="subjects" element={<SubjectsAdmin />} />
             <Route path="subjects/create" element={<FormCreateSubject />} />
+            <Route path="subjects/edit/:id" element={<FormEditSubject />} />
           </Route>
 
           {/* ==================== RUTAS DOCENTE ==================== */}
