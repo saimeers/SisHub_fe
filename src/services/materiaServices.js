@@ -1,9 +1,9 @@
-import api from "../config/axios";
+import axiosInstance from "../config/axios";
 
 const SUBJECTS_BASE = "/materias";
 
 export async function fetchSubjects() {
-  const { data } = await api.get(`${SUBJECTS_BASE}/`);
+  const { data } = await axiosInstance.get(`${SUBJECTS_BASE}/`);
   return data;
 }
 

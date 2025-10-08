@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import ProfessorLayout from "../../modules/professor/layouts/ProfessorLayout";
+import { useNavigate } from "react-router-dom";
 import SubjectGrid from "../../modules/admin/components/SubjectGrid";
 import { fetchSubjects } from "../../services/materiaServices";
 
@@ -7,6 +8,7 @@ const ProfessorSubjects = () => {
   const [subjects, setSubjects] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const navigate = useNavigate();
 
   const loadSubjects = async () => {
     setIsLoading(true);
@@ -50,7 +52,14 @@ const ProfessorSubjects = () => {
           <div className="text-center text-red-600 py-6">{error}</div>
         )}
         {!isLoading && !error && (
-          <SubjectGrid subjects={subjects} onDetails={() => {}} showSettings={true} />
+          <SubjectGrid
+            subjects={subjects}
+            onDetails={(subject) => {
+              const materia = { value: subject?.id_materia, label: subject?.nombre };
+              navigate("/professor/groups", { state: { materia } });
+            }}
+            showSettings={true}
+          />
         )}
       </div>
     </ProfessorLayout>

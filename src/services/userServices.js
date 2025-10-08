@@ -51,6 +51,16 @@ export const obtenerUsuariosStandBy = async () => {
   }
 };
 
+export const listarDocentes = async () => {
+  try {
+    const response = await axiosInstance.get("/usuarios/docentes");
+    return response.data;
+  } catch (error) {
+    console.error("Error al listar docentes:", error);
+    throw error;
+  }
+};
+
 export const habilitarUsuario = async (id_usuario) => {
   try {
     const response = await axiosInstance.patch(`/usuarios/${id_usuario}/estado`, {

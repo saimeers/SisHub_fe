@@ -5,7 +5,7 @@ import { PublicRoute } from "./components/routes/PublicRoute";
 
 // auth
 import Login from "./pages/auth/Login";
-import Signup from "./pages/auth/SignUp";
+import Signup from "./pages/auth/Signup";
 import FormRegister from "./pages/auth/FormRegister";
 import ResetPassword from "./pages/auth/ResetPassword";
 
@@ -100,7 +100,7 @@ function App() {
             element={<ProtectedRoute allowedRoles={["ESTUDIANTE"]} />}
           >
             <Route path="dashboard" element={<DashboardStudent />} />
-            <Route path="grupos" element={<GroupsStudent />} />
+            <Route path="groups" element={<GroupsStudent />} />
             <Route path="subjects" element={<SubjectsStudent />} />
           </Route>
 
