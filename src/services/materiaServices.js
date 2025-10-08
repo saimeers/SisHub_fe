@@ -8,19 +8,19 @@ export async function fetchSubjects() {
 }
 
 export async function createSubject(subjectPayload) {
-  // Espera un objeto con: codigo, nombre, creditos, prerrequisitos, tipo, id_area
-  const { data } = await api.post(`/api${SUBJECTS_BASE}`, subjectPayload);
+  // Espera un objeto con: codigo, nombre, semestre, creditos, prerrequisitos, tipo, id_area
+  const { data } = await axiosInstance.post(`${SUBJECTS_BASE}`, subjectPayload);
   return data;
 }
 
 export async function getSubjectById(id) {
-  const { data } = await api.get(`/api${SUBJECTS_BASE}/${id}`);
+  const { data } = await axiosInstance.get(`${SUBJECTS_BASE}/${id}`);
   return data;
 }
 
 export async function updateSubject(id, subjectPayload) {
-  // Espera un objeto con: codigo, nombre, creditos, prerrequisitos, tipo, id_area
-  const { data } = await api.put(`/api${SUBJECTS_BASE}/${id}`, subjectPayload);
+  // Espera un objeto con: codigo, nombre, semestre, creditos, prerrequisitos, tipo, id_area
+  const { data } = await axiosInstance.put(`${SUBJECTS_BASE}/${id}`, subjectPayload);
   return data;
 }
 

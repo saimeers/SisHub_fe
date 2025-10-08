@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import AdminLayout from "../../modules/admin/layouts/AdminLayout";
 import FieldText from "../../components/ui/FieldText";
 import SelectField from "../../components/ui/SelectField";
@@ -11,6 +11,7 @@ import { useNavigate, useParams } from "react-router-dom";
 const initialForm = {
   codigo: "",
   nombre: "",
+  semestre: "",
   creditos: "",
   prerrequisitos: "",
   tipo: "Obligatoria",
@@ -26,84 +27,76 @@ const FormEditSubject = () => {
   const [form, setForm] = useState(initialForm);
   const [areas, setAreas] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isLoadingAreas, setIsLoadingAreas] = useState(true);
-  const [isLoadingSubject, setIsLoadingSubject] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const { success, error } = useToast();
   const navigate = useNavigate();
-  const { id } = useParams();
+  const { id } = useParams(); // id_materia
 
+  // Cargar datos iniciales
   useEffect(() => {
     const loadData = async () => {
-      setIsLoadingAreas(true);
-      setIsLoadingSubject(true);
-      
+      setIsLoading(true);
       try {
-        // Cargar áreas y materia en paralelo
-        const [areasList, subjectData] = await Promise.all([
-          listarAreas(),
-          getSubjectById(id)
-        ]);
-        
-        const areasArray = Array.isArray(areasList) ? areasList : [];
-        setAreas(areasArray);
-        
-        // Pre-cargar datos de la materia
+        console.log("🔹 Solicitando datos de la materia con id:", id);
+        const subjectData = await getSubjectById(id);
+        console.log("✅ Materia recibida:", subjectData);
+
+        console.log("🔹 Solicitando listado de áreas...");
+        const list = await listarAreas();
+        console.log("✅ Áreas recibidas:", list);
+
+        const areasList = Array.isArray(list) ? list : [];
+        setAreas(areasList);
+
         if (subjectData) {
           setForm({
             codigo: subjectData.codigo || "",
             nombre: subjectData.nombre || "",
+            semestre: subjectData.semestre || "",
             creditos: subjectData.creditos || "",
             prerrequisitos: subjectData.prerrequisitos || "",
             tipo: subjectData.tipo || "Obligatoria",
             id_area: subjectData.id_area || null,
           });
         }
-        
       } catch (err) {
-        error(err?.message || "Error al cargar datos");
+        console.error("❌ Error al cargar materia:", err);
+        error("No se pudo cargar la información de la materia");
       } finally {
-        setIsLoadingAreas(false);
-        setIsLoadingSubject(false);
+        setIsLoading(false);
       }
     };
-    
+
     loadData();
   }, [id, error]);
 
-  const areaOptions = useMemo(() => {
-    return areas.map((a) => ({
-      value: a.id_area,
-      label: a.nombre,
-    }));
-  }, [areas]);
 
+  const areaOptions = useMemo(
+    () => areas.map((a) => ({ value: a.id_area, label: a.nombre })),
+    [areas]
+  );
+
+  // Handlers
   const handleChange = (e) => {
     const { name, value } = e.target;
-    
-    // Validación especial para créditos
-    if (name === 'creditos') {
-      const numericValue = parseFloat(value);
-      if (value === '' || (numericValue >= 0 && !isNaN(numericValue))) {
-        setForm((f) => ({ ...f, [name]: value }));
-      }
-    } else {
-      setForm((f) => ({ ...f, [name]: value }));
-    }
-  };
-
-  const handleSelectArea = (opt) => {
-    setForm((f) => ({ ...f, id_area: opt ? opt.value : null }));
+    setForm((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSelectType = (opt) => {
-    setForm((f) => ({ ...f, tipo: opt ? opt.value : "" }));
+    setForm((prev) => ({ ...prev, tipo: opt ? opt.value : "" }));
   };
 
+  const handleSelectArea = (opt) => {
+    setForm((prev) => ({ ...prev, id_area: opt ? opt.value : null }));
+  };
+
+
   const validate = () => {
-    if (!form.codigo || !form.nombre || !form.tipo) return "Complete los campos requeridos";
-    const creditosNum = Number(form.creditos);
-    if (!Number.isFinite(creditosNum) || creditosNum <= 0) return "Créditos debe ser numérico y mayor a 0";
-    if (!form.id_area) return "Seleccione un área";
+    if (!form.codigo || !form.nombre || !form.semestre || !form.tipo)
+      return "Complete los campos requeridos.";
+    if (!Number.isFinite(Number(form.creditos)) || Number(form.creditos) <= 0)
+      return "El campo Créditos debe ser un número válido.";
+    if (!form.id_area) return "Seleccione un área del conocimiento.";
     return null;
   };
 
@@ -111,33 +104,37 @@ const FormEditSubject = () => {
     e.preventDefault();
     const msg = validate();
     if (msg) return error(msg);
-    
+
     setIsSubmitting(true);
     try {
       const payload = {
         codigo: String(form.codigo).trim(),
         nombre: String(form.nombre).trim(),
+        semestre: String(form.semestre).trim(),
         creditos: Number(form.creditos),
-        prerrequisitos: form.prerrequisitos ? String(form.prerrequisitos).trim() : "Ninguno",
+        prerrequisitos: form.prerrequisitos
+          ? String(form.prerrequisitos).trim()
+          : "Ninguno",
         tipo: form.tipo,
         id_area: Number(form.id_area),
       };
-      
-      const updated = await updateSubject(id, payload);
+
+      await updateSubject(id, payload);
       success("Materia actualizada correctamente");
-      navigate("/admin/subjects", { replace: true, state: { updated } });
+      navigate("/admin/subjects", { replace: true });
     } catch (err) {
-      error(err?.message || "No se pudo actualizar la materia");
+      console.error(err);
+      error("No se pudo actualizar la materia");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  if (isLoadingSubject) {
+  if (isLoading) {
     return (
       <AdminLayout title="Editar materia">
-        <div className="w-full max-w-5xl mx-auto py-8">
-          <div className="text-center text-gray-500 py-16">Cargando materia...</div>
+        <div className="text-center py-8 text-gray-500">
+          Cargando información...
         </div>
       </AdminLayout>
     );
@@ -147,71 +144,82 @@ const FormEditSubject = () => {
     <AdminLayout title="Editar materia">
       <div className="w-full max-w-5xl mx-auto py-8">
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Primera fila: Código y Créditos */}
+          {/* Código y Créditos */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label htmlFor="codigo" className="block text-sm font-medium text-black mb-2">
+              <label className="block text-sm font-medium text-black mb-2">
                 Código
               </label>
-              <FieldText id="codigo" name="codigo" value={form.codigo} onChange={handleChange} placeholder="Ingrese el código" />
+              <FieldText
+                name="codigo"
+                value={form.codigo}
+                onChange={handleChange}
+                placeholder="Ej: 1155101"
+              />
             </div>
 
             <div>
-              <label htmlFor="creditos" className="block text-sm font-medium text-black mb-2">
+              <label className="block text-sm font-medium text-black mb-2">
                 Créditos
               </label>
-              <FieldText 
-                id="creditos" 
-                name="creditos" 
-                value={form.creditos} 
-                onChange={handleChange} 
-                placeholder="0" 
+              <FieldText
+                name="creditos"
                 type="number"
-                min="0"
-                style={{ 
-                  appearance: 'textfield',
-                  MozAppearance: 'textfield'
-                }}
-                onWheel={(e) => e.target.blur()}
-                onKeyDown={(e) => {
-                  // Prevenir teclas de incremento/decremento
-                  if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-                    e.preventDefault();
-                  }
-                }}
+                value={form.creditos}
+                onChange={handleChange}
+                placeholder="Ej: 4"
               />
             </div>
           </div>
 
-          {/* Segunda fila: Nombre y Tipo */}
+          {/* Nombre y Tipo */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label htmlFor="nombre" className="block text-sm font-medium text-black mb-2">
+              <label className="block text-sm font-medium text-black mb-2">
                 Nombre
               </label>
-              <FieldText id="nombre" name="nombre" value={form.nombre} onChange={handleChange} placeholder="Ingrese el nombre" />
+              <FieldText
+                name="nombre"
+                value={form.nombre}
+                onChange={handleChange}
+                placeholder="Ej: Análisis de Algoritmos"
+              />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-black mb-2">Tipo</label>
+              <label className="block text-sm font-medium text-black mb-2">
+                Tipo
+              </label>
               <SelectField
-                id="tipo"
-                name="tipo"
-                value={subjectTypes.find((t) => t.value === form.tipo) || null}
+                value={
+                  subjectTypes.find((t) => t.value === form.tipo) || null
+                }
                 onChange={handleSelectType}
                 options={subjectTypes}
-                placeholder="Seleccione el tipo"
+                isClearable={false}
               />
             </div>
           </div>
 
-          {/* Tercera fila: Prerrequisito (ancho completo) */}
+          {/* Semestre */}
           <div>
-            <label htmlFor="prerrequisitos" className="block text-sm font-medium text-black mb-2">
-              Prerrequisito
+            <label className="block text-sm font-medium text-black mb-2">
+              Semestre
             </label>
             <FieldText
-              id="prerrequisitos"
+              name="semestre"
+              value={form.semestre}
+              onChange={handleChange}
+              placeholder="Ej: 6"
+            />
+          </div>
+
+          {/* Prerrequisitos */}
+          <div>
+            <label className="block text-sm font-medium text-black mb-2">
+              Prerrequisitos
+            </label>
+            <FieldText
               name="prerrequisitos"
               value={form.prerrequisitos}
               onChange={handleChange}
@@ -219,27 +227,36 @@ const FormEditSubject = () => {
             />
           </div>
 
-          {/* Cuarta fila: Área del conocimiento (ancho completo) */}
+          {/* Área */}
           <div>
-            <label className="block text-sm font-medium text-black mb-2">Área del conocimiento</label>
+            <label className="block text-sm font-medium text-black mb-2">
+              Área del conocimiento
+            </label>
             <SelectField
-              id="id_area"
-              name="id_area"
-              value={areaOptions.find((o) => String(o.value) === String(form.id_area)) || null}
+              value={
+                areaOptions.find(
+                  (a) => String(a.value) === String(form.id_area)
+                ) || null
+              }
               onChange={handleSelectArea}
               options={areaOptions}
-              placeholder={isLoadingAreas ? "Cargando áreas..." : areaOptions.length === 0 ? "No hay áreas disponibles" : "Seleccione un área"}
               isClearable={true}
-              disabled={isLoadingAreas}
             />
-            {isLoadingAreas && <div className="text-sm text-gray-500 mt-1">Cargando áreas...</div>}
-            {!isLoadingAreas && areaOptions.length === 0 && <div className="text-sm text-red-500 mt-1">No se pudieron cargar las áreas</div>}
           </div>
 
           {/* Botones */}
           <div className="flex gap-4 justify-center pt-4">
-            <Button type="submit" text={isSubmitting ? "Actualizando..." : "Actualizar"} disabled={isSubmitting} />
-            <Button type="button" variant="secondary" text="Cancelar" onClick={() => navigate("/admin/subjects")} />
+            <Button
+              type="submit"
+              text={isSubmitting ? "Actualizando..." : "Actualizar"}
+              disabled={isSubmitting}
+            />
+            <Button
+              type="button"
+              variant="secondary"
+              text="Cancelar"
+              onClick={() => navigate("/admin/subjects")}
+            />
           </div>
         </form>
       </div>
@@ -248,4 +265,3 @@ const FormEditSubject = () => {
 };
 
 export default FormEditSubject;
-

@@ -1,5 +1,5 @@
 import React from "react";
-import { FiSettings, FiEdit } from "react-icons/fi";
+import { FiSettings } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 
 const gradientClasses = [
@@ -29,7 +29,8 @@ const SubjectCard = ({ subject, index = 0, onDetails, showSettings = true }) => 
             <button
               type="button"
               className="w-9 h-9 bg-white/25 hover:bg-white/35 rounded-full grid place-items-center text-white"
-              title="Opciones"
+              title="Editar materia"
+              onClick={handleEdit}
             >
               <FiSettings size={18} />
             </button>
@@ -60,15 +61,7 @@ const SubjectCard = ({ subject, index = 0, onDetails, showSettings = true }) => 
           </p>
         )}
 
-        <div className="pt-4 flex gap-2 justify-center">
-          <button
-            type="button"
-            className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2 rounded-md flex items-center gap-1"
-            onClick={handleEdit}
-          >
-            <FiEdit size={14} />
-            Editar
-          </button>
+        <div className="pt-4 flex justify-center">
           <button
             type="button"
             className="bg-red-600 hover:bg-red-700 text-white text-sm font-semibold px-4 py-2 rounded-md"
