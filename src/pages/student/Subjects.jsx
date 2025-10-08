@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import StudentLayout from "../../modules/student/layouts/StudentLayout";
 import { useNavigate } from "react-router-dom";
 import SubjectGrid from "../../modules/admin/components/SubjectGrid";
+import SubjectFilters from "../../components/ui/SubjectFilters";
+import useSubjectFilters from "../../hooks/useSubjectFilters";
 import { fetchSubjects } from "../../services/materiaServices";
 
 const StudentSubjects = () => {
@@ -9,6 +11,17 @@ const StudentSubjects = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
+  
+  // Hook para manejar filtros y búsqueda
+  const {
+    searchTerm,
+    filters,
+    filteredSubjects,
+    handleSearch,
+    handleApplyFilters,
+    clearAllFilters,
+    hasActiveFilters,
+  } = useSubjectFilters(subjects);
 
   const loadSubjects = async () => {
     setIsLoading(true);
@@ -30,20 +43,22 @@ const StudentSubjects = () => {
   return (
     <StudentLayout title="Materias">
       <div className="flex flex-col gap-4">
-        {/* Controles superiores (iguales visualmente que admin, sin botón crear) */}
-        <div className="flex flex-wrap gap-3 items-center">
-          <button className="px-4 py-2 rounded-full border border-gray-300 text-sm font-medium hover:bg-gray-100">
-            Todos
-          </button>
-          <input
-            type="text"
-            placeholder="Buscar por nombre o codigo"
-            className="flex-1 min-w-[240px] border border-gray-300 rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-300"
-          />
-          <button className="px-4 py-2 rounded-full border border-gray-300 text-sm font-medium hover:bg-gray-100">
-            Ordenar por nombre
-          </button>
-        </div>
+        {/* Componente de filtros */}
+        <SubjectFilters
+          onSearch={handleSearch}
+          onApplyFilters={handleApplyFilters}
+          onClearAll={clearAllFilters}
+          searchTerm={searchTerm}
+          filters={filters}
+          showCreateButton={false}
+        />
+
+        {/* Indicador de resultados */}
+        {hasActiveFilters && (
+          <div className="text-sm text-gray-600">
+            Mostrando {filteredSubjects.length} de {subjects.length} materias
+          </div>
+        )}
 
         {isLoading && (
           <div className="text-center text-gray-500 py-16">Cargando...</div>
@@ -53,7 +68,7 @@ const StudentSubjects = () => {
         )}
         {!isLoading && !error && (
           <SubjectGrid
-            subjects={subjects}
+            subjects={filteredSubjects}
             onDetails={(subject) => {
               const materia = { value: subject?.id_materia, label: subject?.nombre };
               navigate("/student/groups", { state: { materia } });
