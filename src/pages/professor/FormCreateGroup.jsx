@@ -2,48 +2,27 @@ import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import AdminLayout from "../../modules/admin/layouts/AdminLayout";
 import FieldText from "../../components/ui/FieldText";
-import SelectField from "../../components/ui/SelectField";
 import Button from "../../components/ui/Button";
-import { listarDocentes } from "../../services/userServices";
 import { generarClaveAcceso, crearGrupo } from "../../services/groupServices";
 import { useToast } from "../../hooks/useToast";
+import { useAuth } from "../../contexts/AuthContext";
 
 const FormCreateGroup = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const materiaState = location?.state?.materia || null;
   const { success, error: toastError } = useToast();
+  const { userData } = useAuth();
 
   const [formData, setFormData] = useState({
     name: materiaState?.label || "",
-    docente: null,
+    docenteName: "",
+    docenteId: null,
     groupName: "",
     accessKey: "",
   });
-  const [isLoading, setIsLoading] = useState(false);
-  const [docenteOptions, setDocenteOptions] = useState([]);
 
-  useEffect(() => {
-    const loadDocentes = async () => {
-      try {
-        const data = await listarDocentes();
-        const lista = data?.docentes || data?.usuarios || data || [];
-        const options = lista.map((d) => {
-          const raw = d.nombre || "";
-          const formatted = raw
-            .split(" ")
-            .filter(Boolean)
-            .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
-            .join(" ");
-          return { value: d.id_usuario, label: formatted };
-        });
-        setDocenteOptions(options);
-      } catch (err) {
-        console.error("Error al cargar docentes:", err);
-      }
-    };
-    loadDocentes();
-  }, []);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     const loadAccessKey = async () => {
@@ -58,18 +37,25 @@ const FormCreateGroup = () => {
     loadAccessKey();
   }, []);
 
+  useEffect(() => {
+    if (userData) {
+      const nombreCompleto =
+        `${userData.nombre || ""} ${userData.apellido || ""}`.trim() ||
+        userData.correo ||
+        "";
+      setFormData((prev) => ({
+        ...prev,
+        docenteName: nombreCompleto,
+        docenteId: userData.id_usuario,
+      }));
+    }
+  }, [userData]);
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
       [name]: value,
-    }));
-  };
-
-  const handleDocenteChange = (selectedOption) => {
-    setFormData((prev) => ({
-      ...prev,
-      docente: selectedOption,
     }));
   };
 
@@ -82,20 +68,32 @@ const FormCreateGroup = () => {
         nombre: formData.groupName,
         clave_acceso: formData.accessKey,
         id_materia: materiaState?.value,
-        id_docente: formData.docente?.value,
+        id_docente: formData.docenteId,
       };
+
       await crearGrupo(payload);
       success("Grupo creado correctamente");
+
+      const nombreCompleto = userData.nombre?.trim() || userData.correo || "";
       setFormData({
         name: materiaState?.label || "",
-        docente: null,
+        docenteName: nombreCompleto,
+        docenteId: userData.id_usuario,
         groupName: "",
         accessKey: "",
       });
+
       navigate("/professor/groups", { state: { materia: materiaState } });
     } catch (error) {
-      console.error("Error al registrar:", error);
-      toastError("Error al crear el grupo");
+      // Captura el mensaje que devuelve el backend
+      const backendMessage =
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        error.message ||
+        "Error desconocido";
+
+      // Muestra el mensaje completo
+      toastError(`No se puede crear el grupo: ${backendMessage}`);
     } finally {
       setIsLoading(false);
     }
@@ -119,27 +117,25 @@ const FormCreateGroup = () => {
               name="name"
               value={formData.name}
               onChange={handleInputChange}
-              placeholder="Ingrese el nombre de materia"
+              placeholder="Ingrese el nombre de la materia"
               disabled={!!materiaState}
             />
           </div>
 
-          {/*label con select de Docente */}
+          {/* Docente */}
           <div>
             <label
-              htmlFor="docente"
+              htmlFor="docenteName"
               className="block text-sm font-medium text-black mb-2"
             >
               Docente
             </label>
-            <SelectField
-              id="docente"
-              name="docente"
-              value={formData.docente}
-              onChange={handleDocenteChange}
-              options={docenteOptions}
-              placeholder="Seleccione un docente"
-              isClearable={true}
+            <FieldText
+              type="text"
+              id="docenteName"
+              name="docenteName"
+              value={formData.docenteName}
+              disabled
             />
           </div>
 
