@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
 import AdminLayout from "../../modules/admin/layouts/AdminLayout";
-import Button from "../../components/ui/Button";
 import { useNavigate } from "react-router-dom";
 import SubjectGrid from "../../modules/admin/components/SubjectGrid";
+import SubjectFilters from "../../components/ui/SubjectFilters";
+import useSubjectFilters from "../../hooks/useSubjectFilters";
 import { fetchSubjects } from "../../services/materiaServices";
 
 const Subjects = () => {
@@ -10,6 +11,17 @@ const Subjects = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
+  
+  // Hook para manejar filtros y búsqueda
+  const {
+    searchTerm,
+    filters,
+    filteredSubjects,
+    handleSearch,
+    handleApplyFilters,
+    clearAllFilters,
+    hasActiveFilters,
+  } = useSubjectFilters(subjects);
 
   const loadSubjects = async () => {
     setIsLoading(true);
@@ -31,25 +43,24 @@ const Subjects = () => {
   return (
     <AdminLayout title="Materias">
       <div className="flex flex-col gap-4">
-        <div className="flex justify-end">
-          <Button text="+ Crear Materias" onClick={() => navigate("/admin/subjects/create")} />
-        </div>
-        <hr className="border-gray-300" />
+        {/* Componente de filtros */}
+        <SubjectFilters
+          onSearch={handleSearch}
+          onApplyFilters={handleApplyFilters}
+          onClearAll={clearAllFilters}
+          searchTerm={searchTerm}
+          filters={filters}
+          showCreateButton={true}
+          onCreateClick={() => navigate("/admin/subjects/create")}
+          createButtonText="+ Crear Materias"
+        />
 
-        {/* Controles superiores (filtros/búsqueda) - visuales, sin lógica todavía */}
-        <div className="flex flex-wrap gap-3 items-center">
-          <button className="px-4 py-2 rounded-full border border-gray-300 text-sm font-medium hover:bg-gray-100">
-            Todos
-          </button>
-          <input
-            type="text"
-            placeholder="Buscar por nombre o codigo"
-            className="flex-1 min-w-[240px] border border-gray-300 rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-300"
-          />
-          <button className="px-4 py-2 rounded-full border border-gray-300 text-sm font-medium hover:bg-gray-100">
-            Ordenar por nombre
-          </button>
-        </div>
+        {/* Indicador de resultados */}
+        {hasActiveFilters && (
+          <div className="text-sm text-gray-600">
+            Mostrando {filteredSubjects.length} de {subjects.length} materias
+          </div>
+        )}
 
         {isLoading && (
           <div className="text-center text-gray-500 py-16">Cargando...</div>
@@ -59,7 +70,7 @@ const Subjects = () => {
         )}
         {!isLoading && !error && (
           <SubjectGrid
-            subjects={subjects}
+            subjects={filteredSubjects}
             onDetails={(subject) =>
               navigate("/admin/groups", {
                 state: {

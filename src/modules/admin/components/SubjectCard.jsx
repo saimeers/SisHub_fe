@@ -57,7 +57,7 @@ const SubjectCard = ({ subject, index = 0, onDetails, showSettings = true }) => 
         )}
         {subject?.id_area != null && (
           <p className="text-sm">
-            <span className="text-gray-500">Area Conocimiento:</span> {" "}{subject.id_area}
+            <span className="text-gray-500">Area Conocimiento:</span> {" "}{subject.Area.nombre}
           </p>
         )}
 
