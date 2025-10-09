@@ -73,7 +73,7 @@ const ProfessorSubjects = () => {
               const materia = { value: subject?.id_materia, label: subject?.nombre };
               navigate("/professor/groups", { state: { materia } });
             }}
-            showSettings={true}
+            showSettings={false}
           />
         )}
       </div>
@@ -82,5 +82,3 @@ const ProfessorSubjects = () => {
 };
 
 export default ProfessorSubjects;
-
-

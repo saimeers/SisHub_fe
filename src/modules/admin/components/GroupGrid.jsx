@@ -12,12 +12,12 @@ const GroupGrid = ({ groups = [], onQRCode }) => {
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-      {groups.map((group, idx) => (
+      {groups.map((group, index) => (
         <GroupCard
-          key={group.id_grupo ?? idx}
+          key={group.id_grupo ?? index}
           group={group}
-          index={idx}
-          onQRCode={onQRCode}
+          index={index}
+          onQRCode={onQRCode} 
         />
       ))}
     </div>

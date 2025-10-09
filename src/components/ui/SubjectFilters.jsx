@@ -1,16 +1,17 @@
 import React, { useState } from "react";
 import SearchBar from "./SearchBar";
 import FilterModal from "./FilterModal";
+import { FiFilter } from "react-icons/fi";
 
-const SubjectFilters = ({ 
-  onSearch, 
-  onApplyFilters, 
-  onClearAll, 
-  searchTerm = "", 
+const SubjectFilters = ({
+  onSearch,
+  onApplyFilters,
+  onClearAll,
+  searchTerm = "",
   filters = {},
   showCreateButton = false,
   onCreateClick,
-  createButtonText = "+ Crear Materias"
+  createButtonText = "+ Crear Materias",
 }) => {
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
 
@@ -48,11 +49,11 @@ const SubjectFilters = ({
         {/* Controles de filtros y búsqueda */}
         <div className="flex flex-wrap gap-3 items-center">
           {/* Botón "Todos" / "Limpiar filtros" */}
-          <button 
+          <button
             onClick={onClearAll}
             className={`px-4 py-2 rounded-full border text-sm font-medium transition-colors ${
-              hasActiveFilters 
-                ? "border-red-300 text-red-600 hover:bg-red-50" 
+              hasActiveFilters
+                ? "border-green-300 text-green-600 hover:bg-green-50"
                 : "border-gray-300 text-gray-700 hover:bg-gray-100"
             }`}
           >
@@ -67,18 +68,18 @@ const SubjectFilters = ({
           />
 
           {/* Botón de filtros */}
-          <button 
+          <button
             onClick={handleOpenFilters}
             className={`px-4 py-2 rounded-full border text-sm font-medium transition-colors ${
-              hasActiveFilters 
-                ? "border-red-300 text-red-600 hover:bg-red-50" 
+              hasActiveFilters
+                ? "border-green-300 text-green-600 hover:bg-green-50"
                 : "border-gray-300 text-gray-700 hover:bg-gray-100"
             }`}
           >
             Filtros
             {hasActiveFilters && (
-              <span className="ml-1 inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-600 rounded-full">
-                !
+              <span className="ml-1 inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-green">
+                <FiFilter className="text-base" />
               </span>
             )}
           </button>
