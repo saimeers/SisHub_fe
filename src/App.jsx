@@ -24,7 +24,7 @@ import GroupsProfessor from "./pages/professor/Groups";
 import DashboardProfessor from "./pages/professor/Dashboard";
 import CreateGroupProfessor from "./pages/professor/FormCreateGroup";
 import SubjectsProfessor from "./pages/professor/Subjects";
-import AllGroupsProfessor from "./pages/professor/AllGroups";
+import MyGroupsProfessor from "./pages/professor/MyGroups";
 import GroupDetailProfessor from "./pages/professor/GroupDetail";
 
 // estudiante
@@ -98,7 +98,7 @@ function App() {
           >
             <Route path="dashboard" element={<DashboardProfessor />} />
             <Route path="groups" element={<GroupsProfessor />} />
-            <Route path="all-groups" element={<AllGroupsProfessor />} />
+            <Route path="my-groups" element={<MyGroupsProfessor />} />
             <Route path="create-group" element={<CreateGroupProfessor />} />
             <Route path="subjects" element={<SubjectsProfessor />} />
             <Route path="groups/:id" element={<GroupDetailProfessor />} />

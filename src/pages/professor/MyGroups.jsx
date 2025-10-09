@@ -1,17 +1,20 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import ProfessorLayout from "../../modules/professor/layouts/ProfessorLayout";
 import { useNavigate } from "react-router-dom";
-import GroupGrid from "../../modules/admin/components/GroupGrid";
+import GroupGrid from "../../modules/professor/components/GroupGrid";
 import GroupFilters from "../../components/ui/GroupFilters";
 import useGroupFilters from "../../hooks/useGroupFilters";
 import {
   listarGruposPorUsuario,
   obtenerClaveYCodigoQR,
+  actualizarEstado,
 } from "../../services/groupServices";
 import { useAuth } from "../../contexts/AuthContext";
 import GroupAccessModal from "../../components/ui/GroupAccessModal";
+import ConfirmModal from "../../components/ui/ConfirmModal";
+import { useToast } from "../../hooks/useToast";
 
-const AllGroups = () => {
+const MyGroups = () => {
   const [groups, setGroups] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -19,9 +22,18 @@ const AllGroups = () => {
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [qrData, setQrData] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [showEstadoConfirm, setShowEstadoConfirm] = useState(false);
+  const confirmResolveRef = useRef(null);
+  const [isProcessingConfirm, setIsProcessingConfirm] = useState(false);
+  const [confirmConfig, setConfirmConfig] = useState({
+    title: "Confirmar",
+    message: "¿Estás seguro?",
+    confirmText: "Confirmar",
+  });
 
   const navigate = useNavigate();
   const { userData } = useAuth();
+  const { success: toastSuccess, error: toastError } = useToast();
 
   const {
     searchTerm,
@@ -33,17 +45,16 @@ const AllGroups = () => {
     hasActiveFilters,
   } = useGroupFilters(groups);
 
+  // Cargar los grupos del profesor
   useEffect(() => {
     const loadGroups = async () => {
-      if (!userData?.id_usuario) {
-        return;
-      }
+      if (!userData?.id_usuario) return;
 
       setIsLoading(true);
       setError("");
       try {
         const list = await listarGruposPorUsuario(userData.id_usuario);
-        console.log("Grupos del profesor:", list); // Para debugging
+        console.log("Grupos del profesor:", list);
         setGroups(Array.isArray(list) ? list : []);
       } catch (err) {
         console.error("Error al cargar grupos:", err);
@@ -57,11 +68,11 @@ const AllGroups = () => {
     loadGroups();
   }, [userData]);
 
+  // Manejar apertura del QR
   const handleOpenQRCode = async (group) => {
     try {
       const response = await obtenerClaveYCodigoQR(group.id_grupo);
 
-      // Generamos la URL de destino del QR (por ejemplo, una ruta para unirse al grupo)
       const joinUrl = `https://sishub.vercel.app/join-group/${
         response?.clave_acceso || group.clave_acceso
       }`;
@@ -76,6 +87,54 @@ const AllGroups = () => {
     } catch (error) {
       console.error("Error al obtener QR:", error);
       alert("No se pudo obtener la clave de acceso.");
+    }
+  };
+
+  // Solicitar confirmación (habilitar o deshabilitar) desde las cards
+  const requestConfirmEstado = ({ title, message, confirmText }) => {
+    return new Promise((resolve) => {
+      confirmResolveRef.current = resolve;
+      setConfirmConfig({ title, message, confirmText });
+      setShowEstadoConfirm(true);
+    });
+  };
+
+  const handleConfirmEstado = () => {
+    setIsProcessingConfirm(true);
+    setShowEstadoConfirm(false);
+    setIsProcessingConfirm(false);
+    if (confirmResolveRef.current) {
+      confirmResolveRef.current(true);
+      confirmResolveRef.current = null;
+    }
+  };
+
+  const handleCancelEstado = () => {
+    setShowEstadoConfirm(false);
+    if (confirmResolveRef.current) {
+      confirmResolveRef.current(false);
+      confirmResolveRef.current = null;
+    }
+  };
+
+  const handleEstadoActualizado = async (id_grupo, nuevoEstado) => {
+    try {
+      // nuevoEstado ya viene como número (1 o 0)
+      await actualizarEstado(id_grupo, nuevoEstado);
+      setGroups((prev) =>
+        prev.map((g) =>
+          g.id_grupo === id_grupo ? { ...g, estado: nuevoEstado } : g
+        )
+      );
+
+      const updated = groups.find((g) => g.id_grupo === id_grupo);
+      const nombre =
+        updated?.nombre_grupo || updated?.nombre || `ID ${id_grupo}`;
+      const estadoTexto = nuevoEstado === 1 ? "habilitado" : "deshabilitado";
+      toastSuccess(`Grupo ${nombre} ${estadoTexto} correctamente`);
+    } catch (error) {
+      alert("❌ No se pudo actualizar el estado del grupo");
+      toastError("No se pudo actualizar el estado del grupo");
     }
   };
 
@@ -152,29 +211,44 @@ const AllGroups = () => {
           </div>
         )}
 
+        {/* Sin grupos */}
         {!isLoading && !error && groups.length === 0 && (
           <div className="text-center text-gray-500 py-16">
             No tienes grupos asignados aún
           </div>
         )}
 
+        {/* Mostrar grupos */}
         {!isLoading && !error && groups.length > 0 && (
           <GroupGrid
             groups={filteredGroups}
             onQRCode={handleOpenQRCode}
             role="professor"
+            onEstadoActualizado={handleEstadoActualizado} // 👈 se pasa para actualizar estado
+            requestConfirmEstado={requestConfirmEstado}
           />
         )}
       </div>
 
+      {/* Modal QR */}
       <GroupAccessModal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={closeModal}
         group={selectedGroup}
         qrData={qrData}
+      />
+      <ConfirmModal
+        isOpen={showEstadoConfirm}
+        title={confirmConfig.title}
+        message={confirmConfig.message}
+        confirmText={confirmConfig.confirmText}
+        cancelText="Cancelar"
+        onConfirm={handleConfirmEstado}
+        onCancel={handleCancelEstado}
+        loading={isProcessingConfirm}
       />
     </ProfessorLayout>
   );
 };
 
-export default AllGroups;
+export default MyGroups;
