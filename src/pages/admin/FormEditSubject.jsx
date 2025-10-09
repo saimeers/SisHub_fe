@@ -68,7 +68,8 @@ const FormEditSubject = () => {
     };
 
     loadData();
-  }, [id, error]);
+  }, [id]); // ← solo depende del id
+
 
 
   const areaOptions = useMemo(
