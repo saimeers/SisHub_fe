@@ -11,7 +11,6 @@ const RolFilter = ({ value, onChange }) => {
         <option value="Todos">Todos los roles</option>
         <option value="ESTUDIANTE">Estudiante</option>
         <option value="DOCENTE">Docente</option>
-        <option value="ADMIN">Admin</option>
       </select>
       <svg
         className="absolute right-2.5 md:right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 md:w-5 md:h-5 text-gray-600 pointer-events-none"
