@@ -84,7 +84,8 @@ export const listarGruposHabilitadosPorMateria = async (id_materia) => {
 
 export const listarGruposPorUsuario = async (id_usuario) => {
   try {
-    const response = await axiosInstance.get(`${GROUPS_BASE}/usuario/${id_usuario}`);
+    const response = await axiosInstance.get(`/grupos/usuario/${id_usuario}`);
+    // console.log("Backend grupos por usuario:", response.data); // Puedes agregar esto para depurar
     return response.data;
   } catch (error) {
     console.error("Error al obtener grupos por usuario:", error);
