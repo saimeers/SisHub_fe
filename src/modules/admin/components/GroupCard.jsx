@@ -23,7 +23,7 @@ const GroupCard = ({ group, index = 0, onQRCode }) => {
 
   return (
     <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow overflow-hidden hover:scale-[1.02] transition-all duration-300 ease-in-out">
-      <div className={`bg-gradient-to-r ${gradient} px-6 py-6 text-white`}> 
+      <div className={`bg-gradient-to-r ${gradient} px-6 py-6 text-white`}>
         <div className="flex items-start justify-between">
           <h3 className="text-2xl font-extrabold drop-shadow-sm">
             {group?.nombre_materia || group?.nombre}
@@ -34,7 +34,7 @@ const GroupCard = ({ group, index = 0, onQRCode }) => {
       <div className="px-6 py-5 text-gray-700">
         <div className="flex items-center justify-between mb-4">
           <p className="text-sm font-semibold text-gray-800">
-            {group?.nombre_grupo || group?.nombre} - {group?.periodo || "2025"} - {group?.seccion || "A"}
+            {group?.nombre_grupo || group?.nombre}
           </p>
           <button
             type="button"
@@ -48,19 +48,24 @@ const GroupCard = ({ group, index = 0, onQRCode }) => {
 
         <div className="space-y-2">
           <p className="text-sm">
-            <span className="text-gray-500">Código:</span> <span className="font-semibold">{group?.codigo_materia || group?.codigo}</span>
+            <span className="text-gray-500">Código:</span>{" "}
+            <span className="font-semibold">
+              {group?.codigo_materia || group?.codigo}
+            </span>
           </p>
           <p className="text-sm">
             <span className="text-gray-500">Créditos:</span> {group?.creditos}
           </p>
           {group?.prerrequisitos && (
             <p className="text-sm">
-              <span className="text-gray-500">Prerrequisito:</span> {group.prerrequisitos}
+              <span className="text-gray-500">Prerrequisito:</span>{" "}
+              {group.prerrequisitos}
             </p>
           )}
           {group?.area_conocimiento && (
             <p className="text-sm">
-              <span className="text-gray-500">Área Conocimiento:</span> {group.area_conocimiento}
+              <span className="text-gray-500">Área Conocimiento:</span>{" "}
+              {group.area_conocimiento}
             </p>
           )}
         </div>
