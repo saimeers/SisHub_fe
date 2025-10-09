@@ -73,9 +73,7 @@ const Dashboard = () => {
   };
 
   const filteredUsers = users.filter((user) => {
-    const matchesSearch = user.nombre
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase());
+    const matchesSearch = user.nombre.includes(searchTerm) || user.correo.includes(searchTerm);
     const matchesRol = selectedRol === "Todos" || user.rol === selectedRol;
     const matchesEstado =
       selectedEstado === "Todos" || user.estado === selectedEstado;

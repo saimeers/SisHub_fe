@@ -11,6 +11,7 @@ import { useNavigate } from "react-router-dom";
 const initialForm = {
   codigo: "",
   nombre: "",
+  semestre: "",
   creditos: "",
   prerrequisitos: "",
   tipo: "Obligatoria",
@@ -43,7 +44,15 @@ const FormCreateSubject = () => {
         setIsLoadingAreas(false);
         
       } catch (err) {
-        error(err?.message || "Error al cargar áreas");
+        console.warn("No se pudieron cargar las áreas:", err);
+        // Usar datos mock para áreas mientras se resuelve el endpoint
+        const mockAreas = [
+          { id_area: 1, nombre: "Ciencias Básicas" },
+          { id_area: 2, nombre: "Ingeniería Aplicada" },
+          { id_area: 3, nombre: "Formación Complementaria" },
+          { id_area: 4, nombre: "Ciencias Básicas en Ingeniería" }
+        ];
+        setAreas(mockAreas);
         setIsLoadingAreas(false);
       }
     };
@@ -67,7 +76,20 @@ const FormCreateSubject = () => {
       if (value === '' || (numericValue >= 0 && !isNaN(numericValue))) {
         setForm((f) => ({ ...f, [name]: value }));
       }
-    } else {
+    } 
+    // Validación especial para código - solo números
+    else if (name === 'codigo') {
+      if (value === '' || /^\d+$/.test(value)) {
+        setForm((f) => ({ ...f, [name]: value }));
+      }
+    }
+    // Validación especial para semestre - solo números
+    else if (name === 'semestre') {
+      if (value === '' || /^\d+$/.test(value)) {
+        setForm((f) => ({ ...f, [name]: value }));
+      }
+    } 
+    else {
       setForm((f) => ({ ...f, [name]: value }));
     }
   };
@@ -81,7 +103,7 @@ const FormCreateSubject = () => {
   };
 
   const validate = () => {
-    if (!form.codigo || !form.nombre || !form.tipo) return "Complete los campos requeridos";
+    if (!form.codigo || !form.nombre || !form.semestre || !form.tipo) return "Complete los campos requeridos";
     const creditosNum = Number(form.creditos);
     if (!Number.isFinite(creditosNum) || creditosNum <= 0) return "Créditos debe ser numérico y mayor a 0";
     if (!form.id_area) return "Seleccione un área";
@@ -97,6 +119,7 @@ const FormCreateSubject = () => {
       const payload = {
         codigo: String(form.codigo).trim(),
         nombre: String(form.nombre).trim(),
+        semestre: String(form.semestre).trim(),
         creditos: Number(form.creditos),
         prerrequisitos: form.prerrequisitos ? String(form.prerrequisitos).trim() : "Ninguno",
         tipo: form.tipo,
@@ -122,7 +145,16 @@ const FormCreateSubject = () => {
               <label htmlFor="codigo" className="block text-sm font-medium text-black mb-2">
                 Código
               </label>
-              <FieldText id="codigo" name="codigo" value={form.codigo} onChange={handleChange} placeholder="Ingrese el código" />
+              <FieldText 
+                id="codigo" 
+                name="codigo" 
+                value={form.codigo} 
+                onChange={handleChange} 
+                placeholder="Ej: 1155101" 
+                type="text"
+                pattern="[0-9]*"
+                inputMode="numeric"
+              />
             </div>
 
             <div>
@@ -174,7 +206,25 @@ const FormCreateSubject = () => {
             </div>
           </div>
 
-          {/* Tercera fila: Prerrequisito (ancho completo) */}
+          {/* Tercera fila: Semestre (ancho completo) */}
+          <div>
+            <label htmlFor="semestre" className="block text-sm font-medium text-black mb-2">
+              Semestre
+            </label>
+            <FieldText
+              id="semestre"
+              name="semestre"
+              value={form.semestre}
+              onChange={handleChange}
+              placeholder="Ej: 3 o 10"
+              maxLength="2"
+              type="text"
+              pattern="[0-9]*"
+              inputMode="numeric"
+            />
+          </div>
+
+          {/* Cuarta fila: Prerrequisito (ancho completo) */}
           <div>
             <label htmlFor="prerrequisitos" className="block text-sm font-medium text-black mb-2">
               Prerrequisito
@@ -188,7 +238,7 @@ const FormCreateSubject = () => {
             />
           </div>
 
-          {/* Cuarta fila: Área del conocimiento (ancho completo) */}
+          {/* Quinta fila: Área del conocimiento (ancho completo) */}
           <div>
             <label className="block text-sm font-medium text-black mb-2">Área del conocimiento</label>
             <SelectField

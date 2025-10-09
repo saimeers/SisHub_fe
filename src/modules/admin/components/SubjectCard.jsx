@@ -1,5 +1,6 @@
 import React from "react";
 import { FiSettings } from "react-icons/fi";
+import { useNavigate } from "react-router-dom";
 
 const gradientClasses = [
   "from-purple-500 to-indigo-500",
@@ -11,6 +12,11 @@ const gradientClasses = [
 
 const SubjectCard = ({ subject, index = 0, onDetails, showSettings = true }) => {
   const gradient = gradientClasses[index % gradientClasses.length];
+  const navigate = useNavigate();
+
+  const handleEdit = () => {
+    navigate(`/admin/subjects/edit/${subject.id_materia}`);
+  };
 
   return (
     <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow overflow-hidden hover:scale-[1.02] transition-all duration-300 ease-in-out">
@@ -23,7 +29,8 @@ const SubjectCard = ({ subject, index = 0, onDetails, showSettings = true }) => 
             <button
               type="button"
               className="w-9 h-9 bg-white/25 hover:bg-white/35 rounded-full grid place-items-center text-white"
-              title="Opciones"
+              title="Editar materia"
+              onClick={handleEdit}
             >
               <FiSettings size={18} />
             </button>
@@ -50,7 +57,7 @@ const SubjectCard = ({ subject, index = 0, onDetails, showSettings = true }) => 
         )}
         {subject?.id_area != null && (
           <p className="text-sm">
-            <span className="text-gray-500">Area Conocimiento:</span> {" "}{subject.id_area}
+            <span className="text-gray-500">Area Conocimiento:</span> {" "}{subject.Area.nombre}
           </p>
         )}
 

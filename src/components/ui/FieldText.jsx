@@ -1,6 +1,6 @@
 import React from "react";
 
-const FieldText = ({ type, id, name, onChange, onWheel, onKeyDown, value, placeholder, disabled, maxLength, style, min }) => {
+const FieldText = ({ type, id, name, onChange, onWheel, onKeyDown, value, placeholder, disabled, maxLength, style, min, pattern, inputMode }) => {
   return (
     <input
       className="p-3 rounded-md bg-gray-100 w-full focus:outline-none focus:ring-2 focus:ring-[#C03030]"
@@ -15,6 +15,8 @@ const FieldText = ({ type, id, name, onChange, onWheel, onKeyDown, value, placeh
       disabled={disabled}
       maxLength={maxLength}
       min={min}
+      pattern={pattern}
+      inputMode={inputMode}
       style={style}
     />
   );
