@@ -1,6 +1,11 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { signOutAccount, signInWithGoogle, signInWithEmail, deleteCurrentUser } from "../../../services/authService";
+import {
+  signOutAccount,
+  signInWithGoogle,
+  signInWithEmail,
+  deleteCurrentUser
+} from "../../../services/authService";
 import { obtenerUsuario } from "../../../services/userServices";
 import { getAuthErrorMessage } from "../utils/authErrorHandler";
 import { isEmailDomainAllowed } from "../utils/emailValidator";
@@ -13,7 +18,7 @@ export const useAuth = () => {
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
 
-  const ALLOWED_DOMAINS = ['ufps.edu.co'];
+  const ALLOWED_DOMAINS = ["ufps.edu.co"];
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -60,9 +65,47 @@ export const useAuth = () => {
       return false;
     }
 
-    toast.success(`¡Bienvenido ${formatShortName(userName) || ''}!`);
+    toast.success(`¡Bienvenido ${formatShortName(userName) || ""}!`);
     navigate(`/${usuario.Rol.descripcion.toLowerCase()}/dashboard`);
     return true;
+  };
+
+  // ✅ Nueva versión robusta
+  const validarYRedirigirUsuario = async (user, token) => {
+    saveUserData(user, token);
+
+    try {
+      const res = await obtenerUsuario();
+      console.log("🔍 obtenerUsuario:", res);
+
+      // Detecta el usuario independientemente de la estructura del backend
+      const usuario =
+        res?.data?.usuario ||
+        res?.data ||
+        res?.usuario ||
+        res;
+
+      // Solo continúa si el usuario realmente existe
+      if (usuario && (usuario.id || usuario.IdUsuario || usuario.Rol)) {
+        verificarEstadoUsuario(usuario, user.displayName);
+      } else {
+        toast.warning("Debes completar tu registro antes de continuar.");
+        navigate("/signup");
+      }
+    } catch (error) {
+      console.error("Error al obtener usuario:", error);
+
+      // Si la API devuelve 404, significa que el usuario no está registrado
+      if (error.response?.status === 404) {
+        toast.warning("Debes completar tu registro antes de continuar.");
+        navigate("/signup");
+      } else {
+        toast.error("Error al validar tu cuenta. Intenta de nuevo.");
+        await signOutAccount();
+        localStorage.clear();
+        navigate("/login");
+      }
+    }
   };
 
   const handleEmailLogin = async (e) => {
@@ -77,31 +120,14 @@ export const useAuth = () => {
 
       if (!isEmailDomainAllowed(user.email, ALLOWED_DOMAINS)) {
         await deleteCurrentUser();
-        toast.warning(
-          `Solo se permiten correos institucionales.`,
-          { autoClose: 5000 }
-        );
+        toast.warning(`Solo se permiten correos institucionales.`, {
+          autoClose: 5000,
+        });
         setLoading(false);
         return;
       }
 
-      saveUserData(user, token);
-
-      try {
-        const usuario = await obtenerUsuario();
-
-        if (usuario) {
-          verificarEstadoUsuario(usuario, user.displayName);
-        } else {
-          toast.warning("Debes completar tu registro antes de continuar.");
-          navigate("/signup");
-        }
-      } catch (error) {
-        console.error("Error al obtener usuario:", error);
-        toast.warning("Debes completar tu registro antes de continuar.");
-        navigate("/signup");
-      }
-
+      await validarYRedirigirUsuario(user, token);
     } catch (err) {
       localStorage.clear();
       console.error("Error login:", err);
@@ -119,31 +145,14 @@ export const useAuth = () => {
 
       if (!isEmailDomainAllowed(user.email, ALLOWED_DOMAINS)) {
         await deleteCurrentUser();
-        toast.warning(
-          `Solo se permiten correos institucionales.`,
-          { autoClose: 5000 }
-        );
+        toast.warning(`Solo se permiten correos institucionales.`, {
+          autoClose: 5000,
+        });
         setLoading(false);
         return;
       }
 
-      saveUserData(user, token);
-
-      try {
-        const usuario = await obtenerUsuario();
-
-        if (usuario) {
-          verificarEstadoUsuario(usuario, user.displayName);
-        } else {
-          toast.warning("Debes completar tu registro antes de continuar.");
-          navigate("/signup");
-        }
-      } catch (error) {
-        console.error("Error al obtener usuario:", error);
-        toast.warning("Debes completar tu registro antes de continuar.");
-        navigate("/signup");
-      }
-
+      await validarYRedirigirUsuario(user, token);
     } catch (err) {
       console.error("Error Google login:", err);
       toast.error(getAuthErrorMessage(err.code));
@@ -155,7 +164,11 @@ export const useAuth = () => {
   const handleSignOut = async () => {
     try {
       const userName = localStorage.getItem("userName") || "";
-      toast.success(`¡Hasta luego${formatShortName(userName) ? ' ' + formatShortName(userName) : ''}!`);
+      toast.success(
+        `¡Hasta luego${
+          formatShortName(userName) ? " " + formatShortName(userName) : ""
+        }!`
+      );
 
       await signOutAccount();
       localStorage.clear();
