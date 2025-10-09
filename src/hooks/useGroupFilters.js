@@ -16,10 +16,16 @@ const useGroupFilters = (groups = []) => {
       const searchLower = searchTerm.toLowerCase().trim();
       filtered = filtered.filter((group) => {
         const nombreMateria = group.nombre_materia?.toLowerCase() || "";
-        const nombreGrupo = group.nombre_grupo?.toLowerCase() || group.nombre?.toLowerCase() || "";
-        const codigo = group.codigo_materia?.toLowerCase() || group.codigo?.toLowerCase() || "";
+        const nombreGrupo =
+          group.nombre_grupo?.toLowerCase() ||
+          group.nombre?.toLowerCase() ||
+          "";
+        const codigo =
+          group.codigo_materia?.toLowerCase() ||
+          group.codigo?.toLowerCase() ||
+          "";
         const docente = group.docente?.toLowerCase() || "";
-        
+
         return (
           nombreMateria.includes(searchLower) ||
           nombreGrupo.includes(searchLower) ||
@@ -40,8 +46,10 @@ const useGroupFilters = (groups = []) => {
     // Aplicar filtro por área
     if (filters.area) {
       filtered = filtered.filter((group) => {
-        const areaConocimiento = group.area_conocimiento?.toLowerCase() || "";
-        return areaConocimiento.includes(filters.area.toLowerCase());
+        const areaConocimiento = String(
+          group.area_conocimiento || ""
+        ).toLowerCase();
+        return areaConocimiento.includes(String(filters.area).toLowerCase());
       });
     }
 
@@ -92,13 +100,13 @@ const useGroupFilters = (groups = []) => {
     searchTerm,
     filters,
     filteredGroups,
-    
+
     // Funciones
     handleSearch,
     handleApplyFilters,
     clearAllFilters,
     clearFilters,
-    
+
     // Información
     hasActiveFilters,
     activeFiltersCount: getActiveFiltersCount(),

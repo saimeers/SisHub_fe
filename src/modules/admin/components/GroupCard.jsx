@@ -1,5 +1,6 @@
 import React from "react";
 import { FiKey } from "react-icons/fi";
+import { useNavigate } from "react-router-dom";
 
 const gradientClasses = [
   "from-purple-500 to-indigo-500",
@@ -12,21 +13,31 @@ const gradientClasses = [
   "from-amber-500 to-yellow-600",
 ];
 
-const GroupCard = ({ group, index = 0, onQRCode }) => {
+const GroupCard = ({ group, index = 0, onQRCode, showQRButton = true, role = "admin" }) => {
+  const navigate = useNavigate();
   const gradient = gradientClasses[index % gradientClasses.length];
 
-  const handleQRCode = () => {
+  const handleQRCode = (e) => {
+    e.stopPropagation(); // evita que al hacer click en el ícono también navegue
     if (onQRCode) {
       onQRCode(group);
     }
   };
 
+  const handleClick = () => {
+    const basePath = role === "admin" ? "/admin" : role === "professor" ? "/professor" : "/student";
+    navigate(`${basePath}/groups/${group.id_grupo}`);
+  };
+
   return (
-    <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow overflow-hidden hover:scale-[1.02] transition-all duration-300 ease-in-out">
+    <div
+      onClick={handleClick}
+      className="cursor-pointer bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow overflow-hidden hover:scale-[1.02] transition-all duration-300 ease-in-out"
+    >
       <div className={`bg-gradient-to-r ${gradient} px-6 py-6 text-white`}>
         <div className="flex items-start justify-between">
-          <h3 className="text-2xl font-extrabold drop-shadow-sm">
-            {group?.nombre_materia || group?.nombre}
+          <h3 className="text-2xl font-extrabold drop-shadow-sm text-center">
+            {group?.nombre_materia}
           </h3>
         </div>
       </div>
@@ -36,14 +47,16 @@ const GroupCard = ({ group, index = 0, onQRCode }) => {
           <p className="text-sm font-semibold text-gray-800">
             {group?.nombre_grupo || group?.nombre}
           </p>
-          <button
-            type="button"
-            className="text-gray-600 hover:text-gray-800 transition-colors"
-            onClick={handleQRCode}
-            title="Generar código QR"
-          >
-            <FiKey size={16} />
-          </button>
+          {showQRButton && (
+            <button
+              type="button"
+              className="text-gray-600 hover:text-gray-800 transition-colors"
+              onClick={handleQRCode}
+              title="Generar código QR"
+            >
+              <FiKey size={16} />
+            </button>
+          )}
         </div>
 
         <div className="space-y-2">

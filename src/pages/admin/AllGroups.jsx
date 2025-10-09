@@ -103,7 +103,7 @@ const AllGroups = () => {
 
         {/* Grilla */}
         {!isLoading && !error && (
-          <GroupGrid groups={filteredGroups} onQRCode={handleOpenQRCode} />
+          <GroupGrid groups={filteredGroups} onQRCode={handleOpenQRCode} role="admin" />
         )}
       </div>
 
