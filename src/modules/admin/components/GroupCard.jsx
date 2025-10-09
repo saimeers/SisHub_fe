@@ -35,8 +35,8 @@ const GroupCard = ({ group, index = 0, onQRCode, showQRButton = true }) => {
     >
       <div className={`bg-gradient-to-r ${gradient} px-6 py-6 text-white`}>
         <div className="flex items-start justify-between">
-          <h3 className="text-2xl font-extrabold drop-shadow-sm">
-            {group?.nombre_materia || group?.nombre}
+          <h3 className="text-2xl font-extrabold drop-shadow-sm text-center">
+            {group?.nombre_materia}
           </h3>
         </div>
       </div>
@@ -44,8 +44,7 @@ const GroupCard = ({ group, index = 0, onQRCode, showQRButton = true }) => {
       <div className="px-6 py-5 text-gray-700">
         <div className="flex items-center justify-between mb-4">
           <p className="text-sm font-semibold text-gray-800">
-            {group?.nombre_grupo || group?.nombre} - {group?.periodo || "2025"} -{" "}
-            {group?.seccion || "A"}
+            {group?.nombre_grupo || group?.nombre}
           </p>
           {showQRButton && (
             <button
