@@ -1,0 +1,72 @@
+import React from "react";
+import { FiKey } from "react-icons/fi";
+
+const gradientClasses = [
+  "from-purple-500 to-indigo-500",
+  "from-teal-400 to-cyan-500",
+  "from-pink-500 to-rose-500",
+  "from-yellow-400 to-orange-400",
+  "from-sky-500 to-blue-600",
+  "from-emerald-500 to-teal-600",
+  "from-violet-500 to-purple-600",
+  "from-amber-500 to-yellow-600",
+];
+
+const GroupCard = ({ group, index = 0, onQRCode }) => {
+  const gradient = gradientClasses[index % gradientClasses.length];
+
+  const handleQRCode = () => {
+    if (onQRCode) {
+      onQRCode(group);
+    }
+  };
+
+  return (
+    <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow overflow-hidden hover:scale-[1.02] transition-all duration-300 ease-in-out">
+      <div className={`bg-gradient-to-r ${gradient} px-6 py-6 text-white`}> 
+        <div className="flex items-start justify-between">
+          <h3 className="text-2xl font-extrabold drop-shadow-sm">
+            {group?.nombre_materia || group?.nombre}
+          </h3>
+        </div>
+      </div>
+
+      <div className="px-6 py-5 text-gray-700">
+        <div className="flex items-center justify-between mb-4">
+          <p className="text-sm font-semibold text-gray-800">
+            {group?.nombre_grupo || group?.nombre} - {group?.periodo || "2025"} - {group?.seccion || "A"}
+          </p>
+          <button
+            type="button"
+            className="text-gray-600 hover:text-gray-800 transition-colors"
+            onClick={handleQRCode}
+            title="Generar código QR"
+          >
+            <FiKey size={16} />
+          </button>
+        </div>
+
+        <div className="space-y-2">
+          <p className="text-sm">
+            <span className="text-gray-500">Código:</span> <span className="font-semibold">{group?.codigo_materia || group?.codigo}</span>
+          </p>
+          <p className="text-sm">
+            <span className="text-gray-500">Créditos:</span> {group?.creditos}
+          </p>
+          {group?.prerrequisitos && (
+            <p className="text-sm">
+              <span className="text-gray-500">Prerrequisito:</span> {group.prerrequisitos}
+            </p>
+          )}
+          {group?.area_conocimiento && (
+            <p className="text-sm">
+              <span className="text-gray-500">Área Conocimiento:</span> {group.area_conocimiento}
+            </p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default GroupCard;

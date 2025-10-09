@@ -4,8 +4,8 @@ const GROUPS_BASE = "/grupos";
 
 export const obtenerGrupos = async () => {
   try {
-    console.warn("No hay ruta para obtener todos los grupos en el backend");
-    return [];
+    const response = await axiosInstance.get(`${GROUPS_BASE}/`);
+    return response.data;
   } catch (error) {
     console.error("Error al obtener grupos:", error);
     throw error;
