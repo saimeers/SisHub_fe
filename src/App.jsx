@@ -17,17 +17,20 @@ import CreateGroupAdmin from "./pages/admin/FormCreateGroup";
 import SubjectsAdmin from "./pages/admin/Subjects";
 import FormCreateSubject from "./pages/admin/FormCreateSubject";
 import FormEditSubject from "./pages/admin/FormEditSubject";
+import GroupDetail from "./pages/admin/GroupDetail";
 
 // docente
 import GroupsProfessor from "./pages/professor/Groups";
 import DashboardProfessor from "./pages/professor/Dashboard";
 import CreateGroupProfessor from "./pages/professor/FormCreateGroup";
 import SubjectsProfessor from "./pages/professor/Subjects";
+import GroupDetailProfessor from "./pages/professor/GroupDetail";
 
 // estudiante
 import DashboardStudent from "./pages/student/Dashboard";
 import GroupsStudent from "./pages/student/Groups";
 import SubjectsStudent from "./pages/student/Subjects";
+import GroupDetailStudent from "./pages/student/GroupDetail";
 
 // stand by
 import CuentaPendiente from "./pages/standby/CuentaPendiente";
@@ -83,6 +86,7 @@ function App() {
             <Route path="subjects" element={<SubjectsAdmin />} />
             <Route path="subjects/create" element={<FormCreateSubject />} />
             <Route path="subjects/edit/:id" element={<FormEditSubject />} />
+            <Route path="groups/:id" element={<GroupDetail />} />
           </Route>
 
           {/* ==================== RUTAS DOCENTE ==================== */}
@@ -94,6 +98,7 @@ function App() {
             <Route path="groups" element={<GroupsProfessor />} />
             <Route path="create-group" element={<CreateGroupProfessor />} />
             <Route path="subjects" element={<SubjectsProfessor />} />
+            <Route path="groups/:id" element={<GroupDetailProfessor />} />
           </Route>
 
           {/* ==================== RUTAS ESTUDIANTE ==================== */}
@@ -104,6 +109,7 @@ function App() {
             <Route path="dashboard" element={<DashboardStudent />} />
             <Route path="groups" element={<GroupsStudent />} />
             <Route path="subjects" element={<SubjectsStudent />} />
+            <Route path="groups/:id" element={<GroupDetailStudent />} />
           </Route>
 
           {/* ==================== RUTAS ESPECIALES ==================== */}

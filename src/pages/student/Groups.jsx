@@ -162,10 +162,7 @@ const Groups = () => {
                 status={group.estado}
                 editable={false}
                 showStatus={false}
-                onClick={() => {
-                  setSelectedGroupName(group.nombre);
-                  setSelectedGroupId(group.id_grupo);
-                }}
+                onClick={() => navigate(`/student/groups/${group.id_grupo}`)}
               />
             ))
           )}
