@@ -192,6 +192,10 @@ const Groups = () => {
               status={group.estado}
               onStatusChange={(newStatus) => handleStatusChange(group.id_grupo, newStatus)}
               editable={true}
+              onClick={() => {
+                console.log("Click en grupo:", group.id_grupo);
+                navigate(`/admin/groups/${group.id_grupo}`);
+              }}
             />
           ))}
         </div>

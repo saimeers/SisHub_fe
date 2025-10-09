@@ -93,6 +93,16 @@ export const listarGruposPorUsuario = async (id_usuario) => {
   }
 };
 
+export const listarParticipantesGrupo = async (id_grupo) => {
+  try {
+    const response = await axiosInstance.get(`/grupos-usuarios/grupo/${id_grupo}/participantes`);
+    return response.data;
+  } catch (error) {
+    console.error("Error al obtener participantes del grupo:", error);
+    throw error;
+  }
+};
+
 export default {
   obtenerGrupos,
   crearGrupo,
@@ -103,4 +113,5 @@ export default {
   listarGruposPorMateria,
   listarGruposHabilitadosPorMateria,
   listarGruposPorUsuario,
+  listarParticipantesGrupo,
 };
