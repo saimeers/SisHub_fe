@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import SearchBar from "./SearchBar";
 import FilterModal from "./FilterModal";
+import { FiFilter } from "react-icons/fi";
 
 const SubjectFilters = ({
   onSearch,
@@ -77,8 +78,8 @@ const SubjectFilters = ({
           >
             Filtros
             {hasActiveFilters && (
-              <span className="ml-1 inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-green-600 rounded-full">
-                !
+              <span className="ml-1 inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-green">
+                <FiFilter className="text-base" />
               </span>
             )}
           </button>
