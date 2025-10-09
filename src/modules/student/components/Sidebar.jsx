@@ -33,7 +33,7 @@ const Sidebar = () => {
     const menuItems = [
         { icon: <GoHomeFill size={20} />, label: "Inicio", path: "/student/dashboard" },
         { icon: <FaBook size={20} />, label: "Materias", path: "/student/subjects" },
-        { icon: <MdGroups2 size={20} />, label: "Grupos" },
+        { icon: <MdGroups2 size={20} />, label: "Grupos", path: "/student/all-groups" },
         { icon: <FaFolder size={20} />, label: "Proyectos" }
     ];
 

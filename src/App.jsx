@@ -28,6 +28,7 @@ import AllGroupsProfessor from "./pages/professor/AllGroups";
 // estudiante
 import DashboardStudent from "./pages/student/Dashboard";
 import GroupsStudent from "./pages/student/Groups";
+import StudentAllGroups from "./pages/student/AllGroups";
 import SubjectsStudent from "./pages/student/Subjects";
 
 // stand by
@@ -105,6 +106,7 @@ function App() {
           >
             <Route path="dashboard" element={<DashboardStudent />} />
             <Route path="groups" element={<GroupsStudent />} />
+            <Route path="/student/all-groups" element={<StudentAllGroups />} />
             <Route path="subjects" element={<SubjectsStudent />} />
           </Route>
 

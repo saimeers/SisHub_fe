@@ -12,7 +12,7 @@ const gradientClasses = [
   "from-amber-500 to-yellow-600",
 ];
 
-const GroupCard = ({ group, index = 0, onQRCode }) => {
+const GroupCard = ({ group, index = 0, onQRCode, showQRButton = true }) => {
   const gradient = gradientClasses[index % gradientClasses.length];
 
   const handleQRCode = () => {
@@ -36,14 +36,16 @@ const GroupCard = ({ group, index = 0, onQRCode }) => {
           <p className="text-sm font-semibold text-gray-800">
             {group?.nombre_grupo || group?.nombre}
           </p>
-          <button
-            type="button"
-            className="text-gray-600 hover:text-gray-800 transition-colors"
-            onClick={handleQRCode}
-            title="Generar código QR"
-          >
-            <FiKey size={16} />
-          </button>
+          {showQRButton && (
+            <button
+              type="button"
+              className="text-gray-600 hover:text-gray-800 transition-colors"
+              onClick={handleQRCode}
+              title="Generar código QR"
+            >
+              <FiKey size={16} />
+            </button>
+          )}
         </div>
 
         <div className="space-y-2">
