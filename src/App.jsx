@@ -111,7 +111,7 @@ function App() {
           >
             <Route path="dashboard" element={<DashboardStudent />} />
             <Route path="groups" element={<GroupsStudent />} />
-            <Route path="/student/all-groups" element={<StudentAllGroups />} />
+            <Route path="all-groups" element={<StudentAllGroups />} />
             <Route path="subjects" element={<SubjectsStudent />} />
             <Route path="groups/:id" element={<GroupDetailStudent />} />
           </Route>

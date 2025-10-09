@@ -117,6 +117,7 @@ const AllGroups = () => {
           <GroupGrid
             groups={filteredGroups}
             onQRCode={handleQRCode}
+            role="professor"
           />
         )}
       </div>

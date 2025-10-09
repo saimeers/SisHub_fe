@@ -1,7 +1,7 @@
 import React from "react";
 import GroupCard from "./GroupCard";
 
-const GroupGrid = ({ groups, onQRCode, showQRButton = true }) => {
+const GroupGrid = ({ groups, onQRCode, showQRButton = true, role = "admin" }) => {
   if (!groups || groups.length === 0) {
     return (
       <div className="text-center py-12 text-gray-500">
@@ -19,6 +19,7 @@ const GroupGrid = ({ groups, onQRCode, showQRButton = true }) => {
           index={index}
           onQRCode={onQRCode}
           showQRButton={showQRButton}
+          role={role}
         />
       ))}
     </div>

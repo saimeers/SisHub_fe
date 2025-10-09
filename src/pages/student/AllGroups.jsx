@@ -110,6 +110,7 @@ const AllGroups = () => {
           <GroupGrid
             groups={filteredGroups}
             showQRButton={false}
+            role="student"
           />
         )}
       </div>

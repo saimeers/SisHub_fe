@@ -13,7 +13,7 @@ const gradientClasses = [
   "from-amber-500 to-yellow-600",
 ];
 
-const GroupCard = ({ group, index = 0, onQRCode, showQRButton = true }) => {
+const GroupCard = ({ group, index = 0, onQRCode, showQRButton = true, role = "admin" }) => {
   const navigate = useNavigate();
   const gradient = gradientClasses[index % gradientClasses.length];
 
@@ -25,7 +25,8 @@ const GroupCard = ({ group, index = 0, onQRCode, showQRButton = true }) => {
   };
 
   const handleClick = () => {
-    navigate(`/admin/groups/${group.id_grupo}`);
+    const basePath = role === "admin" ? "/admin" : role === "professor" ? "/professor" : "/student";
+    navigate(`${basePath}/groups/${group.id_grupo}`);
   };
 
   return (
