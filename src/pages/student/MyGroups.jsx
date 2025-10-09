@@ -7,7 +7,7 @@ import useGroupFilters from "../../hooks/useGroupFilters";
 import { listarGruposPorUsuario } from "../../services/groupServices";
 import { useAuth } from "../../contexts/AuthContext";
 
-const AllGroups = () => {
+const MyGroups = () => {
   const [groups, setGroups] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -137,4 +137,4 @@ const AllGroups = () => {
   );
 };
 
-export default AllGroups;
+export default MyGroups;

@@ -1,11 +1,11 @@
 import React, { useEffect, useMemo, useState } from "react";
-import AdminLayout from "../../modules/admin/layouts/AdminLayout";
-import FieldText from "../../components/ui/FieldText";
-import SelectField from "../../components/ui/SelectField";
-import Button from "../../components/ui/Button";
-import { listarAreas } from "../../services/areaServices";
-import { createSubject } from "../../services/materiaServices";
-import { useToast } from "../../hooks/useToast";
+import AdminLayout from "../layouts/AdminLayout";
+import FieldText from "../../../components/ui/FieldText";
+import SelectField from "../../../components/ui/SelectField";
+import Button from "../../../components/ui/Button";
+import { listarAreas } from "../../../services/areaServices";
+import { createSubject } from "../../../services/materiaServices";
+import { useToast } from "../../../hooks/useToast";
 import { useNavigate } from "react-router-dom";
 
 const initialForm = {
@@ -34,15 +34,14 @@ const FormCreateSubject = () => {
   useEffect(() => {
     const loadAreas = async () => {
       setIsLoadingAreas(true);
-      
+
       try {
         const list = await listarAreas();
         const areasList = Array.isArray(list) ? list : [];
-        
+
         // Establecer las áreas y el estado de carga al mismo tiempo
         setAreas(areasList);
         setIsLoadingAreas(false);
-        
       } catch (err) {
         console.warn("No se pudieron cargar las áreas:", err);
         // Usar datos mock para áreas mientras se resuelve el endpoint
@@ -50,13 +49,13 @@ const FormCreateSubject = () => {
           { id_area: 1, nombre: "Ciencias Básicas" },
           { id_area: 2, nombre: "Ingeniería Aplicada" },
           { id_area: 3, nombre: "Formación Complementaria" },
-          { id_area: 4, nombre: "Ciencias Básicas en Ingeniería" }
+          { id_area: 4, nombre: "Ciencias Básicas en Ingeniería" },
         ];
         setAreas(mockAreas);
         setIsLoadingAreas(false);
       }
     };
-    
+
     loadAreas();
   }, []); // Dependencias vacías para que solo se ejecute una vez
 
@@ -69,27 +68,26 @@ const FormCreateSubject = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    
+
     // Validación especial para créditos
-    if (name === 'creditos') {
+    if (name === "creditos") {
       const numericValue = parseFloat(value);
-      if (value === '' || (numericValue >= 0 && !isNaN(numericValue))) {
+      if (value === "" || (numericValue >= 0 && !isNaN(numericValue))) {
         setForm((f) => ({ ...f, [name]: value }));
       }
-    } 
+    }
     // Validación especial para código - solo números
-    else if (name === 'codigo') {
-      if (value === '' || /^\d+$/.test(value)) {
+    else if (name === "codigo") {
+      if (value === "" || /^\d+$/.test(value)) {
         setForm((f) => ({ ...f, [name]: value }));
       }
     }
     // Validación especial para semestre - solo números
-    else if (name === 'semestre') {
-      if (value === '' || /^\d+$/.test(value)) {
+    else if (name === "semestre") {
+      if (value === "" || /^\d+$/.test(value)) {
         setForm((f) => ({ ...f, [name]: value }));
       }
-    } 
-    else {
+    } else {
       setForm((f) => ({ ...f, [name]: value }));
     }
   };
@@ -103,9 +101,11 @@ const FormCreateSubject = () => {
   };
 
   const validate = () => {
-    if (!form.codigo || !form.nombre || !form.semestre || !form.tipo) return "Complete los campos requeridos";
+    if (!form.codigo || !form.nombre || !form.semestre || !form.tipo)
+      return "Complete los campos requeridos";
     const creditosNum = Number(form.creditos);
-    if (!Number.isFinite(creditosNum) || creditosNum <= 0) return "Créditos debe ser numérico y mayor a 0";
+    if (!Number.isFinite(creditosNum) || creditosNum <= 0)
+      return "Créditos debe ser numérico y mayor a 0";
     if (!form.id_area) return "Seleccione un área";
     return null;
   };
@@ -121,7 +121,9 @@ const FormCreateSubject = () => {
         nombre: String(form.nombre).trim(),
         semestre: String(form.semestre).trim(),
         creditos: Number(form.creditos),
-        prerrequisitos: form.prerrequisitos ? String(form.prerrequisitos).trim() : "Ninguno",
+        prerrequisitos: form.prerrequisitos
+          ? String(form.prerrequisitos).trim()
+          : "Ninguno",
         tipo: form.tipo,
         id_area: Number(form.id_area),
       };
@@ -142,15 +144,18 @@ const FormCreateSubject = () => {
           {/* Primera fila: Código y Créditos */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label htmlFor="codigo" className="block text-sm font-medium text-black mb-2">
+              <label
+                htmlFor="codigo"
+                className="block text-sm font-medium text-black mb-2"
+              >
                 Código
               </label>
-              <FieldText 
-                id="codigo" 
-                name="codigo" 
-                value={form.codigo} 
-                onChange={handleChange} 
-                placeholder="Ej: 1155101" 
+              <FieldText
+                id="codigo"
+                name="codigo"
+                value={form.codigo}
+                onChange={handleChange}
+                placeholder="Ej: 1155101"
                 type="text"
                 pattern="[0-9]*"
                 inputMode="numeric"
@@ -158,25 +163,28 @@ const FormCreateSubject = () => {
             </div>
 
             <div>
-              <label htmlFor="creditos" className="block text-sm font-medium text-black mb-2">
+              <label
+                htmlFor="creditos"
+                className="block text-sm font-medium text-black mb-2"
+              >
                 Créditos
               </label>
-              <FieldText 
-                id="creditos" 
-                name="creditos" 
-                value={form.creditos} 
-                onChange={handleChange} 
-                placeholder="0" 
+              <FieldText
+                id="creditos"
+                name="creditos"
+                value={form.creditos}
+                onChange={handleChange}
+                placeholder="0"
                 type="number"
                 min="0"
-                style={{ 
-                  appearance: 'textfield',
-                  MozAppearance: 'textfield'
+                style={{
+                  appearance: "textfield",
+                  MozAppearance: "textfield",
                 }}
                 onWheel={(e) => e.target.blur()}
                 onKeyDown={(e) => {
                   // Prevenir teclas de incremento/decremento
-                  if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                  if (e.key === "ArrowUp" || e.key === "ArrowDown") {
                     e.preventDefault();
                   }
                 }}
@@ -187,14 +195,25 @@ const FormCreateSubject = () => {
           {/* Segunda fila: Nombre y Tipo */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label htmlFor="nombre" className="block text-sm font-medium text-black mb-2">
+              <label
+                htmlFor="nombre"
+                className="block text-sm font-medium text-black mb-2"
+              >
                 Nombre
               </label>
-              <FieldText id="nombre" name="nombre" value={form.nombre} onChange={handleChange} placeholder="Ingrese el nombre" />
+              <FieldText
+                id="nombre"
+                name="nombre"
+                value={form.nombre}
+                onChange={handleChange}
+                placeholder="Ingrese el nombre"
+              />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-black mb-2">Tipo</label>
+              <label className="block text-sm font-medium text-black mb-2">
+                Tipo
+              </label>
               <SelectField
                 id="tipo"
                 name="tipo"
@@ -208,7 +227,10 @@ const FormCreateSubject = () => {
 
           {/* Tercera fila: Semestre (ancho completo) */}
           <div>
-            <label htmlFor="semestre" className="block text-sm font-medium text-black mb-2">
+            <label
+              htmlFor="semestre"
+              className="block text-sm font-medium text-black mb-2"
+            >
               Semestre
             </label>
             <FieldText
@@ -226,7 +248,10 @@ const FormCreateSubject = () => {
 
           {/* Cuarta fila: Prerrequisito (ancho completo) */}
           <div>
-            <label htmlFor="prerrequisitos" className="block text-sm font-medium text-black mb-2">
+            <label
+              htmlFor="prerrequisitos"
+              className="block text-sm font-medium text-black mb-2"
+            >
               Prerrequisito
             </label>
             <FieldText
@@ -240,25 +265,54 @@ const FormCreateSubject = () => {
 
           {/* Quinta fila: Área del conocimiento (ancho completo) */}
           <div>
-            <label className="block text-sm font-medium text-black mb-2">Área del conocimiento</label>
+            <label className="block text-sm font-medium text-black mb-2">
+              Área del conocimiento
+            </label>
             <SelectField
               id="id_area"
               name="id_area"
-              value={areaOptions.find((o) => String(o.value) === String(form.id_area)) || null}
+              value={
+                areaOptions.find(
+                  (o) => String(o.value) === String(form.id_area)
+                ) || null
+              }
               onChange={handleSelectArea}
               options={areaOptions}
-              placeholder={isLoadingAreas ? "Cargando áreas..." : areaOptions.length === 0 ? "No hay áreas disponibles" : "Seleccione un área"}
+              placeholder={
+                isLoadingAreas
+                  ? "Cargando áreas..."
+                  : areaOptions.length === 0
+                  ? "No hay áreas disponibles"
+                  : "Seleccione un área"
+              }
               isClearable={true}
               disabled={isLoadingAreas}
             />
-            {isLoadingAreas && <div className="text-sm text-gray-500 mt-1">Cargando áreas...</div>}
-            {!isLoadingAreas && areaOptions.length === 0 && <div className="text-sm text-red-500 mt-1">No se pudieron cargar las áreas</div>}
+            {isLoadingAreas && (
+              <div className="text-sm text-gray-500 mt-1">
+                Cargando áreas...
+              </div>
+            )}
+            {!isLoadingAreas && areaOptions.length === 0 && (
+              <div className="text-sm text-red-500 mt-1">
+                No se pudieron cargar las áreas
+              </div>
+            )}
           </div>
 
           {/* Botones */}
           <div className="flex gap-4 justify-center pt-4">
-            <Button type="submit" text={isSubmitting ? "Registrando..." : "Registrar"} disabled={isSubmitting} />
-            <Button type="button" variant="secondary" text="Cancelar" onClick={() => navigate("/admin/subjects")} />
+            <Button
+              type="submit"
+              text={isSubmitting ? "Registrando..." : "Registrar"}
+              disabled={isSubmitting}
+            />
+            <Button
+              type="button"
+              variant="secondary"
+              text="Cancelar"
+              onClick={() => navigate("/admin/subjects")}
+            />
           </div>
         </form>
       </div>
@@ -267,5 +321,3 @@ const FormCreateSubject = () => {
 };
 
 export default FormCreateSubject;
-
-

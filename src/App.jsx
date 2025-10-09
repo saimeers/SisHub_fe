@@ -13,16 +13,15 @@ import ResetPassword from "./pages/auth/ResetPassword";
 import AdminDashboard from "./pages/admin/Dashboard";
 import GroupsAdmin from "./pages/admin/Groups";
 import AllGroupsAdmin from "./pages/admin/AllGroups";
-import CreateGroupAdmin from "./pages/admin/FormCreateGroup";
+import CreateGroupAdmin from "./modules/admin/components/FormCreateGroup";
 import SubjectsAdmin from "./pages/admin/Subjects";
-import FormCreateSubject from "./pages/admin/FormCreateSubject";
-import FormEditSubject from "./pages/admin/FormEditSubject";
+import FormCreateSubject from "./modules/admin/components/FormCreateSubject";
+import FormEditSubject from "./modules/admin/components/FormEditSubject";
 import GroupDetail from "./pages/admin/GroupDetail";
 
 // docente
 import GroupsProfessor from "./pages/professor/Groups";
 import DashboardProfessor from "./pages/professor/Dashboard";
-import CreateGroupProfessor from "./pages/professor/FormCreateGroup";
 import SubjectsProfessor from "./pages/professor/Subjects";
 import MyGroupsProfessor from "./pages/professor/MyGroups";
 import GroupDetailProfessor from "./pages/professor/GroupDetail";
@@ -30,7 +29,7 @@ import GroupDetailProfessor from "./pages/professor/GroupDetail";
 // estudiante
 import DashboardStudent from "./pages/student/Dashboard";
 import GroupsStudent from "./pages/student/Groups";
-import StudentAllGroups from "./pages/student/AllGroups";
+import StudentAllGroups from "./pages/student/MyGroups";
 import SubjectsStudent from "./pages/student/Subjects";
 import GroupDetailStudent from "./pages/student/GroupDetail";
 
@@ -99,7 +98,6 @@ function App() {
             <Route path="dashboard" element={<DashboardProfessor />} />
             <Route path="groups" element={<GroupsProfessor />} />
             <Route path="my-groups" element={<MyGroupsProfessor />} />
-            <Route path="create-group" element={<CreateGroupProfessor />} />
             <Route path="subjects" element={<SubjectsProfessor />} />
             <Route path="groups/:id" element={<GroupDetailProfessor />} />
           </Route>
