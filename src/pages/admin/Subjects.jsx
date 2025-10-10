@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import AdminLayout from "../../modules/admin/layouts/AdminLayout";
 import { useNavigate } from "react-router-dom";
-import SubjectGrid from "../../modules/admin/components/SubjectGrid";
+import SubjectGrid from "../../components/ui/SubjectGrid";
 import SubjectFilters from "../../components/ui/SubjectFilters";
 import useSubjectFilters from "../../hooks/useSubjectFilters";
 import { fetchSubjects } from "../../services/materiaServices";

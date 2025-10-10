@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import AdminLayout from "../../modules/admin/layouts/AdminLayout";
-import GroupParticipants from "../../modules/admin/components/GroupParticipants";
+import GroupParticipants from "../../components/ui/GroupParticipants";
 import { listarParticipantesGrupo } from "../../services/groupServices";
 import { useToast } from "../../hooks/useToast";
 

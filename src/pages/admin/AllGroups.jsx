@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import AdminLayout from "../../modules/admin/layouts/AdminLayout";
 import { useNavigate } from "react-router-dom";
-import GroupGrid from "../../modules/admin/components/GroupGrid";
+import GroupGrid from "../../components/ui/GroupGrid";
 import GroupFilters from "../../components/ui/GroupFilters";
 import useGroupFilters from "../../hooks/useGroupFilters";
 import {

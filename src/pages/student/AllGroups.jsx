@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import StudentLayout from "../../modules/student/layouts/StudentLayout";
 import { useNavigate } from "react-router-dom";
-import GroupGrid from "../../modules/admin/components/GroupGrid";
+import GroupGrid from "../../components/ui/GroupGrid";
 import GroupFilters from "../../components/ui/GroupFilters";
 import useGroupFilters from "../../hooks/useGroupFilters";
 import { listarGruposPorUsuario } from "../../services/groupServices";
