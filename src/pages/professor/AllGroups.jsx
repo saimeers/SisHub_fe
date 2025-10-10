@@ -26,7 +26,6 @@ const AllGroups = () => {
 
   useEffect(() => {
     const loadGroups = async () => {
-     
       if (!userData?.id_usuario) {
         return;
       }

@@ -46,15 +46,12 @@ export const useRegister = () => {
 
     const registroPromise = async () => {
       const rol = localStorage.getItem("rolSeleccionado");
-      const nombre = localStorage.getItem("userName");
 
       const data = await registrarUsuario({
         documento: formData.documento,
         telefono: formData.telefono,
         codigo: formData.codigo,
         rol: rol,
-        nombre: nombre,
-        fechaNacimiento: formData.fechaNacimiento || null,
       });
 
       if (!data.ok) {
@@ -87,10 +84,7 @@ export const useRegister = () => {
         localStorage.removeItem("rolSeleccionado");
         localStorage.removeItem("userName");
         localStorage.removeItem("userEmail");
-
-        setTimeout(() => {
-          navigate("/");
-        }, 1500);
+        navigate("/");
       }
     } catch (error) {
       console.error("Error:", error);

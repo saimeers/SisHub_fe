@@ -1,11 +1,14 @@
 import React, { useEffect, useState, useMemo } from "react";
-import AdminLayout from "../../modules/admin/layouts/AdminLayout";
-import FieldText from "../../components/ui/FieldText";
-import SelectField from "../../components/ui/SelectField";
-import Button from "../../components/ui/Button";
-import { listarAreas } from "../../services/areaServices";
-import { getSubjectById, updateSubject } from "../../services/materiaServices";
-import { useToast } from "../../hooks/useToast";
+import AdminLayout from "../layouts/AdminLayout";
+import FieldText from "../../../components/ui/FieldText";
+import SelectField from "../../../components/ui/SelectField";
+import Button from "../../../components/ui/Button";
+import { listarAreas } from "../../../services/areaServices";
+import {
+  getSubjectById,
+  updateSubject,
+} from "../../../services/materiaServices";
+import { useToast } from "../../../hooks/useToast";
 import { useNavigate, useParams } from "react-router-dom";
 
 const initialForm = {
@@ -70,8 +73,6 @@ const FormEditSubject = () => {
     loadData();
   }, [id]); // ← solo depende del id
 
-
-
   const areaOptions = useMemo(
     () => areas.map((a) => ({ value: a.id_area, label: a.nombre })),
     [areas]
@@ -90,7 +91,6 @@ const FormEditSubject = () => {
   const handleSelectArea = (opt) => {
     setForm((prev) => ({ ...prev, id_area: opt ? opt.value : null }));
   };
-
 
   const validate = () => {
     if (!form.codigo || !form.nombre || !form.semestre || !form.tipo)
@@ -192,9 +192,7 @@ const FormEditSubject = () => {
                 Tipo
               </label>
               <SelectField
-                value={
-                  subjectTypes.find((t) => t.value === form.tipo) || null
-                }
+                value={subjectTypes.find((t) => t.value === form.tipo) || null}
                 onChange={handleSelectType}
                 options={subjectTypes}
                 isClearable={false}

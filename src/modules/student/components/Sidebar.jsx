@@ -4,7 +4,7 @@ import { GoHomeFill } from "react-icons/go";
 import { FaBook, FaFolder, FaSignOutAlt } from "react-icons/fa";
 import { MdGroups2 } from "react-icons/md";
 import UserProfile from "../../../components/ui/UserProfile";
-import { useAuth } from "../../auth/hooks/useAuth";
+import { useAuth } from "../../../contexts/AuthContext";
 import { Menu } from "lucide-react";
 
 const Sidebar = () => {
@@ -33,7 +33,7 @@ const Sidebar = () => {
     const menuItems = [
         { icon: <GoHomeFill size={20} />, label: "Inicio", path: "/student/dashboard" },
         { icon: <FaBook size={20} />, label: "Materias", path: "/student/subjects" },
-        { icon: <MdGroups2 size={20} />, label: "Grupos", path: "/student/all-groups" },
+        { icon: <MdGroups2 size={20} />, label: "Mis Grupos", path: "/student/all-groups" },
         { icon: <FaFolder size={20} />, label: "Proyectos" }
     ];
 

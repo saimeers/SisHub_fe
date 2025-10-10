@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import AdminLayout from "../../modules/admin/layouts/AdminLayout";
 import GroupParticipants from "../../components/ui/GroupParticipants";
@@ -13,95 +13,91 @@ const GroupDetail = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("participantes");
   const [groupInfo, setGroupInfo] = useState(null);
+  const hasLoaded = useRef(false);
 
   useEffect(() => {
     const loadGroupData = async () => {
+      if (hasLoaded.current) return;
+      hasLoaded.current = true;
+      if (!id) return;
+
       setIsLoading(true);
       try {
-        // Cargar participantes del grupo
         const participantsData = await listarParticipantesGrupo(id);
-        setParticipants(Array.isArray(participantsData) ? participantsData : []);
-        
-        // Por ahora usamos datos mock para la información del grupo
-        // En el futuro esto podría venir de otro endpoint
+        setParticipants(
+          Array.isArray(participantsData) ? participantsData : []
+        );
         setGroupInfo({
           nombre: "Fisica Mecanica",
           grupo: "Grupo A",
-          periodo: "2025-1"
+          periodo: "2025-1",
         });
       } catch (err) {
-        console.error("Error al cargar datos del grupo:", err);
+        console.error("❌ Error al cargar datos del grupo:", err);
         error("No se pudieron cargar los datos del grupo");
       } finally {
         setIsLoading(false);
       }
     };
 
-    if (id) {
-      loadGroupData();
-    }
+    loadGroupData();
   }, [id, error]);
 
   const tabs = [
     { id: "proyecto", label: "Proyecto" },
     { id: "equipo", label: "Equipo" },
-    { id: "participantes", label: "Participantes" }
+    { id: "participantes", label: "Participantes" },
   ];
 
   return (
-    <AdminLayout title="Detalle del Grupo">
-      <div className="w-full max-w-6xl mx-auto py-8">
-        {/* Header del grupo */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 italic mb-6">
-            {groupInfo ? `${groupInfo.nombre} | ${groupInfo.grupo} | ${groupInfo.periodo}` : "Cargando..."}
-          </h1>
-          
-          {/* Tabs */}
-          <div className="border-b border-gray-200">
-            <nav className="-mb-px flex space-x-8">
-              {tabs.map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                    activeTab === tab.id
-                      ? "border-blue-500 text-blue-600"
-                      : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                  }`}
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </nav>
+    <StudentLayout
+      title={
+        groupInfo
+          ? `${groupInfo.nombre} | ${groupInfo.grupo} | ${groupInfo.periodo}`
+          : "Cargando grupo..."
+      }
+    >
+      <div className="w-full max-w-5xl mx-auto py-10 px-6 bg-white rounded-2xl shadow-sm">
+        {/* Tabs centradas */}
+        <div className="flex justify-center mb-8">
+          <div className="flex justify-center space-x-2 bg-gray-100 p-1 rounded-full w-fit mx-auto">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`px-6 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
+                  activeTab === tab.id
+                    ? "bg-white shadow text-gray-900"
+                    : "text-gray-600 hover:text-gray-800"
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
           </div>
         </div>
 
-        {/* Contenido de las tabs */}
-        <div className="mt-6">
+        {/* Contenido */}
+        <div className="rounded-xl">
           {activeTab === "participantes" && (
-            <div>
-              <div className="mb-6">
-                <h2 className="text-lg font-semibold text-gray-900 mb-4">Participantes</h2>
-                <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                  <div className="px-6 py-3 bg-gray-50 border-b border-gray-200">
-                    <div className="grid grid-cols-2 gap-4 text-sm font-medium text-gray-500 uppercase tracking-wider">
-                      <div>Código</div>
-                      <div>Nombre</div>
-                    </div>
-                  </div>
-                  <div className="divide-y divide-gray-200">
-                    {isLoading ? (
-                      <div className="p-6">
-                        <GroupParticipants participants={[]} isLoading={true} />
-                      </div>
-                    ) : (
-                      <div className="p-6">
-                        <GroupParticipants participants={participants} />
-                      </div>
-                    )}
-                  </div>
-                </div>
+            <div className="mt-8">
+              <div className="mb-4 grid grid-cols-2 text-sm font-semibold text-gray-600 px-4">
+                <span>Código</span>
+                <span>Nombre</span>
+              </div>
+
+              <div className="flex flex-col gap-3">
+                {isLoading ? (
+                  <p className="text-gray-500 text-center py-6">
+                    Cargando participantes...
+                  </p>
+                ) : participants.length > 0 ? (
+                  <GroupParticipants participants={participants} />
+                ) : (
+                  <p className="text-gray-500 text-center py-6">
+                    No hay participantes registrados
+                  </p>
+                )}
               </div>
             </div>
           )}
@@ -119,17 +115,21 @@ const GroupDetail = () => {
           )}
         </div>
 
-        {/* Botón de regreso */}
-        <div className="mt-8 flex justify-start">
+        {/* Botón volver 
+        <div className="mt-10">
           <button
-            onClick={() => navigate("/student/groups")}
-            className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            onClick={() => {
+              navigate("/admin/groups");
+              window.location.reload();
+            }}
+            className="inline-flex items-center px-5 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 shadow-sm transition"
           >
             ← Volver a Grupos
           </button>
         </div>
+        */}
       </div>
-    </AdminLayout>
+    </StudentLayout>
   );
 };
 

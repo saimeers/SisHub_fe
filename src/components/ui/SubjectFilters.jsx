@@ -37,7 +37,7 @@ const SubjectFilters = ({
           <div className="flex justify-end">
             <button
               onClick={onCreateClick}
-              className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg font-medium transition-colors"
+              className="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
             >
               {createButtonText}
             </button>

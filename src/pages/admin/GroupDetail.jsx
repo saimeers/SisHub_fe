@@ -24,7 +24,9 @@ const GroupDetail = () => {
       setIsLoading(true);
       try {
         const participantsData = await listarParticipantesGrupo(id);
-        setParticipants(Array.isArray(participantsData) ? participantsData : []);
+        setParticipants(
+          Array.isArray(participantsData) ? participantsData : []
+        );
         setGroupInfo({
           nombre: "Fisica Mecanica",
           grupo: "Grupo A",
@@ -63,10 +65,11 @@ const GroupDetail = () => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`px-6 py-2 rounded-full text-sm font-medium transition-all duration-200 ${activeTab === tab.id
+                className={`px-6 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
+                  activeTab === tab.id
                     ? "bg-white shadow text-gray-900"
                     : "text-gray-600 hover:text-gray-800"
-                  }`}
+                }`}
               >
                 {tab.label}
               </button>
