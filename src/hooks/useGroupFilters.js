@@ -46,10 +46,8 @@ const useGroupFilters = (groups = []) => {
     // Aplicar filtro por área
     if (filters.area) {
       filtered = filtered.filter((group) => {
-        const areaConocimiento = String(
-          group.area_conocimiento || ""
-        ).toLowerCase();
-        return areaConocimiento.includes(String(filters.area).toLowerCase());
+        // filters.area viene como ID numérico del FilterModal
+        return group.id_area === parseInt(filters.area);
       });
     }
 
@@ -63,6 +61,7 @@ const useGroupFilters = (groups = []) => {
 
   // Función para aplicar filtros
   const handleApplyFilters = (newFilters) => {
+    console.log("Filtros aplicados:", newFilters); // Para debugging
     setFilters(newFilters);
   };
 
