@@ -8,6 +8,7 @@ import Login from "./pages/auth/Login";
 import Signup from "./pages/auth/Signup";
 import FormRegister from "./pages/auth/FormRegister";
 import ResetPassword from "./pages/auth/ResetPassword";
+import FormPassword from "./pages/auth/FormPassword";
 
 // admin
 import AdminDashboard from "./pages/admin/Dashboard";
@@ -18,6 +19,7 @@ import SubjectsAdmin from "./pages/admin/Subjects";
 import FormCreateSubject from "./modules/admin/components/FormCreateSubject";
 import FormEditSubject from "./modules/admin/components/FormEditSubject";
 import GroupDetail from "./pages/admin/GroupDetail";
+import UploadUsers from "./pages/admin/UploadUsers";
 
 // docente
 import GroupsProfessor from "./pages/professor/Groups";
@@ -88,6 +90,7 @@ function App() {
             <Route path="subjects/create" element={<FormCreateSubject />} />
             <Route path="subjects/edit/:id" element={<FormEditSubject />} />
             <Route path="groups/:id" element={<GroupDetail />} />
+            <Route path="upload-users" element={<UploadUsers />} />
           </Route>
 
           {/* ==================== RUTAS DOCENTE ==================== */}
