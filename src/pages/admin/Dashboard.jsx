@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import Swal from "sweetalert2";
 import AdminLayout from "../../modules/admin/layouts/AdminLayout";
@@ -20,6 +21,7 @@ import {
 } from "../../services/userServices";
 
 const Dashboard = () => {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedRol, setSelectedRol] = useState("Todos");
   const [selectedEstado, setSelectedEstado] = useState("Todos");
@@ -91,7 +93,7 @@ const Dashboard = () => {
   const handleViewUser = (user) => {
     // Determinar si es una postulación pendiente (no tiene estado)
     const esPostulacion = !user.estado;
-    
+
     Swal.fire({
       title: user.nombre,
       html: `
@@ -237,9 +239,30 @@ const Dashboard = () => {
   return (
     <AdminLayout title="Inicio">
       <div className="space-y-4 md:space-y-6">
-        <h3 className="text-base md:text-lg font-semibold text-gray-800 mb-3 md:mb-4">
-          Consulta la información de usuarios
-        </h3>
+        {/* Header con botón de crear usuario */}
+        <div className="flex justify-end">
+          <button
+            onClick={() => navigate("/admin/upload-users")}
+            className="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center gap-2"
+          >
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 4v16m8-8H4"
+              />
+            </svg>
+            Crear Usuario
+          </button>
+
+        </div>
+
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
           <SearchBar
