@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { getAuthInstance, signOutAccount } from '../services/authService';
 import { obtenerUsuario } from '../services/userServices';
+import { userHasPasswordProvider } from '../modules/auth/utils/passwordValidator';
 import { useNavigate } from 'react-router-dom';
 
 const AuthContext = createContext(null);
@@ -18,6 +19,7 @@ export const AuthProvider = ({ children }) => {
     const [userData, setUserData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [token, setToken] = useState(localStorage.getItem('firebaseToken'));
+    const [needsPassword, setNeedsPassword] = useState(false);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -34,13 +36,25 @@ export const AuthProvider = ({ children }) => {
                     try {
                         const userInfo = await obtenerUsuario();
                         setUserData(userInfo);
+
+                        // ✅ Verificar si es docente y no tiene contraseña
+                        const rol = userInfo?.Rol?.descripcion || userInfo?.data?.Rol?.descripcion;
+                        const hasPassword = userHasPasswordProvider();
+                        
+                        if (rol === "DOCENTE" && !hasPassword) {
+                            setNeedsPassword(true);
+                        } else {
+                            setNeedsPassword(false);
+                        }
                     } catch {
                         setUserData(null);
+                        setNeedsPassword(false);
                     }
                 } catch (error) {
                     setUser(null);
                     setUserData(null);
                     setToken(null);
+                    setNeedsPassword(false);
                     localStorage.removeItem("firebaseToken");
                 } finally {
                     setLoading(false);
@@ -49,6 +63,7 @@ export const AuthProvider = ({ children }) => {
                 setUser(null);
                 setUserData(null);
                 setToken(null);
+                setNeedsPassword(false);
                 localStorage.removeItem("firebaseToken");
                 setLoading(false);
             }
@@ -64,6 +79,7 @@ export const AuthProvider = ({ children }) => {
             setUser(null);
             setUserData(null);
             setToken(null);
+            setNeedsPassword(false);
             navigate("/login");
         } catch (error) {
             console.error("Error al cerrar sesión:", error);
@@ -75,9 +91,10 @@ export const AuthProvider = ({ children }) => {
         userData,
         token,
         loading,
+        needsPassword,
         isAuthenticated: !!user,
-        rol: userData?.Rol?.descripcion || null,
-        estado: userData?.Estado?.descripcion || null,
+        rol: userData?.Rol?.descripcion || userData?.data?.Rol?.descripcion || null,
+        estado: userData?.Estado?.descripcion || userData?.data?.Estado?.descripcion || null,
         handleSignOut
     };
 

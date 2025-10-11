@@ -9,6 +9,7 @@ import {
 import { obtenerUsuario } from "../../../services/userServices";
 import { getAuthErrorMessage } from "../utils/authErrorHandler";
 import { isEmailDomainAllowed } from "../utils/emailValidator";
+import { userHasPasswordProvider } from "../utils/passwordValidator";
 import { useToast } from "../../../hooks/useToast";
 import { formatShortName } from "../../../utils/nameFormatter";
 
@@ -33,6 +34,7 @@ export const useAuth = () => {
 
   const verificarEstadoUsuario = (usuario, userName) => {
     const estado = usuario.Estado?.descripcion;
+    const rol = usuario.Rol?.descripcion;
 
     if (estado === "STAND_BY") {
       toast.warning(
@@ -65,12 +67,21 @@ export const useAuth = () => {
       return false;
     }
 
+    // ✅ VALIDACIÓN DE PASSWORD SOLO PARA DOCENTES
+    if (rol === "DOCENTE" && !userHasPasswordProvider()) {
+      toast.warning(
+        "Como docente, debes establecer una contraseña para continuar.",
+        { autoClose: 6000 }
+      );
+      navigate("/establecer-contrasena");
+      return false;
+    }
+
     toast.success(`¡Bienvenido ${formatShortName(userName) || ""}!`);
-    navigate(`/${usuario.Rol.descripcion.toLowerCase()}/dashboard`);
+    navigate(`/${rol.toLowerCase()}/dashboard`);
     return true;
   };
 
-  // ✅ Nueva versión robusta
   const validarYRedirigirUsuario = async (user, token) => {
     saveUserData(user, token);
 
@@ -78,14 +89,12 @@ export const useAuth = () => {
       const res = await obtenerUsuario();
       console.log("🔍 obtenerUsuario:", res);
 
-      // Detecta el usuario independientemente de la estructura del backend
       const usuario =
         res?.data?.usuario ||
         res?.data ||
         res?.usuario ||
         res;
 
-      // Solo continúa si el usuario realmente existe
       if (usuario && (usuario.id || usuario.IdUsuario || usuario.Rol)) {
         verificarEstadoUsuario(usuario, user.displayName);
       } else {
@@ -95,7 +104,6 @@ export const useAuth = () => {
     } catch (error) {
       console.error("Error al obtener usuario:", error);
 
-      // Si la API devuelve 404, significa que el usuario no está registrado
       if (error.response?.status === 404) {
         toast.warning("Debes completar tu registro antes de continuar.");
         navigate("/signup");

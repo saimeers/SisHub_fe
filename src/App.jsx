@@ -101,6 +101,7 @@ function App() {
             <Route path="subjects" element={<SubjectsProfessor />} />
             <Route path="groups/:id" element={<GroupDetailProfessor />} />
           </Route>
+          <Route path="/establecer-contrasena" element={<ProtectedRoute><FormPassword /></ProtectedRoute>} />
 
           {/* ==================== RUTAS ESTUDIANTE ==================== */}
           <Route

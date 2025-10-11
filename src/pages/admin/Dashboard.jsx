@@ -42,7 +42,7 @@ const Dashboard = () => {
       ]);
 
       const usuariosFormateados = usuariosResponse.usuarios.map((user) => ({
-        id: user.id_usuario,
+        id: user.codigo,
         nombre: user.nombre,
         documento: user.documento,
         correo: user.correo,
@@ -53,7 +53,7 @@ const Dashboard = () => {
       }));
 
       const postulacionesFormateadas = standByResponse.usuarios.map((user) => ({
-        id: user.id_usuario,
+        id: user.codigo,
         nombre: user.nombre,
         documento: user.documento,
         correo: user.correo,
