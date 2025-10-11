@@ -26,7 +26,7 @@ const GroupCard = ({ group, index = 0, onQRCode, showQRButton = true, role = "ad
 
   const handleClick = () => {
     const basePath = role === "admin" ? "/admin" : role === "professor" ? "/professor" : "/student";
-    navigate(`${basePath}/groups/${group.id_grupo}`);
+    navigate(`${basePath}/groups/${group.codigo_materia}/${group.nombre_grupo}/${group.periodo}/${group.anio}`);
   };
 
   return (

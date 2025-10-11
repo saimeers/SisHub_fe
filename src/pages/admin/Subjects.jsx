@@ -11,7 +11,7 @@ const Subjects = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
-  
+
   // Hook para manejar filtros y búsqueda
   const {
     searchTerm,
@@ -72,9 +72,9 @@ const Subjects = () => {
           <SubjectGrid
             subjects={filteredSubjects}
             onDetails={(subject) =>
-              navigate("/admin/groups", {
+              navigate(`/admin/${subject?.codigo}/groups`, {
                 state: {
-                  materia: { value: subject?.id_materia, label: subject?.nombre },
+                  materia: { value: subject?.codigo, label: subject?.nombre },
                 },
               })
             }
@@ -86,5 +86,3 @@ const Subjects = () => {
 };
 
 export default Subjects;
-
-

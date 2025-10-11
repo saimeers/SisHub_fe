@@ -1,13 +1,15 @@
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import AdminLayout from "../../modules/professor/layouts/ProfessorLayout";
 import Button from "../../components/ui/Button";
 import RowItem from "../../components/ui/RowItem";
 import { listarGruposPorMateria } from "../../services/groupServices";
+import { getSubjectByCode } from "../../services/materiaServices";
 
 const Groups = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { codigo_materia } = useParams();
   const materiaState = location?.state?.materia || null;
 
   const [materiaInput, setMateriaInput] = useState(materiaState?.label || "");
@@ -25,8 +27,9 @@ const Groups = () => {
       }
       setError(null);
 
-      if (materiaState?.value) {
-        const gruposData = await listarGruposPorMateria(materiaState.value);
+      const materiaValue = materiaState?.value || codigo_materia;
+      if (materiaValue) {
+        const gruposData = await listarGruposPorMateria(materiaValue);
         const ordenados = [...gruposData].sort((a, b) =>
           (a?.nombre || "").localeCompare(b?.nombre || "", undefined, {
             sensitivity: "base",
@@ -49,8 +52,33 @@ const Groups = () => {
   };
 
   useEffect(() => {
-    setMateriaInput(materiaState?.label || "");
-    fetchGroups(true);
+    const initializeMateria = async () => {
+      const materiaFromState = materiaState;
+      const materiaFromParams = codigo_materia;
+      
+      if (materiaFromState) {
+        setMateriaInput(materiaFromState.label || "");
+      } else if (materiaFromParams) {
+        // Validar que la materia existe
+        try {
+          const materiaData = await getSubjectByCode(materiaFromParams);
+          if (materiaData) {
+            setMateriaInput(materiaData.nombre);
+          } else {
+            setError("La materia especificada no existe");
+            setMateriaInput("");
+          }
+        } catch (materiaError) {
+          console.error("Error al validar materia:", materiaError);
+          setError("La materia especificada no existe");
+          setMateriaInput("");
+        }
+      }
+      
+      fetchGroups(true);
+    };
+    
+    initializeMateria();
   }, []);
 
   if (loading) {
@@ -90,7 +118,7 @@ const Groups = () => {
       <AdminLayout title="Grupos">
         <div className="text-center py-8">
           <p className="text-red-600 mb-4">{error}</p>
-          <Button onClick={() => fetchGroups(true)} text="Reintentar" />
+          <Button onClick={() => navigate("/professor/subjects")} text="Ver Catálogo de Materias" />
         </div>
       </AdminLayout>
     );
@@ -157,9 +185,9 @@ const Groups = () => {
         <div className="space-y-2 max-h-[60vh] overflow-y-auto pr-1">
           {groups.map((group) => (
             <RowItem
-              key={group.id_grupo}
+              key={group.codigo_materia+"-"+group.nombre+"-"+group.periodo+"-"+group.anio}
               columns={[
-                group.nombre,
+                `${group.codigo_materia}-${group.nombre}-${group.periodo}-${group.anio}`,
                 `${group.participantes} participantes`,
                 `Docente: ${group.docente}`,
               ]}

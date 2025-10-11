@@ -18,6 +18,11 @@ export async function getSubjectById(id) {
   return data;
 }
 
+export async function getSubjectByCode(codigo) {
+  const { data } = await axiosInstance.get(`${SUBJECTS_BASE}/codigo/${codigo}`);
+  return data;
+}
+
 export async function updateSubject(id, subjectPayload) {
   // Espera un objeto con: codigo, nombre, semestre, creditos, prerrequisitos, tipo, id_area
   const { data } = await axiosInstance.put(`${SUBJECTS_BASE}/${id}`, subjectPayload);
@@ -28,6 +33,7 @@ export default {
   fetchSubjects,
   createSubject,
   getSubjectById,
+  getSubjectByCode,
   updateSubject,
 };
 

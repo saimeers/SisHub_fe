@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import AdminLayout from "../../modules/admin/layouts/AdminLayout";
 import GroupParticipants from "../../components/ui/GroupParticipants";
-import { listarParticipantesGrupo } from "../../services/groupServices";
+import { listarParticipantesGrupo } from "../../services/groupUserServices";
 import { useToast } from "../../hooks/useToast";
 
 const GroupDetail = () => {

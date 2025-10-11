@@ -70,8 +70,8 @@ const StudentSubjects = () => {
           <SubjectGrid
             subjects={filteredSubjects}
             onDetails={(subject) => {
-              const materia = { value: subject?.id_materia, label: subject?.nombre };
-              navigate("/student/groups", { state: { materia } });
+              const materia = { value: subject?.codigo, label: subject?.nombre };
+              navigate(`/student/${subject?.codigo}/groups`, { state: { materia } });
             }}
             showSettings={false}
           />

@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useParams } from "react-router-dom";
 import AdminLayout from "../../modules/student/layouts/StudentLayout";
 import RowItem from "../../components/ui/RowItem";
 import FieldText from "../../components/ui/FieldText";
+import Button from "../../components/ui/Button";
 import JoinGroupForm from "../../modules/student/components/JoinGroupForm";
 import { listarGruposHabilitadosPorMateria } from "../../services/groupServices";
+import { getSubjectByCode } from "../../services/materiaServices";
 import { joinGroupByAccessKey } from "../../services/groupUserServices";
 import { useToast } from "../../hooks/useToast";
 import { useAuth } from "../../contexts/AuthContext";
@@ -12,6 +14,7 @@ import { useNavigate } from "react-router-dom";
 
 const Groups = () => {
   const location = useLocation();
+  const { codigo_materia } = useParams();
   const materiaState = location?.state?.materia || null;
   const [selectedMateria, setSelectedMateria] = useState(
     materiaState?.label || ""
@@ -36,18 +39,26 @@ const Groups = () => {
       toast.error("Ingresa la clave de acceso");
       return;
     }
-    if (!userData?.id_usuario) {
+    if (!userData?.codigo) {
       toast.error("No se encontró el usuario autenticado");
       return;
     }
 
     try {
       setJoining(true);
-      await joinGroupByAccessKey({
-        id_usuario: userData.id_usuario,
-        id_grupo: selectedGroupId,
+      // Parsear el selectedGroupId para obtener los componentes individuales
+      const [codigo_materia, nombre_grupo, periodo, anio] = selectedGroupId.split('-');
+      
+      const payload = {
+        codigo_usuario: userData.codigo,
+        codigo_materia,
+        nombre_grupo,
+        periodo,
+        anio,
         clave_acceso: accessKey,
-      });
+      };
+      console.log("Datos enviados al backend:", payload);
+      await joinGroupByAccessKey(payload);
       toast.success("Te uniste al grupo correctamente");
       setAccessKey("");
     } catch (err) {
@@ -74,10 +85,9 @@ const Groups = () => {
     try {
       setLoading(true);
       setError(null);
-      if (materiaState?.value) {
-        const data = await listarGruposHabilitadosPorMateria(
-          materiaState.value
-        );
+      const materiaValue = materiaState?.value || codigo_materia;
+      if (materiaValue) {
+        const data = await listarGruposHabilitadosPorMateria(materiaValue);
         const ordenados = [...data].sort((a, b) =>
           (a?.nombre || "").localeCompare(b?.nombre || "", undefined, {
             sensitivity: "base",
@@ -96,8 +106,33 @@ const Groups = () => {
   };
 
   useEffect(() => {
-    setSelectedMateria(materiaState?.label || "");
-    fetchGroups();
+    const initializeMateria = async () => {
+      const materiaFromState = materiaState;
+      const materiaFromParams = codigo_materia;
+
+      if (materiaFromState) {
+        setSelectedMateria(materiaFromState.label || "");
+      } else if (materiaFromParams) {
+        // Validar que la materia existe
+        try {
+          const materiaData = await getSubjectByCode(materiaFromParams);
+          if (materiaData) {
+            setSelectedMateria(materiaData.nombre);
+          } else {
+            setError("La materia especificada no existe");
+            setSelectedMateria("");
+          }
+        } catch (materiaError) {
+          console.error("Error al validar materia:", materiaError);
+          setError("La materia especificada no existe");
+          setSelectedMateria("");
+        }
+      }
+
+      fetchGroups();
+    };
+
+    initializeMateria();
   }, []);
 
   const handleStatusChange = (index, newStatus) => {
@@ -115,7 +150,13 @@ const Groups = () => {
   if (error) {
     return (
       <AdminLayout title="Grupos">
-        <div className="text-center text-red-600 py-6">{error}</div>
+        <div className="text-center py-8">
+          <p className="text-red-600 mb-4">{error}</p>
+          <Button
+            onClick={() => navigate("/student/subjects")}
+            text="Ver Catálogo de Materias"
+          />
+        </div>
       </AdminLayout>
     );
   }
@@ -157,14 +198,18 @@ const Groups = () => {
           ) : (
             groups.map((group) => (
               <RowItem
-                key={group.id_grupo}
-                columns={[group.nombre, `Docente: ${group.docente}`]}
+                key={`${group.codigo_materia}-${group.nombre}-${group.periodo}-${group.anio}`}
+                columns={[
+                  `${group.codigo_materia}-${group.nombre}-${group.periodo}-${group.anio}`,
+                  `Docente: ${group.docente}`,
+                ]}
                 status={group.estado}
                 editable={false}
                 showStatus={false}
                 onClick={() => {
-                  setSelectedGroupName(group.nombre);
-                  setSelectedGroupId(group.id_grupo);
+                  const fullGroupName = `${group.codigo_materia}-${group.nombre}-${group.periodo}-${group.anio}`;
+                  setSelectedGroupName(fullGroupName);
+                  setSelectedGroupId(fullGroupName);
                 }}
               />
             ))

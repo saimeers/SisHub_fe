@@ -31,7 +31,7 @@ import GroupDetailProfessor from "./pages/professor/GroupDetail";
 // estudiante
 import DashboardStudent from "./pages/student/Dashboard";
 import GroupsStudent from "./pages/student/Groups";
-import StudentAllGroups from "./pages/student/MyGroups";
+import StudentMyGroups from "./pages/student/MyGroups";
 import SubjectsStudent from "./pages/student/Subjects";
 import GroupDetailStudent from "./pages/student/GroupDetail";
 
@@ -83,13 +83,13 @@ function App() {
             element={<ProtectedRoute allowedRoles={["ADMIN"]} />}
           >
             <Route path="dashboard" element={<AdminDashboard />} />
-            <Route path="groups" element={<GroupsAdmin />} />
+            <Route path=":codigo_materia/groups" element={<GroupsAdmin />} />
+            <Route path=":codigo_materia/create-group" element={<CreateGroupAdmin />} />
             <Route path="all-groups" element={<AllGroupsAdmin />} />
-            <Route path="create-group" element={<CreateGroupAdmin />} />
             <Route path="subjects" element={<SubjectsAdmin />} />
             <Route path="subjects/create" element={<FormCreateSubject />} />
             <Route path="subjects/edit/:id" element={<FormEditSubject />} />
-            <Route path="groups/:id" element={<GroupDetail />} />
+            <Route path="groups/:codigo_materia/:nombre/:periodo/:anio" element={<GroupDetail />} />
             <Route path="upload-users" element={<UploadUsers />} />
           </Route>
 
@@ -99,12 +99,22 @@ function App() {
             element={<ProtectedRoute allowedRoles={["DOCENTE"]} />}
           >
             <Route path="dashboard" element={<DashboardProfessor />} />
-            <Route path="groups" element={<GroupsProfessor />} />
+            <Route
+              path=":codigo_materia/groups"
+              element={<GroupsProfessor />}
+            />
             <Route path="my-groups" element={<MyGroupsProfessor />} />
             <Route path="subjects" element={<SubjectsProfessor />} />
             <Route path="groups/:id" element={<GroupDetailProfessor />} />
           </Route>
-          <Route path="/establecer-contrasena" element={<ProtectedRoute><FormPassword /></ProtectedRoute>} />
+          <Route
+            path="/establecer-contrasena"
+            element={
+              <ProtectedRoute>
+                <FormPassword />
+              </ProtectedRoute>
+            }
+          />
 
           {/* ==================== RUTAS ESTUDIANTE ==================== */}
           <Route
@@ -112,8 +122,8 @@ function App() {
             element={<ProtectedRoute allowedRoles={["ESTUDIANTE"]} />}
           >
             <Route path="dashboard" element={<DashboardStudent />} />
-            <Route path="groups" element={<GroupsStudent />} />
-            <Route path="all-groups" element={<StudentAllGroups />} />
+            <Route path=":codigo_materia/groups" element={<GroupsStudent />} />
+            <Route path="my-groups" element={<StudentMyGroups />} />
             <Route path="subjects" element={<SubjectsStudent />} />
             <Route path="groups/:id" element={<GroupDetailStudent />} />
           </Route>
