@@ -22,11 +22,11 @@ export const crearGrupo = async (groupData) => {
   }
 };
 
-export const actualizarEstado = async (id_grupo, nuevoEstado) => {
+export const actualizarEstado = async (codigo_materia, nombre, periodo, anio, nuevoEstado) => {
   try {
     const response = await axiosInstance.patch(
-      `${GROUPS_BASE}/${id_grupo}/actualizar-estado`,
-      { nuevoEstado }
+      `${GROUPS_BASE}/actualizar-estado`,
+      { codigo_materia, nombre, periodo, anio, nuevoEstado }
     );
     return response.data;
   } catch (error) {
@@ -45,10 +45,10 @@ export const generarClaveAcceso = async () => {
   }
 };
 
-export const generarCodigoQR = async (id_grupo) => {
+export const generarCodigoQR = async (codigo_materia, nombre, periodo, anio) => {
   try {
     const response = await axiosInstance.get(
-      `${GROUPS_BASE}/${id_grupo}/generar-qr`
+      `${GROUPS_BASE}/${codigo_materia}/${nombre}/${periodo}/${anio}/generar-qr`
     );
     return response.data;
   } catch (error) {
@@ -57,10 +57,11 @@ export const generarCodigoQR = async (id_grupo) => {
   }
 };
 
-export const obtenerClaveYCodigoQR = async (id_grupo) => {
+export const obtenerClaveYCodigoQR = async (codigo_materia, nombre, periodo, anio) => {
   try {
-    const response = await axiosInstance.get(
-      `${GROUPS_BASE}/${id_grupo}/clave-y-qr`
+    const response = await axiosInstance.post(
+      `${GROUPS_BASE}/clave-y-qr`,
+      { codigo_materia, nombre, periodo, anio }
     );
     return response.data;
   } catch (error) {
@@ -69,10 +70,10 @@ export const obtenerClaveYCodigoQR = async (id_grupo) => {
   }
 };
 
-export const listarGruposPorMateria = async (id_materia) => {
+export const listarGruposPorMateria = async (codigo) => {
   try {
     const response = await axiosInstance.get(
-      `${GROUPS_BASE}/materia/${id_materia}`
+      `${GROUPS_BASE}/materia/${codigo}`
     );
     return response.data;
   } catch (error) {
@@ -81,10 +82,10 @@ export const listarGruposPorMateria = async (id_materia) => {
   }
 };
 
-export const listarGruposHabilitadosPorMateria = async (id_materia) => {
+export const listarGruposHabilitadosPorMateria = async (codigo) => {
   try {
     const response = await axiosInstance.get(
-      `${GROUPS_BASE}/materia/${id_materia}/habilitados`
+      `${GROUPS_BASE}/materia/${codigo}/habilitados`
     );
     return response.data;
   } catch (error) {
@@ -93,9 +94,9 @@ export const listarGruposHabilitadosPorMateria = async (id_materia) => {
   }
 };
 
-export const listarGruposPorUsuario = async (id_usuario) => {
+export const listarGruposPorUsuario = async (codigo) => {
   try {
-    const response = await axiosInstance.get(`/grupos/usuario/${id_usuario}`);
+    const response = await axiosInstance.get(`/grupos/usuario/${codigo}`);
     // console.log("Backend grupos por usuario:", response.data); // Puedes agregar esto para depurar
     return response.data;
   } catch (error) {

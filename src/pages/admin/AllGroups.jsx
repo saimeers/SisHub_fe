@@ -51,10 +51,15 @@ const AllGroups = () => {
     loadGroups();
   }, []);
 
-  // Manejar clic en el ícono 🔑
+  // Manejar clic en el ícono de llave
   const handleOpenQRCode = async (group) => {
     try {
-      const response = await obtenerClaveYCodigoQR(group.id_grupo);
+      const response = await obtenerClaveYCodigoQR(
+        group.codigo_materia,
+        group.nombre_grupo,
+        group.periodo,
+        group.anio
+      );
 
       // Generamos la URL de destino del QR (por ejemplo, una ruta para unirse al grupo)
       const joinUrl = `https://sishub.vercel.app/join-group/${
@@ -75,7 +80,7 @@ const AllGroups = () => {
   };
 
   return (
-    <AdminLayout title="Mis Grupos">
+    <AdminLayout title="Grupos">
       <div className="flex flex-col gap-4">
         {/* Filtros */}
         <GroupFilters

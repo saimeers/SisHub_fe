@@ -105,7 +105,7 @@ function App() {
             />
             <Route path="my-groups" element={<MyGroupsProfessor />} />
             <Route path="subjects" element={<SubjectsProfessor />} />
-            <Route path="groups/:id" element={<GroupDetailProfessor />} />
+            <Route path="groups/:codigo_materia/:nombre_grupo/:periodo_grupo/:anio_grupo" element={<GroupDetailProfessor />} />
           </Route>
           <Route
             path="/establecer-contrasena"
@@ -125,7 +125,7 @@ function App() {
             <Route path=":codigo_materia/groups" element={<GroupsStudent />} />
             <Route path="my-groups" element={<StudentMyGroups />} />
             <Route path="subjects" element={<SubjectsStudent />} />
-            <Route path="groups/:id" element={<GroupDetailStudent />} />
+            <Route path="my-groups/:codigo_materia/:nombre_grupo/:periodo_grupo/:anio_grupo" element={<GroupDetailStudent />} />
           </Route>
 
           {/* ==================== RUTAS ESPECIALES ==================== */}

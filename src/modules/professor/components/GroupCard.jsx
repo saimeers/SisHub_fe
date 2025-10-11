@@ -44,7 +44,7 @@ const GroupCard = ({
         : role === "professor"
         ? "/professor"
         : "/student";
-    navigate(`${basePath}/groups/${group.id_grupo}`);
+    navigate(`${basePath}/groups/${group.codigo_materia}/${group.nombre_grupo}/${group.periodo_grupo}/${group.anio_grupo}`);
   };
 
   const handleEstadoChange = async (e) => {
@@ -75,7 +75,7 @@ const GroupCard = ({
     setEstado(nuevoEstadoTexto);
     try {
       if (onEstadoChange) {
-        await onEstadoChange(group.id_grupo, nuevoEstado);
+        await onEstadoChange(group, nuevoEstado);
       }
     } catch (error) {
       setEstado(estadoAnterior);
@@ -99,7 +99,13 @@ const GroupCard = ({
       <div className="px-6 py-5 text-gray-700">
         <div className="flex items-center justify-between mb-4">
           <p className="text-sm font-semibold text-gray-800">
-            {group?.nombre_grupo || group?.nombre}
+            {group?.codigo_materia +
+              "-" +
+              group?.nombre_grupo +
+              "-" +
+              group?.periodo_grupo +
+              "-" +
+              group?.anio_grupo}
           </p>
           {showQRButton && (
             <button

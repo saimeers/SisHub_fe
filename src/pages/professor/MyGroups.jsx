@@ -48,12 +48,12 @@ const MyGroups = () => {
   // Cargar los grupos del profesor
   useEffect(() => {
     const loadGroups = async () => {
-      if (!userData?.id_usuario) return;
+      if (!userData?.codigo) return;
 
       setIsLoading(true);
       setError("");
       try {
-        const list = await listarGruposPorUsuario(userData.id_usuario);
+        const list = await listarGruposPorUsuario(userData.codigo);
         console.log("Grupos del profesor:", list);
         setGroups(Array.isArray(list) ? list : []);
       } catch (err) {
@@ -71,7 +71,12 @@ const MyGroups = () => {
   // Manejar apertura del QR
   const handleOpenQRCode = async (group) => {
     try {
-      const response = await obtenerClaveYCodigoQR(group.id_grupo);
+      const response = await obtenerClaveYCodigoQR(
+        group.codigo_materia,
+        group.nombre_grupo,
+        group.periodo_grupo,
+        group.anio_grupo
+      );
 
       const joinUrl = `https://sishub.vercel.app/join-group/${
         response?.clave_acceso || group.clave_acceso
@@ -117,21 +122,42 @@ const MyGroups = () => {
     }
   };
 
-  const handleEstadoActualizado = async (id_grupo, nuevoEstado) => {
+  const handleEstadoActualizado = async (groupData, nuevoEstado) => {
     try {
-      // nuevoEstado ya viene como número (1 o 0)
-      await actualizarEstado(id_grupo, nuevoEstado);
+      // groupData puede ser un objeto con los identificadores del grupo o un id_grupo (para compatibilidad)
+      let codigo_materia, nombre, periodo, anio;
+      
+      if (typeof groupData === 'object') {
+        codigo_materia = groupData.codigo_materia;
+        nombre = groupData.nombre_grupo;
+        periodo = groupData.periodo_grupo;
+        anio = groupData.anio_grupo;
+      } else {
+        // Fallback para compatibilidad con código anterior
+        const group = groups.find(g => g.id_grupo === groupData);
+        if (!group) throw new Error("Grupo no encontrado");
+        codigo_materia = group.codigo_materia;
+        nombre = group.nombre_grupo;
+        periodo = group.periodo_grupo;
+        anio = group.anio_grupo;
+      }
+
+      await actualizarEstado(codigo_materia, nombre, periodo, anio, nuevoEstado);
+      
       setGroups((prev) =>
         prev.map((g) =>
-          g.id_grupo === id_grupo ? { ...g, estado: nuevoEstado } : g
+          g.codigo_materia === codigo_materia && 
+          g.nombre_grupo === nombre && 
+          g.periodo_grupo === periodo && 
+          g.anio_grupo === anio
+            ? { ...g, estado: nuevoEstado === 1 ? "Habilitado" : "Deshabilitado" } 
+            : g
         )
       );
 
-      const updated = groups.find((g) => g.id_grupo === id_grupo);
-      const nombre =
-        updated?.nombre_grupo || updated?.nombre || `ID ${id_grupo}`;
+      const nombreGrupo = nombre || "grupo";
       const estadoTexto = nuevoEstado === 1 ? "habilitado" : "deshabilitado";
-      toastSuccess(`Grupo ${nombre} ${estadoTexto} correctamente`);
+      toastSuccess(`Grupo ${nombreGrupo} ${estadoTexto} correctamente`);
     } catch (error) {
       alert("❌ No se pudo actualizar el estado del grupo");
       toastError("No se pudo actualizar el estado del grupo");

@@ -26,14 +26,14 @@ const MyGroups = () => {
 
   useEffect(() => {
     const loadGroups = async () => {
-      if (!userData?.id_usuario) {
+      if (!userData?.codigo) {
         return;
       }
 
       setIsLoading(true);
       setError("");
       try {
-        const list = await listarGruposPorUsuario(userData.id_usuario);
+        const list = await listarGruposPorUsuario(userData.codigo);
         console.log("Grupos del estudiante:", list);
         setGroups(Array.isArray(list) ? list : []);
       } catch (err) {

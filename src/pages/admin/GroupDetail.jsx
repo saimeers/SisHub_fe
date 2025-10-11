@@ -62,7 +62,7 @@ const GroupDetail = () => {
     <AdminLayout
       title={
         groupInfo
-          ? `${groupInfo.nombre} | ${groupInfo.grupo} | ${groupInfo.periodo_display}`
+          ? `${groupInfo.codigo_materia} - ${groupInfo.nombre} | ${groupInfo.periodo_display}`
           : "Cargando grupo..."
       }
     >
