@@ -45,7 +45,7 @@ const GroupCard = ({ group, index = 0, onQRCode, showQRButton = true, role = "ad
       <div className="px-6 py-5 text-gray-700">
         <div className="flex items-center justify-between mb-4">
           <p className="text-sm font-semibold text-gray-800">
-            {group?.nombre_grupo || group?.nombre}
+            {group?.codigo_materia+group?.nombre_grupo+"-"+group?.anio+"-"+group?.periodo}
           </p>
           {showQRButton && (
             <button
@@ -63,7 +63,7 @@ const GroupCard = ({ group, index = 0, onQRCode, showQRButton = true, role = "ad
           <p className="text-sm">
             <span className="text-gray-500">Código:</span>{" "}
             <span className="font-semibold">
-              {group?.codigo_materia || group?.codigo}
+              {group?.codigo || group?.codigo_materia}
             </span>
           </p>
           <p className="text-sm">
@@ -75,10 +75,10 @@ const GroupCard = ({ group, index = 0, onQRCode, showQRButton = true, role = "ad
               {group.prerrequisitos}
             </p>
           )}
-          {group?.area_conocimiento && (
+          {group?.nombre_area && (
             <p className="text-sm">
               <span className="text-gray-500">Área Conocimiento:</span>{" "}
-              {group.area_conocimiento}
+              {group.nombre_area}
             </p>
           )}
         </div>
