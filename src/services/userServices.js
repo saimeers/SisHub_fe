@@ -104,3 +104,15 @@ export const rechazarPostulacion = async (codigo) => {
     throw error;
   }
 };
+
+export const cargarDocentesMasivamente = async (docentes) => {
+  try {
+    const response = await axiosInstance.post("/usuarios/cargar-docentes", {
+      docentes
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error al cargar docentes masivamente:", error);
+    throw error;
+  }
+};

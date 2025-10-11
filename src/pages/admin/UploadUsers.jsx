@@ -8,7 +8,7 @@ import { useToast } from "../../hooks/useToast";
 import Swal from "sweetalert2";
 import { useUserValidation } from "../../modules/admin/hooks/useUserValidation";
 import { parseCSV, formatErrorMessage } from "../../modules/admin/utils/csvParser";
-
+import { cargarDocentesMasivamente } from "../../services/userServices";
 
 const UploadUsers = () => {
   const navigate = useNavigate();
@@ -27,6 +27,7 @@ const UploadUsers = () => {
   const [editingUser, setEditingUser] = useState(null);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // ==================== HANDLERS ====================
 
@@ -139,47 +140,47 @@ const UploadUsers = () => {
     setEditingUser(null);
   };
 
- const deleteUser = async (index) => {
-  const actualIndex = (currentPage - 1) * itemsPerPage + index;
-  const userName = users[actualIndex].nombre;
+  const deleteUser = async (index) => {
+    const actualIndex = (currentPage - 1) * itemsPerPage + index;
+    const userName = users[actualIndex].nombre;
 
-  const result = await Swal.fire({
-    title: `¿Eliminar a ${userName}?`,
-    text: "Esta acción no se puede deshacer.",
-    icon: "warning",
-    showCancelButton: true,
-    confirmButtonColor: "#d33",
-    cancelButtonColor: "#6b7280",
-    confirmButtonText: "Sí, eliminar",
-    cancelButtonText: "Cancelar",
-  });
-
-  if (result.isConfirmed) {
-    setUsers((prev) => prev.filter((_, i) => i !== actualIndex));
-
-    const totalPages = Math.ceil((users.length - 1) / itemsPerPage);
-    if (currentPage > totalPages && currentPage > 1) {
-      setCurrentPage(currentPage - 1);
-    }
-
-    toast.warning(`Usuario ${userName} eliminado`);
-    Swal.fire({
-      title: "Eliminado",
-      text: `${userName} ha sido eliminado correctamente.`,
-      icon: "success",
-      timer: 1500,
-      showConfirmButton: false,
+    const result = await Swal.fire({
+      title: `¿Eliminar a ${userName}?`,
+      text: "Esta acción no se puede deshacer.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#6b7280",
+      confirmButtonText: "Sí, eliminar",
+      cancelButtonText: "Cancelar",
     });
-  }
-};
 
+    if (result.isConfirmed) {
+      setUsers((prev) => prev.filter((_, i) => i !== actualIndex));
 
-  const handleSubmit = () => {
+      const totalPages = Math.ceil((users.length - 1) / itemsPerPage);
+      if (currentPage > totalPages && currentPage > 1) {
+        setCurrentPage(currentPage - 1);
+      }
+
+      toast.warning(`Usuario ${userName} eliminado`);
+      Swal.fire({
+        title: "Eliminado",
+        text: `${userName} ha sido eliminado correctamente.`,
+        icon: "success",
+        timer: 1500,
+        showConfirmButton: false,
+      });
+    }
+  };
+
+  const handleSubmit = async () => {
     if (users.length === 0) {
       toast.warning("No hay docentes para cargar");
       return;
     }
 
+    // Validación final
     const invalidUsers = [];
     users.forEach((user) => {
       const errors = validateUser(user);
@@ -193,14 +194,182 @@ const UploadUsers = () => {
       return;
     }
 
-    // Aquí iría la lógica para enviar los datos al backend
-    toast.success(`✓ ${users.length} docente(s) guardado(s) exitosamente`);
-    setTimeout(() => navigate("/admin"), 2000);
+    // Confirmar acción
+    const result = await Swal.fire({
+      title: "¿Confirmar carga de docentes?",
+      html: `
+        <div style="text-align: center;">
+          <p>Se cargarán <strong>${users.length} docente(s)</strong> al sistema.</p>
+          <ul style="margin-top: 10px; font-size: 0.9em; color: #374151;">
+            <li>Podrán establecer su contraseña al ingresar</li>
+          </ul>
+        </div>
+      `,
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonColor: "#B70000",
+      cancelButtonColor: "#6b7280",
+      confirmButtonText: "Sí, cargar docentes",
+      cancelButtonText: "Cancelar",
+    });
+
+    if (!result.isConfirmed) return;
+
+    setIsSubmitting(true);
+
+    try {
+      // Preparar datos (sin el id temporal)
+      const docentesParaEnviar = users.map(({ id, ...user }) => user);
+
+      // Llamar al servicio
+      const response = await cargarDocentesMasivamente(docentesParaEnviar);
+
+      // Mostrar resultados
+      if (response.totalErrores === 0) {
+        // ✅ Todo exitoso
+        await Swal.fire({
+          title: "¡Éxito!",
+          html: `
+            <div style="text-align: left;">
+              <p style="color: #059669; font-weight: 600; margin-bottom: 10px;">
+                ✅ Se cargaron <strong>${response.totalExitosos} docente(s)</strong> correctamente.
+              </p>
+              <ul style="font-size: 0.9em; color: #374151; max-height: 200px; overflow-y: auto;">
+                ${response.exitosos.slice(0, 8).map(d => 
+                  `<li>✓ ${d.nombre} (${d.codigo})</li>`
+                ).join('')}
+                ${response.exitosos.length > 8 ? `<li style="color: #6b7280; font-style: italic;">... y ${response.exitosos.length - 8} más</li>` : ''}
+              </ul>
+              <p style="margin-top: 15px; font-size: 0.85em; color: #6b7280; padding: 10px; background-color: #f3f4f6; border-radius: 6px;">
+                Los docentes están <strong>HABILITADOS</strong> y pueden acceder al sistema.
+              </p>
+            </div>
+          `,
+          icon: "success",
+          confirmButtonColor: "#B70000",
+          confirmButtonText: "Ir a lista de usuarios"
+        });
+        navigate("/admin/usuarios");
+        
+      } else if (response.totalExitosos === 0) {
+        // ❌ Todo falló
+        const erroresHTML = response.errores
+          .slice(0, 8)
+          .map(e => `<li style="margin-bottom: 8px;"><strong>${e.docente.nombre}:</strong> <span style="color: #dc2626;">${e.error}</span></li>`)
+          .join('');
+        
+        await Swal.fire({
+          title: "Error en la carga",
+          html: `
+            <div style="text-align: left;">
+              <p style="color: #dc2626; font-weight: 600; margin-bottom: 10px;">
+                ❌ No se pudo cargar ningún docente.
+              </p>
+              <ul style="font-size: 0.85em; max-height: 300px; overflow-y: auto; color: #374151;">
+                ${erroresHTML}
+                ${response.errores.length > 8 ? `<li style="color: #6b7280; font-style: italic;">... y ${response.errores.length - 8} más</li>` : ''}
+              </ul>
+            </div>
+          `,
+          icon: "error",
+          confirmButtonColor: "#B70000",
+        });
+        
+      } else {
+        // ⚠️ Carga parcial
+        const exitososHTML = response.exitosos
+          .slice(0, 5)
+          .map(e => `<li style="color: #059669;">✅ ${e.nombre} (${e.codigo})</li>`)
+          .join('');
+        
+        const erroresHTML = response.errores
+          .slice(0, 5)
+          .map(e => `<li style="margin-bottom: 6px;"><strong>${e.docente.nombre}:</strong> <span style="color: #dc2626; font-size: 0.9em;">${e.error}</span></li>`)
+          .join('');
+
+        const confirmResult = await Swal.fire({
+          title: "Carga parcial completada",
+          html: `
+            <div style="text-align: left;">
+              <p style="color: #059669; font-weight: 600; margin-bottom: 8px;">
+                ✅ ${response.totalExitosos} exitoso(s):
+              </p>
+              <ul style="font-size: 0.85em; max-height: 140px; overflow-y: auto; margin-bottom: 15px;">
+                ${exitososHTML}
+                ${response.exitosos.length > 5 ? `<li style="color: #6b7280; font-style: italic;">... y ${response.exitosos.length - 5} más</li>` : ''}
+              </ul>
+              
+              <p style="color: #dc2626; font-weight: 600; margin-bottom: 8px;">
+                ❌ ${response.totalErrores} error(es):
+              </p>
+              <ul style="font-size: 0.85em; max-height: 140px; overflow-y: auto;">
+                ${erroresHTML}
+                ${response.errores.length > 5 ? `<li style="color: #6b7280; font-style: italic;">... y ${response.errores.length - 5} más</li>` : ''}
+              </ul>
+            </div>
+          `,
+          icon: "warning",
+          confirmButtonColor: "#B70000",
+          showCancelButton: true,
+          confirmButtonText: "Ver usuarios cargados",
+          cancelButtonText: "Quedarme aquí"
+        });
+
+        if (confirmResult.isConfirmed) {
+          navigate("/admin/usuarios");
+        } else {
+          // Limpiar solo los exitosos
+          const exitososCodigos = new Set(response.exitosos.map(e => e.codigo));
+          setUsers(users.filter(u => !exitososCodigos.has(u.codigo)));
+          toast.info(`Quedan ${users.length - response.totalExitosos} usuario(s) pendientes`);
+        }
+      }
+
+    } catch (error) {
+      console.error("Error al cargar docentes:", error);
+      
+      const errorMessage = error.response?.data?.error || error.error || error.message || "Error desconocido";
+      const errorDetalle = error.response?.data?.detalle || error.detalle || "";
+      
+      Swal.fire({
+        title: "Error del servidor",
+        html: `
+          <div style="text-align: left;">
+            <p style="color: #dc2626; font-weight: 600; margin-bottom: 10px;">
+              ${errorMessage}
+            </p>
+            ${errorDetalle ? `
+              <p style="font-size: 0.85em; color: #6b7280; padding: 10px; background-color: #fef2f2; border-left: 3px solid #dc2626; border-radius: 4px;">
+                ${errorDetalle}
+              </p>
+            ` : ''}
+            <p style="font-size: 0.85em; color: #6b7280; margin-top: 15px;">
+              Por favor intenta de nuevo o contacta al soporte técnico.
+            </p>
+          </div>
+        `,
+        icon: "error",
+        confirmButtonColor: "#B70000",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const handleCancel = () => {
+  const handleCancel = async () => {
     if (users.length > 0) {
-      if (confirm("¿Cancelar? Se perderán todos los docentes agregados")) {
+      const result = await Swal.fire({
+        title: "¿Cancelar carga?",
+        text: `Se perderán ${users.length} docente(s) agregado(s)`,
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#d33",
+        cancelButtonColor: "#6b7280",
+        confirmButtonText: "Sí, cancelar",
+        cancelButtonText: "No, continuar",
+      });
+
+      if (result.isConfirmed) {
         navigate("/admin");
       }
     } else {
@@ -241,8 +410,9 @@ const UploadUsers = () => {
                 accept=".csv"
                 onChange={handleFileUpload}
                 className="hidden"
+                disabled={isSubmitting}
               />
-              <div className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center gap-2 whitespace-nowrap">
+              <div className={`bg-[#B70000] hover:bg-red-800 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center gap-2 whitespace-nowrap ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}>
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                 </svg>
@@ -251,7 +421,7 @@ const UploadUsers = () => {
             </label>
           </div>
           <p className="text-sm text-gray-500">Formato CSV: codigo,nombre,documento,correo,telefono</p>
-          <p className="text-xs text-purple-600 mt-1">* Los correos deben ser @ufps.edu.co</p>
+          <p className="text-xs text-red-700 mt-1">* Los correos deben ser @ufps.edu.co</p>
         </div>
 
         {/* Cantidad de registros y contador */}
@@ -360,18 +530,32 @@ const UploadUsers = () => {
         <div className="flex flex-col sm:flex-row gap-3 justify-end">
           <button
             onClick={handleCancel}
-            className="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg font-medium transition-colors"
+            disabled={isSubmitting}
+            className="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Cancelar
           </button>
           <button
             onClick={handleSubmit}
-            className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+            disabled={isSubmitting || users.length === 0}
+            className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
-            Guardar ({users.length})
+            {isSubmitting ? (
+              <>
+                <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Procesando...
+              </>
+            ) : (
+              <>
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                Guardar ({users.length})
+              </>
+            )}
           </button>
         </div>
       </div>
