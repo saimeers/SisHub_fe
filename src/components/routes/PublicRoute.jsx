@@ -3,13 +3,19 @@ import { useAuth } from '../../contexts/AuthContext';
 import { LoadingScreen } from '../ui/LoadingScreen';
 
 export const PublicRoute = ({ children }) => {
-  const { isAuthenticated, rol, loading, userData } = useAuth();
+  const { isAuthenticated, rol, loading, userData, needsPassword } = useAuth();
 
   if (loading) {
     return <LoadingScreen />;
   }
 
   if (isAuthenticated && userData) {
+    // ✅ Si es docente y necesita contraseña, redirigir primero a establecerla
+    if (needsPassword) {
+      return <Navigate to="/establecer-contrasena" replace />;
+    }
+
+    // Redirigir según rol
     switch (rol) {
       case 'ADMIN':
         return <Navigate to="/admin/dashboard" replace />;

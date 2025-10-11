@@ -3,7 +3,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { LoadingScreen } from '../ui/LoadingScreen';
 
 export const ProtectedRoute = ({ children, allowedRoles = [] }) => {
-    const { isAuthenticated, rol, estado, loading } = useAuth();
+    const { isAuthenticated, rol, estado, loading, needsPassword } = useAuth();
     const location = useLocation();
 
     if (loading) {
@@ -22,6 +22,11 @@ export const ProtectedRoute = ({ children, allowedRoles = [] }) => {
     // Si está en espera
     if (estado === "STAND_BY") {
         return <Navigate to="/account-pending" replace />;
+    }
+
+    // ✅ VALIDACIÓN: Si es docente y no tiene contraseña, redirigir a establecer contraseña
+    if (needsPassword && location.pathname !== "/establecer-contrasena") {
+        return <Navigate to="/establecer-contrasena" replace />;
     }
 
     // 🔹 Redirigir automáticamente al dashboard de su rol
