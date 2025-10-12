@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import AdminLayout from "../../modules/admin/layouts/AdminLayout";
 import { useNavigate } from "react-router-dom";
-import GroupGrid from "../../modules/admin/components/GroupGrid";
+import GroupGrid from "../../components/ui/GroupGrid";
 import GroupFilters from "../../components/ui/GroupFilters";
 import useGroupFilters from "../../hooks/useGroupFilters";
 import {
@@ -51,15 +51,24 @@ const AllGroups = () => {
     loadGroups();
   }, []);
 
-  // Manejar clic en el ícono 🔑
+  // Manejar clic en el ícono de llave
   const handleOpenQRCode = async (group) => {
     try {
-      const response = await obtenerClaveYCodigoQR(group.id_grupo);
+      const response = await obtenerClaveYCodigoQR(
+        group.codigo_materia,
+        group.nombre_grupo,
+        group.periodo,
+        group.anio
+      );
 
       // Generamos la URL de destino del QR (por ejemplo, una ruta para unirse al grupo)
-      const joinUrl = `https://sishub.vercel.app/join-group/${
-        response?.clave_acceso || group.clave_acceso
-      }`;
+      //probar con app desplegada https://sishub-fe.vercel.app/
+      //porbar con local http://localhost:5173/
+      const joinUrl = `https://sishub-fe.vercel.app/join-group?codigo_materia=${
+        group.codigo_materia
+      }&nombre=${group.nombre_grupo}&periodo=${group.periodo}&anio=${
+        group.anio
+      }&clave=${response?.clave_acceso || group.clave_acceso}`;
 
       setQrData({
         clave_acceso: response?.clave_acceso,
@@ -75,7 +84,7 @@ const AllGroups = () => {
   };
 
   return (
-    <AdminLayout title="Mis Grupos">
+    <AdminLayout title="Grupos">
       <div className="flex flex-col gap-4">
         {/* Filtros */}
         <GroupFilters
@@ -103,7 +112,11 @@ const AllGroups = () => {
 
         {/* Grilla */}
         {!isLoading && !error && (
-          <GroupGrid groups={filteredGroups} onQRCode={handleOpenQRCode} role="admin" />
+          <GroupGrid
+            groups={filteredGroups}
+            onQRCode={handleOpenQRCode}
+            role="admin"
+          />
         )}
       </div>
 

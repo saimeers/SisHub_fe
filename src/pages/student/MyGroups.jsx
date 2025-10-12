@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from "react";
 import StudentLayout from "../../modules/student/layouts/StudentLayout";
 import { useNavigate } from "react-router-dom";
-import GroupGrid from "../../modules/admin/components/GroupGrid";
+import GroupGrid from "../../components/ui/GroupGrid";
 import GroupFilters from "../../components/ui/GroupFilters";
 import useGroupFilters from "../../hooks/useGroupFilters";
 import { listarGruposPorUsuario } from "../../services/groupServices";
 import { useAuth } from "../../contexts/AuthContext";
 
-const AllGroups = () => {
+const MyGroups = () => {
   const [groups, setGroups] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -26,14 +26,14 @@ const AllGroups = () => {
 
   useEffect(() => {
     const loadGroups = async () => {
-      if (!userData?.id_usuario) {
+      if (!userData?.codigo) {
         return;
       }
 
       setIsLoading(true);
       setError("");
       try {
-        const list = await listarGruposPorUsuario(userData.id_usuario);
+        const list = await listarGruposPorUsuario(userData.codigo);
         console.log("Grupos del estudiante:", list);
         setGroups(Array.isArray(list) ? list : []);
       } catch (err) {
@@ -137,4 +137,4 @@ const AllGroups = () => {
   );
 };
 
-export default AllGroups;
+export default MyGroups;

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import ProfessorLayout from "../../modules/professor/layouts/ProfessorLayout";
 import { useNavigate } from "react-router-dom";
-import SubjectGrid from "../../modules/admin/components/SubjectGrid";
+import SubjectGrid from "../../components/ui/SubjectGrid";
 import SubjectFilters from "../../components/ui/SubjectFilters";
 import useSubjectFilters from "../../hooks/useSubjectFilters";
 import { fetchSubjects } from "../../services/materiaServices";
@@ -11,7 +11,7 @@ const ProfessorSubjects = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
-  
+
   // Hook para manejar filtros y búsqueda
   const {
     searchTerm,
@@ -70,8 +70,11 @@ const ProfessorSubjects = () => {
           <SubjectGrid
             subjects={filteredSubjects}
             onDetails={(subject) => {
-              const materia = { value: subject?.id_materia, label: subject?.nombre };
-              navigate("/professor/groups", { state: { materia } });
+              const materia = {
+                value: subject?.codigo,
+                label: subject?.nombre,
+              };
+              navigate(`/professor/${subject?.codigo}/groups`, { state: { materia } });
             }}
             showSettings={false}
           />

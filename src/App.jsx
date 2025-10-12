@@ -8,21 +8,22 @@ import Login from "./pages/auth/Login";
 import Signup from "./pages/auth/Signup";
 import FormRegister from "./pages/auth/FormRegister";
 import ResetPassword from "./pages/auth/ResetPassword";
+import FormPassword from "./pages/auth/FormPassword";
 
 // admin
 import AdminDashboard from "./pages/admin/Dashboard";
 import GroupsAdmin from "./pages/admin/Groups";
 import AllGroupsAdmin from "./pages/admin/AllGroups";
-import CreateGroupAdmin from "./pages/admin/FormCreateGroup";
+import CreateGroupAdmin from "./modules/admin/components/FormCreateGroup";
 import SubjectsAdmin from "./pages/admin/Subjects";
-import FormCreateSubject from "./pages/admin/FormCreateSubject";
-import FormEditSubject from "./pages/admin/FormEditSubject";
+import FormCreateSubject from "./modules/admin/components/FormCreateSubject";
+import FormEditSubject from "./modules/admin/components/FormEditSubject";
 import GroupDetail from "./pages/admin/GroupDetail";
+import UploadUsers from "./pages/admin/UploadUsers";
 
 // docente
 import GroupsProfessor from "./pages/professor/Groups";
 import DashboardProfessor from "./pages/professor/Dashboard";
-import CreateGroupProfessor from "./pages/professor/FormCreateGroup";
 import SubjectsProfessor from "./pages/professor/Subjects";
 import MyGroupsProfessor from "./pages/professor/MyGroups";
 import GroupDetailProfessor from "./pages/professor/GroupDetail";
@@ -30,12 +31,13 @@ import GroupDetailProfessor from "./pages/professor/GroupDetail";
 // estudiante
 import DashboardStudent from "./pages/student/Dashboard";
 import GroupsStudent from "./pages/student/Groups";
-import StudentAllGroups from "./pages/student/AllGroups";
+import StudentMyGroups from "./pages/student/MyGroups";
 import SubjectsStudent from "./pages/student/Subjects";
 import GroupDetailStudent from "./pages/student/GroupDetail";
 
 // stand by
 import CuentaPendiente from "./pages/standby/CuentaPendiente";
+import JoinGroup from "./modules/student/components/JoinGroup";
 
 function App() {
   return (
@@ -82,13 +84,17 @@ function App() {
             element={<ProtectedRoute allowedRoles={["ADMIN"]} />}
           >
             <Route path="dashboard" element={<AdminDashboard />} />
-            <Route path="groups" element={<GroupsAdmin />} />
+            <Route path=":codigo_materia/groups" element={<GroupsAdmin />} />
+            <Route
+              path=":codigo_materia/create-group"
+              element={<CreateGroupAdmin />}
+            />
             <Route path="all-groups" element={<AllGroupsAdmin />} />
-            <Route path="create-group" element={<CreateGroupAdmin />} />
             <Route path="subjects" element={<SubjectsAdmin />} />
             <Route path="subjects/create" element={<FormCreateSubject />} />
-            <Route path="subjects/edit/:id" element={<FormEditSubject />} />
-            <Route path="groups/:id" element={<GroupDetail />} />
+            <Route path="subjects/edit/:codigo" element={<FormEditSubject />} />
+            <Route path="groups/:codigo_materia/:nombre/:periodo/:anio" element={<GroupDetail />} />
+            <Route path="upload-users" element={<UploadUsers />} />
           </Route>
 
           {/* ==================== RUTAS DOCENTE ==================== */}
@@ -97,12 +103,25 @@ function App() {
             element={<ProtectedRoute allowedRoles={["DOCENTE"]} />}
           >
             <Route path="dashboard" element={<DashboardProfessor />} />
-            <Route path="groups" element={<GroupsProfessor />} />
+            <Route
+              path=":codigo_materia/groups"
+              element={<GroupsProfessor />}
+            />
             <Route path="my-groups" element={<MyGroupsProfessor />} />
-            <Route path="create-group" element={<CreateGroupProfessor />} />
             <Route path="subjects" element={<SubjectsProfessor />} />
-            <Route path="groups/:id" element={<GroupDetailProfessor />} />
+            <Route
+              path="my-group/:codigo_materia/:nombre/:periodo/:anio"
+              element={<GroupDetailProfessor />}
+            />
           </Route>
+          <Route
+            path="/establecer-contrasena"
+            element={
+              <ProtectedRoute>
+                <FormPassword />
+              </ProtectedRoute>
+            }
+          />
 
           {/* ==================== RUTAS ESTUDIANTE ==================== */}
           <Route
@@ -110,14 +129,18 @@ function App() {
             element={<ProtectedRoute allowedRoles={["ESTUDIANTE"]} />}
           >
             <Route path="dashboard" element={<DashboardStudent />} />
-            <Route path="groups" element={<GroupsStudent />} />
-            <Route path="all-groups" element={<StudentAllGroups />} />
+            <Route path=":codigo_materia/groups" element={<GroupsStudent />} />
+            <Route path="my-groups" element={<StudentMyGroups />} />
             <Route path="subjects" element={<SubjectsStudent />} />
-            <Route path="groups/:id" element={<GroupDetailStudent />} />
+            <Route
+              path="my-group/:codigo_materia/:nombre/:periodo/:anio"
+              element={<GroupDetailStudent />}
+            />
           </Route>
 
           {/* ==================== RUTAS ESPECIALES ==================== */}
           <Route path="/account-pending" element={<CuentaPendiente />} />
+          <Route path="/join-group" element={<JoinGroup />} />
 
           {/* ==================== REDIRECTS ==================== */}
           <Route path="/" element={<Navigate to="/login" replace />} />

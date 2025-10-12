@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import StudentLayout from "../../modules/student/layouts/StudentLayout";
 import { useNavigate } from "react-router-dom";
-import SubjectGrid from "../../modules/admin/components/SubjectGrid";
+import SubjectGrid from "../../components/ui/SubjectGrid";
 import SubjectFilters from "../../components/ui/SubjectFilters";
 import useSubjectFilters from "../../hooks/useSubjectFilters";
 import { fetchSubjects } from "../../services/materiaServices";
@@ -70,8 +70,8 @@ const StudentSubjects = () => {
           <SubjectGrid
             subjects={filteredSubjects}
             onDetails={(subject) => {
-              const materia = { value: subject?.id_materia, label: subject?.nombre };
-              navigate("/student/groups", { state: { materia } });
+              const materia = { value: subject?.codigo, label: subject?.nombre };
+              navigate(`/student/${subject?.codigo}/groups`, { state: { materia } });
             }}
             showSettings={false}
           />

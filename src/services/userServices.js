@@ -61,9 +61,9 @@ export const listarDocentes = async () => {
   }
 };
 
-export const habilitarUsuario = async (id_usuario) => {
+export const habilitarUsuario = async (codigo) => {
   try {
-    const response = await axiosInstance.patch(`/usuarios/${id_usuario}/estado`, {
+    const response = await axiosInstance.patch(`/usuarios/${codigo}/estado`, {
       habilitar: true
     });
     return response.data;
@@ -73,9 +73,9 @@ export const habilitarUsuario = async (id_usuario) => {
   }
 };
 
-export const deshabilitarUsuario = async (id_usuario) => {
+export const deshabilitarUsuario = async (codigo) => {
   try {
-    const response = await axiosInstance.patch(`/usuarios/${id_usuario}/estado`, {
+    const response = await axiosInstance.patch(`/usuarios/${codigo}/estado`, {
       habilitar: false
     });
     return response.data;
@@ -85,9 +85,9 @@ export const deshabilitarUsuario = async (id_usuario) => {
   }
 };
 
-export const aprobarPostulacion = async (id_usuario) => {
+export const aprobarPostulacion = async (codigo) => {
   try {
-    const response = await axiosInstance.patch(`/usuarios/${id_usuario}/aprobar`);
+    const response = await axiosInstance.patch(`/usuarios/${codigo}/aprobar`);
     return response.data;
   } catch (error) {
     console.error("Error al aprobar postulación:", error);
@@ -95,12 +95,24 @@ export const aprobarPostulacion = async (id_usuario) => {
   }
 };
 
-export const rechazarPostulacion = async (id_usuario) => {
+export const rechazarPostulacion = async (codigo) => {
   try {
-    const response = await axiosInstance.patch(`/usuarios/${id_usuario}/rechazar`);
+    const response = await axiosInstance.patch(`/usuarios/${codigo}/rechazar`);
     return response.data;
   } catch (error) {
     console.error("Error al rechazar postulación:", error);
+    throw error;
+  }
+};
+
+export const cargarDocentesMasivamente = async (docentes) => {
+  try {
+    const response = await axiosInstance.post("/usuarios/cargar-docentes", {
+      docentes
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error al cargar docentes masivamente:", error);
     throw error;
   }
 };

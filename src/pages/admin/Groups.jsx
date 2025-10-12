@@ -1,15 +1,20 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, useParams } from "react-router-dom";
 import AdminLayout from "../../modules/admin/layouts/AdminLayout";
 import Button from "../../components/ui/Button";
 import RowItem from "../../components/ui/RowItem";
-import { obtenerGrupos, actualizarEstado, listarGruposPorMateria } from "../../services/groupServices";
+import {
+  actualizarEstado,
+  listarGruposPorMateria,
+} from "../../services/groupServices";
+import { getSubjectByCode } from "../../services/materiaServices";
 import ConfirmModal from "../../components/ui/ConfirmModal";
 import { useToast } from "../../hooks/useToast";
 
 const Groups = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { codigo_materia } = useParams();
   const [selectedMateria, setSelectedMateria] = useState(null);
   const [materiaInput, setMateriaInput] = useState("");
   const [groups, setGroups] = useState([]);
@@ -17,21 +22,44 @@ const Groups = () => {
   const [loadingGroups, setLoadingGroups] = useState(false);
   const [error, setError] = useState(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const [pendingChange, setPendingChange] = useState(null); 
+  const [pendingChange, setPendingChange] = useState(null);
   const [confirmLoading, setConfirmLoading] = useState(false);
   const toast = useToast();
 
   const handleCreateGroup = () => {
     if (!selectedMateria) return;
-    navigate("/admin/create-group", { state: { materia: selectedMateria } });
+    navigate(`/admin/${selectedMateria.value}/create-group`, { state: { materia: selectedMateria } });
   };
 
   const fetchMaterias = async () => {
     try {
       const materiaFromState = location?.state?.materia;
+      const materiaFromParams = codigo_materia;
+
       if (materiaFromState) {
         setSelectedMateria(materiaFromState);
         setMateriaInput(materiaFromState.label || "");
+      } else if (materiaFromParams) {
+        // Si viene de la URL, validar que la materia existe
+        try {
+          const materiaData = await getSubjectByCode(materiaFromParams);
+          if (materiaData) {
+            setSelectedMateria({
+              value: materiaData.codigo,
+              label: materiaData.nombre,
+            });
+            setMateriaInput(materiaData.nombre);
+          } else {
+            setError("La materia especificada no existe");
+            setSelectedMateria(null);
+            setMateriaInput("");
+          }
+        } catch (materiaError) {
+          console.error("Error al validar materia:", materiaError);
+          setError("La materia especificada no existe");
+          setSelectedMateria(null);
+          setMateriaInput("");
+        }
       }
     } catch (error) {
       console.error("Error al inicializar materias:", error);
@@ -49,10 +77,14 @@ const Groups = () => {
         setLoadingGroups(true);
       }
       setError(null);
-      
+
       if (selectedMateria) {
         const gruposData = await listarGruposPorMateria(selectedMateria.value);
-        const ordenados = [...gruposData].sort((a, b) => (a?.nombre || "").localeCompare(b?.nombre || "", undefined, { sensitivity: "base" }));
+        const ordenados = [...gruposData].sort((a, b) =>
+          (a?.nombre || "").localeCompare(b?.nombre || "", undefined, {
+            sensitivity: "base",
+          })
+        );
         setGroups(ordenados);
       } else {
         setGroups([]);
@@ -69,9 +101,13 @@ const Groups = () => {
     }
   };
 
-  const handleStatusChange = (groupId, newStatus) => {
-    const groupName = groups.find(g => g.id_grupo === groupId)?.nombre || "este grupo";
-    setPendingChange({ groupId, newStatus, groupName });
+  const handleStatusChange = (groupKey, newStatus) => {
+    const groupName =
+      groups.find(
+        (g) =>
+          `${g.codigo_materia}-${g.nombre}-${g.periodo}-${g.anio}` === groupKey
+      )?.nombre || "este grupo";
+    setPendingChange({ groupKey, newStatus, groupName });
     setConfirmOpen(true);
   };
 
@@ -80,17 +116,32 @@ const Groups = () => {
     try {
       setConfirmLoading(true);
       const nuevoEstadoBool = pendingChange.newStatus === "Habilitado";
-      await actualizarEstado(pendingChange.groupId, nuevoEstadoBool);
-      toast.success(`Grupo "${pendingChange.groupName}" ${pendingChange.newStatus.toLowerCase()} correctamente`);
+      // Parsear la clave compuesta para obtener los componentes
+      const [codigo_materia, nombre, periodo, anio] =
+        pendingChange.groupKey.split("-");
+      await actualizarEstado(
+        codigo_materia,
+        nombre,
+        periodo,
+        parseInt(anio),
+        nuevoEstadoBool
+      );
+      toast.success(
+        `Grupo "${
+          pendingChange.groupName
+        }" ${pendingChange.newStatus.toLowerCase()} correctamente`
+      );
     } catch (err) {
       console.error("Error al cambiar estado del grupo:", err);
       setError("Error al cambiar el estado del grupo");
-      toast.error(`No se pudo cambiar el estado del grupo "${pendingChange.groupName}"`);
+      toast.error(
+        `No se pudo cambiar el estado del grupo "${pendingChange.groupName}"`
+      );
     } finally {
       setConfirmLoading(false);
       setConfirmOpen(false);
       setPendingChange(null);
-      await fetchGroups(false); // refrescar 
+      await fetchGroups(false); // refrescar
     }
   };
 
@@ -113,9 +164,25 @@ const Groups = () => {
       <AdminLayout title="Grupos">
         <div className="text-center py-16">
           <div className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-500">
-            <svg className="animate-spin -ml-1 mr-3 h-6 w-6 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            <svg
+              className="animate-spin -ml-1 mr-3 h-6 w-6 text-gray-500"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              ></circle>
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              ></path>
             </svg>
             Cargando...
           </div>
@@ -129,7 +196,10 @@ const Groups = () => {
       <AdminLayout title="Grupos">
         <div className="text-center py-8">
           <p className="text-red-600 mb-4">{error}</p>
-          <Button onClick={fetchGroups} text="Reintentar" />
+          <Button
+            onClick={() => navigate("/admin/subjects")}
+            text="Ver Catálogo de Materias"
+          />
         </div>
       </AdminLayout>
     );
@@ -151,7 +221,12 @@ const Groups = () => {
             aria-readonly="true"
           />
         </div>
-        <Button onClick={handleCreateGroup} text="+ Crear Grupo" />
+        <button
+          onClick={handleCreateGroup}
+          className="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+        >
+          + Crear Grupo
+        </button>
       </div>
       <hr className="border-gray-300 mb-4" />
 
@@ -162,9 +237,25 @@ const Groups = () => {
       {loadingGroups ? (
         <div className="text-center py-8">
           <div className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-500">
-            <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            <svg
+              className="animate-spin -ml-1 mr-3 h-5 w-5 text-gray-500"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              ></circle>
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              ></path>
             </svg>
             Cargando grupos...
           </div>
@@ -172,29 +263,34 @@ const Groups = () => {
       ) : groups.length === 0 ? (
         <div className="text-center py-8">
           <p className="text-gray-500">
-            {selectedMateria 
-              ? `No hay grupos para la materia "${selectedMateria.label}"` 
-              : "Selecciona una materia para ver los grupos"
-            }
+            {selectedMateria
+              ? `No hay grupos para la materia "${selectedMateria.label}"`
+              : "Selecciona una materia para ver los grupos"}
           </p>
         </div>
       ) : (
         <div className="space-y-2 max-h-[60vh] overflow-y-auto pr-1">
           {groups.map((group) => (
             <RowItem
-              key={group.id_grupo}
+              key={`${group.codigo_materia}-${group.nombre}-${group.periodo}-${group.anio}`}
               columns={[
-                group.nombre,
+                `${group.codigo_materia}-${group.nombre}-${group.periodo}-${group.anio}`,
                 `${group.participantes} participantes`,
                 `Docente: ${group.docente}`,
                 group.clave_acceso,
               ]}
               status={group.estado}
-              onStatusChange={(newStatus) => handleStatusChange(group.id_grupo, newStatus)}
+              onStatusChange={(newStatus) =>
+                handleStatusChange(
+                  `${group.codigo_materia}-${group.nombre}-${group.periodo}-${group.anio}`,
+                  newStatus
+                )
+              }
               editable={true}
               onClick={() => {
-                console.log("Click en grupo:", group.id_grupo);
-                navigate(`/admin/groups/${group.id_grupo}`);
+                navigate(
+                  `/admin/groups/${group.codigo_materia}/${group.nombre}/${group.periodo}/${group.anio}`
+                );
               }}
             />
           ))}
@@ -203,8 +299,18 @@ const Groups = () => {
       <ConfirmModal
         isOpen={confirmOpen}
         title="Confirmar cambio de estado"
-        message={pendingChange ? `¿Seguro que deseas ${pendingChange.newStatus.toLowerCase()} el grupo "${pendingChange.groupName}"?` : ""}
-        confirmText={pendingChange?.newStatus === "Habilitado" ? "Habilitar" : "Deshabilitar"}
+        message={
+          pendingChange
+            ? `¿Seguro que deseas ${pendingChange.newStatus.toLowerCase()} el grupo "${
+                pendingChange.groupName
+              }"?`
+            : ""
+        }
+        confirmText={
+          pendingChange?.newStatus === "Habilitado"
+            ? "Habilitar"
+            : "Deshabilitar"
+        }
         cancelText="Cancelar"
         onConfirm={confirmStatusChange}
         onCancel={cancelStatusChange}

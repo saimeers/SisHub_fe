@@ -15,7 +15,7 @@ const SubjectCard = ({ subject, index = 0, onDetails, showSettings = true }) => 
   const navigate = useNavigate();
 
   const handleEdit = () => {
-    navigate(`/admin/subjects/edit/${subject.id_materia}`);
+    navigate(`/admin/subjects/edit/${subject.codigo}`);
   };
 
   return (

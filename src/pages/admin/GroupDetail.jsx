@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import AdminLayout from "../../modules/admin/layouts/AdminLayout";
-import GroupParticipants from "../../modules/admin/components/GroupParticipants";
-import { listarParticipantesGrupo } from "../../services/groupServices";
+import GroupParticipants from "../../components/ui/GroupParticipants";
+import { listarParticipantesGrupo } from "../../services/groupUserServices";
 import { useToast } from "../../hooks/useToast";
 
 const GroupDetail = () => {
-  const { id } = useParams();
+  const { codigo_materia, nombre, periodo, anio } = useParams();
   const navigate = useNavigate();
   const { error } = useToast();
   const [participants, setParticipants] = useState([]);
@@ -19,16 +19,27 @@ const GroupDetail = () => {
     const loadGroupData = async () => {
       if (hasLoaded.current) return;
       hasLoaded.current = true;
-      if (!id) return;
+      
+      console.log("Parámetros recibidos en GroupDetail:", { codigo_materia, nombre, periodo, anio });
+      
+      if (!codigo_materia || !nombre || !periodo || !anio) {
+        console.error("Faltan parámetros requeridos:", { codigo_materia, nombre, periodo, anio });
+        return;
+      }
 
       setIsLoading(true);
       try {
-        const participantsData = await listarParticipantesGrupo(id);
-        setParticipants(Array.isArray(participantsData) ? participantsData : []);
+        const participantsData = await listarParticipantesGrupo(codigo_materia, nombre, periodo, anio);
+        setParticipants(
+          Array.isArray(participantsData) ? participantsData : []
+        );
         setGroupInfo({
-          nombre: "Fisica Mecanica",
-          grupo: "Grupo A",
-          periodo: "2025-1",
+          codigo_materia,
+          nombre,
+          periodo,
+          anio,
+          grupo: nombre,
+          periodo_display: `${periodo}-${anio}`,
         });
       } catch (err) {
         console.error("❌ Error al cargar datos del grupo:", err);
@@ -39,7 +50,7 @@ const GroupDetail = () => {
     };
 
     loadGroupData();
-  }, [id, error]);
+  }, [codigo_materia, nombre, periodo, anio, error]);
 
   const tabs = [
     { id: "proyecto", label: "Proyecto" },
@@ -51,7 +62,7 @@ const GroupDetail = () => {
     <AdminLayout
       title={
         groupInfo
-          ? `${groupInfo.nombre} | ${groupInfo.grupo} | ${groupInfo.periodo}`
+          ? `${groupInfo.codigo_materia} - ${groupInfo.nombre} | ${groupInfo.periodo_display}`
           : "Cargando grupo..."
       }
     >
@@ -63,10 +74,11 @@ const GroupDetail = () => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`px-6 py-2 rounded-full text-sm font-medium transition-all duration-200 ${activeTab === tab.id
+                className={`px-6 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
+                  activeTab === tab.id
                     ? "bg-white shadow text-gray-900"
                     : "text-gray-600 hover:text-gray-800"
-                  }`}
+                }`}
               >
                 {tab.label}
               </button>

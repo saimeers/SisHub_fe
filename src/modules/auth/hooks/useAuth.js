@@ -4,11 +4,12 @@ import {
   signOutAccount,
   signInWithGoogle,
   signInWithEmail,
-  deleteCurrentUser
+  deleteCurrentUser,
 } from "../../../services/authService";
 import { obtenerUsuario } from "../../../services/userServices";
 import { getAuthErrorMessage } from "../utils/authErrorHandler";
 import { isEmailDomainAllowed } from "../utils/emailValidator";
+import { userHasPasswordProvider } from "../utils/passwordValidator";
 import { useToast } from "../../../hooks/useToast";
 import { formatShortName } from "../../../utils/nameFormatter";
 
@@ -33,6 +34,7 @@ export const useAuth = () => {
 
   const verificarEstadoUsuario = (usuario, userName) => {
     const estado = usuario.Estado?.descripcion;
+    const rol = usuario.Rol?.descripcion;
 
     if (estado === "STAND_BY") {
       toast.warning(
@@ -40,7 +42,7 @@ export const useAuth = () => {
         { autoClose: 6000 }
       );
       navigate("/cuenta-pendiente");
-      return false;
+      return { valido: false, rol };
     }
 
     if (estado === "RECHAZADO") {
@@ -51,7 +53,7 @@ export const useAuth = () => {
       signOutAccount();
       localStorage.clear();
       navigate("/login");
-      return false;
+      return { valido: false, rol };
     }
 
     if (estado === "INHABILITADO") {
@@ -62,40 +64,60 @@ export const useAuth = () => {
       signOutAccount();
       localStorage.clear();
       navigate("/login");
-      return false;
+      return { valido: false, rol };
     }
 
-    toast.success(`¡Bienvenido ${formatShortName(userName) || ""}!`);
-    navigate(`/${usuario.Rol.descripcion.toLowerCase()}/dashboard`);
-    return true;
+    if (rol === "DOCENTE" && !userHasPasswordProvider()) {
+      toast.warning(
+        "Como docente, debes establecer una contraseña para continuar.",
+        { autoClose: 6000 }
+      );
+      navigate("/establecer-contrasena");
+      return { valido: false, rol };
+    }
+
+    return { valido: true, rol };
   };
 
-  // ✅ Nueva versión robusta
   const validarYRedirigirUsuario = async (user, token) => {
     saveUserData(user, token);
 
     try {
       const res = await obtenerUsuario();
-      console.log("🔍 obtenerUsuario:", res);
+      const usuario = res?.data?.usuario || res?.data || res?.usuario || res;
 
-      // Detecta el usuario independientemente de la estructura del backend
-      const usuario =
-        res?.data?.usuario ||
-        res?.data ||
-        res?.usuario ||
-        res;
+      console.log("🔍 Usuario obtenido:", usuario);
 
-      // Solo continúa si el usuario realmente existe
       if (usuario && (usuario.id || usuario.IdUsuario || usuario.Rol)) {
-        verificarEstadoUsuario(usuario, user.displayName);
+        const { valido, rol } = verificarEstadoUsuario(
+          usuario,
+          user.displayName
+        );
+        if (!valido) return;
+
+        const pendingJoin = localStorage.getItem("pendingJoinGroup");
+
+        console.log("🔗 Pending join detectado:", pendingJoin);
+
+        toast.success(
+          `¡Bienvenido ${formatShortName(user.displayName) || ""}!`
+        );
+
+        if (pendingJoin) {
+          console.log("➡️ Redirigiendo a join-group con:", pendingJoin);
+          // IMPORTANTE: No eliminar pendingJoinGroup aquí, lo hace JoinGroup
+          navigate(`/join-group${pendingJoin}`);
+        } else {
+          console.log("➡️ Redirigiendo a dashboard:", rol);
+          navigate(`/${rol?.toLowerCase()}/dashboard`);
+        }
       } else {
+        console.log("⚠️ Usuario sin datos completos");
         toast.warning("Debes completar tu registro antes de continuar.");
         navigate("/signup");
       }
     } catch (error) {
-      console.error("Error al obtener usuario:", error);
-
-      // Si la API devuelve 404, significa que el usuario no está registrado
+      console.error("❌ Error al obtener usuario:", error);
       if (error.response?.status === 404) {
         toast.warning("Debes completar tu registro antes de continuar.");
         navigate("/signup");

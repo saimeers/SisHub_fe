@@ -29,6 +29,7 @@ axiosInstance.interceptors.response.use(
     if (error.response) {
       const message = error.response.data?.error || error.response.data?.message || "Error en el servidor";
       console.error("Error de respuesta:", message);
+      console.error("Error completo del servidor:", error.response);
       
       if (error.response.status === 401 || error.response.status === 403) {
         localStorage.removeItem("firebaseToken");

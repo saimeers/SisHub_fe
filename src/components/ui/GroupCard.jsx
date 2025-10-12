@@ -13,7 +13,13 @@ const gradientClasses = [
   "from-amber-500 to-yellow-600",
 ];
 
-const GroupCard = ({ group, index = 0, onQRCode, showQRButton = true, role = "admin" }) => {
+const GroupCard = ({
+  group,
+  index = 0,
+  onQRCode,
+  showQRButton = true,
+  role = "admin",
+}) => {
   const navigate = useNavigate();
   const gradient = gradientClasses[index % gradientClasses.length];
 
@@ -25,8 +31,20 @@ const GroupCard = ({ group, index = 0, onQRCode, showQRButton = true, role = "ad
   };
 
   const handleClick = () => {
-    const basePath = role === "admin" ? "/admin" : role === "professor" ? "/professor" : "/student";
-    navigate(`${basePath}/groups/${group.id_grupo}`);
+    const basePath =
+      role === "admin"
+        ? "/admin"
+        : role === "professor"
+        ? "/professor"
+        : "/student";
+    const groupsPath = role === "student" ? "my-group" : "groups";
+    navigate(
+      `${basePath}/${groupsPath}/${group.codigo_materia}/${
+        group.nombre_grupo
+      }/${group.periodo_grupo || group.periodo}/${
+        group.anio_grupo || group.anio
+      }`
+    );
   };
 
   return (
@@ -45,7 +63,13 @@ const GroupCard = ({ group, index = 0, onQRCode, showQRButton = true, role = "ad
       <div className="px-6 py-5 text-gray-700">
         <div className="flex items-center justify-between mb-4">
           <p className="text-sm font-semibold text-gray-800">
-            {group?.nombre_grupo || group?.nombre}
+            {group?.codigo_materia +
+              "-" +
+              group?.nombre_grupo +
+              "-" +
+              (group?.periodo_grupo || group?.periodo) +
+              "-" +
+              (group?.anio_grupo || group?.anio)}
           </p>
           {showQRButton && (
             <button
@@ -63,7 +87,7 @@ const GroupCard = ({ group, index = 0, onQRCode, showQRButton = true, role = "ad
           <p className="text-sm">
             <span className="text-gray-500">Código:</span>{" "}
             <span className="font-semibold">
-              {group?.codigo_materia || group?.codigo}
+              {group?.codigo || group?.codigo_materia}
             </span>
           </p>
           <p className="text-sm">
@@ -75,10 +99,10 @@ const GroupCard = ({ group, index = 0, onQRCode, showQRButton = true, role = "ad
               {group.prerrequisitos}
             </p>
           )}
-          {group?.area_conocimiento && (
+          {(group?.area_conocimiento || group?.nombre_area) && (
             <p className="text-sm">
               <span className="text-gray-500">Área Conocimiento:</span>{" "}
-              {group.area_conocimiento}
+              {group.area_conocimiento || group.nombre_area}
             </p>
           )}
         </div>
