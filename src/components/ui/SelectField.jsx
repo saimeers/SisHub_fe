@@ -10,6 +10,7 @@ const SelectField = ({
   placeholder,
   isClearable = true,
   disabled = false,
+  isMulti = false,
 }) => {
   const customSelectStyles = {
     control: (provided, state) => ({
@@ -88,6 +89,7 @@ const SelectField = ({
       placeholder={placeholder}
       isClearable={isClearable}
       isDisabled={disabled}
+      isMulti={isMulti}
       styles={customSelectStyles}
     />
   );
