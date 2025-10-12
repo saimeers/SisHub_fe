@@ -242,29 +242,32 @@ const UploadGroups = () => {
 
       const response = await cargarGruposDesdeCSV(file);
       const { resultado } = response;
-
-      // Construir mensaje
+      // Construir mensaje con scroll
       let mensaje = `<div class="text-left" style="font-family: system-ui, -apple-system, sans-serif;">`;
       mensaje += `<p class="font-semibold mb-3" style="font-size: 16px; color: #1f2937;"> Resumen:</p>`;
 
-      // Exitosos
+      // Exitosos con scroll
       if (resultado.exitosos > 0) {
-        mensaje += `<p style="font-weight: 600; color: #059669; margin-bottom: 8px;"> ${resultado.exitosos} Exitoso(s)</p>`;
-        mensaje += `<ul style="margin: 0 0 16px 20px; padding: 0; list-style: none;">`;
+        mensaje += `<p style="font-weight: 600; color: #059669; margin-bottom: 8px;">${resultado.exitosos} Exitoso(s)</p>`;
+        mensaje += `<div style="max-height: 160px; overflow-y: auto; background-color: #f0fdf4; border: 1px solid #86efac; border-radius: 6px; padding: 12px; margin-bottom: 16px;">`;
+        mensaje += `<ul style="margin: 0; padding: 0; list-style: none;">`;
         resultado.detalles_exitosos.forEach((msg) => {
-          mensaje += `<li style="margin-bottom: 4px; color: #047857;">- ${msg}</li>`;
+          mensaje += `<li style="margin-bottom: 6px; color: #047857; font-size: 14px;">• ${msg}</li>`;
         });
         mensaje += `</ul>`;
+        mensaje += `</div>`;
       }
 
-      // Errores
+      // Errores con scroll
       if (resultado.fallidos > 0) {
         mensaje += `<p style="font-weight: 600; color: #dc2626; margin-bottom: 8px;"> ${resultado.fallidos} Error(es) encontrado(s):</p>`;
-        mensaje += `<ul style="margin: 0 0 16px 20px; padding: 0; list-style: none;">`;
+        mensaje += `<div style="max-height: 160px; overflow-y: auto; background-color: #fef2f2; border: 1px solid #fca5a5; border-radius: 6px; padding: 12px; margin-bottom: 16px;">`;
+        mensaje += `<ul style="margin: 0; padding: 0; list-style: none;">`;
         resultado.detalles_errores.forEach((err) => {
-          mensaje += `<li style="margin-bottom: 4px; color: #b91c1c;">- ${err}</li>`;
+          mensaje += `<li style="margin-bottom: 6px; color: #b91c1c; font-size: 14px;">• ${err}</li>`;
         });
         mensaje += `</ul>`;
+        mensaje += `</div>`;
       }
 
       mensaje += `</div>`;
@@ -283,7 +286,10 @@ const UploadGroups = () => {
             : "success",
         confirmButtonText: "Entendido",
         confirmButtonColor: "#B70000",
-        width: "600px",
+        width: "650px",
+        customClass: {
+          popup: "swal-scrollable",
+        },
       });
 
       if (resultado.exitosos > 0) {
@@ -365,7 +371,7 @@ const UploadGroups = () => {
 
         {/* Tabla */}
         <UploadGroupsTable
-          groups={paginatedGroups}
+          groups={groups}
           newGroup={newGroup}
           editingIndex={adjustedEditingIndex}
           editingGroup={editingGroup}
@@ -377,49 +383,6 @@ const UploadGroups = () => {
           onCancelEdit={cancelEdit}
           onDeleteGroup={deleteGroup}
         />
-
-        {/* Paginación */}
-        {totalPages > 1 && (
-          <div className="flex justify-center items-center gap-2 p-4">
-            <button
-              onClick={() => goToPage(currentPage - 1)}
-              disabled={currentPage === 1}
-              className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                currentPage === 1
-                  ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                  : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-              }`}
-            >
-              Anterior
-            </button>
-
-            {[...Array(totalPages)].map((_, i) => (
-              <button
-                key={i}
-                onClick={() => goToPage(i + 1)}
-                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                  currentPage === i + 1
-                    ? "bg-cyan-600 text-white"
-                    : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                }`}
-              >
-                {i + 1}
-              </button>
-            ))}
-
-            <button
-              onClick={() => goToPage(currentPage + 1)}
-              disabled={currentPage === totalPages}
-              className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                currentPage === totalPages
-                  ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                  : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-              }`}
-            >
-              Siguiente
-            </button>
-          </div>
-        )}
 
         {/* Botones finales */}
         <div className="flex flex-col sm:flex-row gap-3 justify-end">
