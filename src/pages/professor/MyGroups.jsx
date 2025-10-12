@@ -78,7 +78,9 @@ const MyGroups = () => {
         group.anio_grupo
       );
 
-      const joinUrl = `http://localhost:5173/join-group?codigo_materia=${encodeURIComponent(
+      //probar con app desplegada https://sishub-fe.vercel.app/
+      //porbar con local http://localhost:5173/
+      const joinUrl = `https://sishub-fe.vercel.app/join-group?codigo_materia=${encodeURIComponent(
         group.codigo_materia
       )}&nombre=${encodeURIComponent(
         group.nombre_grupo
@@ -174,7 +176,6 @@ const MyGroups = () => {
       const estadoTexto = nuevoEstado === 1 ? "habilitado" : "deshabilitado";
       toastSuccess(`Grupo ${nombreGrupo} ${estadoTexto} correctamente`);
     } catch (error) {
-      alert("❌ No se pudo actualizar el estado del grupo");
       toastError("No se pudo actualizar el estado del grupo");
     }
   };
