@@ -22,7 +22,13 @@ export const crearGrupo = async (groupData) => {
   }
 };
 
-export const actualizarEstado = async (codigo_materia, nombre, periodo, anio, nuevoEstado) => {
+export const actualizarEstado = async (
+  codigo_materia,
+  nombre,
+  periodo,
+  anio,
+  nuevoEstado
+) => {
   try {
     const response = await axiosInstance.patch(
       `${GROUPS_BASE}/actualizar-estado`,
@@ -45,7 +51,12 @@ export const generarClaveAcceso = async () => {
   }
 };
 
-export const generarCodigoQR = async (codigo_materia, nombre, periodo, anio) => {
+export const generarCodigoQR = async (
+  codigo_materia,
+  nombre,
+  periodo,
+  anio
+) => {
   try {
     const response = await axiosInstance.get(
       `${GROUPS_BASE}/${codigo_materia}/${nombre}/${periodo}/${anio}/generar-qr`
@@ -57,12 +68,19 @@ export const generarCodigoQR = async (codigo_materia, nombre, periodo, anio) => 
   }
 };
 
-export const obtenerClaveYCodigoQR = async (codigo_materia, nombre, periodo, anio) => {
+export const obtenerClaveYCodigoQR = async (
+  codigo_materia,
+  nombre,
+  periodo,
+  anio
+) => {
   try {
-    const response = await axiosInstance.post(
-      `${GROUPS_BASE}/clave-y-qr`,
-      { codigo_materia, nombre, periodo, anio }
-    );
+    const response = await axiosInstance.post(`${GROUPS_BASE}/clave-y-qr`, {
+      codigo_materia,
+      nombre,
+      periodo,
+      anio,
+    });
     return response.data;
   } catch (error) {
     console.error("Error al obtener clave y QR:", error);
@@ -105,6 +123,26 @@ export const listarGruposPorUsuario = async (codigo) => {
   }
 };
 
+export const cargarGruposDesdeCSV = async (file) => {
+  try {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const response = await axiosInstance.post(
+      `${GROUPS_BASE}/cargar-csv`,
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
+
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { message: "Error al procesar CSV" };
+  }
+};
 export default {
   obtenerGrupos,
   crearGrupo,
@@ -115,4 +153,5 @@ export default {
   listarGruposPorMateria,
   listarGruposHabilitadosPorMateria,
   listarGruposPorUsuario,
+  cargarGruposDesdeCSV,
 };
