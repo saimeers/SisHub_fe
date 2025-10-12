@@ -86,6 +86,18 @@ const AllGroups = () => {
   return (
     <AdminLayout title="Grupos">
       <div className="flex flex-col gap-4">
+        {/* Botón pa direigir a importar por csv*/}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-2">
+          <p className="text-gray-600"></p>
+
+          <button
+            onClick={() => navigate("/admin/upload-groups")}
+            className="bg-[#B70000] hover:bg-red-800 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center gap-2"
+          >
+            Importar grupos
+          </button>
+        </div>
+
         {/* Filtros */}
         <GroupFilters
           onSearch={handleSearch}

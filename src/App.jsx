@@ -20,6 +20,7 @@ import FormCreateSubject from "./modules/admin/components/FormCreateSubject";
 import FormEditSubject from "./modules/admin/components/FormEditSubject";
 import GroupDetail from "./pages/admin/GroupDetail";
 import UploadUsers from "./pages/admin/UploadUsers";
+import UploadGroups from "./modules/admin/components/UploadGroups";
 
 // docente
 import GroupsProfessor from "./pages/professor/Groups";
@@ -93,8 +94,13 @@ function App() {
             <Route path="subjects" element={<SubjectsAdmin />} />
             <Route path="subjects/create" element={<FormCreateSubject />} />
             <Route path="subjects/edit/:codigo" element={<FormEditSubject />} />
-            <Route path="groups/:codigo_materia/:nombre/:periodo/:anio" element={<GroupDetail />} />
+            <Route
+              path="groups/:codigo_materia/:nombre/:periodo/:anio"
+              element={<GroupDetail />}
+            />
+
             <Route path="upload-users" element={<UploadUsers />} />
+            <Route path="upload-groups" element={<UploadGroups />} />
           </Route>
 
           {/* ==================== RUTAS DOCENTE ==================== */}

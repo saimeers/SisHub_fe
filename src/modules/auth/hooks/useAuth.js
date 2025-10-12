@@ -104,20 +104,20 @@ export const useAuth = () => {
         );
 
         if (pendingJoin) {
-          console.log("➡️ Redirigiendo a join-group con:", pendingJoin);
+          console.log("Redirigiendo a join-group con:", pendingJoin);
           // IMPORTANTE: No eliminar pendingJoinGroup aquí, lo hace JoinGroup
           navigate(`/join-group${pendingJoin}`);
         } else {
-          console.log("➡️ Redirigiendo a dashboard:", rol);
+          console.log(" Redirigiendo a dashboard:", rol);
           navigate(`/${rol?.toLowerCase()}/dashboard`);
         }
       } else {
-        console.log("⚠️ Usuario sin datos completos");
+        console.log(" Usuario sin datos completos");
         toast.warning("Debes completar tu registro antes de continuar.");
         navigate("/signup");
       }
     } catch (error) {
-      console.error("❌ Error al obtener usuario:", error);
+      console.error(" Error al obtener usuario:", error);
       if (error.response?.status === 404) {
         toast.warning("Debes completar tu registro antes de continuar.");
         navigate("/signup");
