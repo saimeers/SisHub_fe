@@ -92,11 +92,8 @@ function App() {
             <Route path="all-groups" element={<AllGroupsAdmin />} />
             <Route path="subjects" element={<SubjectsAdmin />} />
             <Route path="subjects/create" element={<FormCreateSubject />} />
-            <Route path="subjects/edit/:id" element={<FormEditSubject />} />
-            <Route
-              path="groups/:codigo_materia/:nombre/:periodo/:anio"
-              element={<GroupDetail />}
-            />
+            <Route path="subjects/edit/:codigo" element={<FormEditSubject />} />
+            <Route path="groups/:codigo_materia/:nombre/:periodo/:anio" element={<GroupDetail />} />
             <Route path="upload-users" element={<UploadUsers />} />
           </Route>
 
