@@ -1,13 +1,14 @@
 import React from "react";
-import AdminLayout from "../layouts/AdminLayout";
-import UploadSubjectsHeader from "./UploadSubjectsHeader";
-import UploadSubjectsControlsForm from "./UploadSubjectsControlsForm";
-import UploadSubjectsTableForm from "./UploadSubjectsTableForm";
-import UploadSubjectsPaginationForm from "./UploadSubjectsPaginationForm";
-import UploadSubjectsActionsForm from "./UploadSubjectsActionsForm";
-import { useSubjectForm } from "../hooks/useSubjectForm";
+import AdminLayout from "../../modules/admin/layouts/AdminLayout";
+import UploadSubjectsHeader from "../../modules/admin/components/UploadSubjectsHeader";
+import UploadSubjectsControls from "../../modules/admin/components/UploadSubjectsControls";
+import UploadSubjectsTable from "../../modules/admin/components/UploadSubjectsTable";
+import UploadSubjectsMobile from "../../modules/admin/components/UploadSubjectsMobile";
+import UploadSubjectsPagination from "../../modules/admin/components/UploadSubjectsPagination";
+import UploadSubjectsActions from "../../modules/admin/components/UploadSubjectsActions";
+import { useUploadSubjects } from "../../modules/admin/hooks/useUploadSubjects";
 
-const FormCreateSubject = () => {
+const UploadSubjects = () => {
   const {
     subjects,
     newSubject,
@@ -34,15 +35,10 @@ const FormCreateSubject = () => {
     setItemsPerPage,
     setCurrentPage,
     goToPage,
-    prerequisiteOptions,
-    handlePrerequisitesChange,
-    handleEditPrerequisitesChange,
-    selectedPrerequisites,
-    editingPrerequisites,
-  } = useSubjectForm();
+  } = useUploadSubjects();
 
   return (
-    <AdminLayout title="Crear materias">
+    <AdminLayout title="Cargar Materias">
       <div className="space-y-6">
         <UploadSubjectsHeader 
           onFileUpload={handleFileUpload}
@@ -50,7 +46,7 @@ const FormCreateSubject = () => {
         />
 
         {subjects.length > 0 && (
-          <UploadSubjectsControlsForm
+          <UploadSubjectsControls
             itemsPerPage={itemsPerPage}
             onItemsPerPageChange={(value) => {
               setItemsPerPage(value);
@@ -62,7 +58,7 @@ const FormCreateSubject = () => {
           />
         )}
 
-        <UploadSubjectsTableForm
+        <UploadSubjectsTable
           subjects={paginatedSubjects}
           newSubject={newSubject}
           editingIndex={adjustedEditingIndex}
@@ -74,22 +70,31 @@ const FormCreateSubject = () => {
           onSaveEdit={saveEdit}
           onCancelEdit={cancelEdit}
           onDeleteSubject={deleteSubject}
-          prerequisiteOptions={prerequisiteOptions}
-          onPrerequisitesChange={handlePrerequisitesChange}
-          onEditPrerequisitesChange={handleEditPrerequisitesChange}
-          selectedPrerequisites={selectedPrerequisites}
-          editingPrerequisites={editingPrerequisites}
+        />
+
+        <UploadSubjectsMobile
+          subjects={paginatedSubjects}
+          newSubject={newSubject}
+          editingIndex={adjustedEditingIndex}
+          editingSubject={editingSubject}
+          onInputChange={handleInputChange}
+          onEditInputChange={handleEditInputChange}
+          onAddSubject={addSubject}
+          onStartEdit={startEdit}
+          onSaveEdit={saveEdit}
+          onCancelEdit={cancelEdit}
+          onDeleteSubject={deleteSubject}
         />
 
         {totalPages > 1 && (
-          <UploadSubjectsPaginationForm
+          <UploadSubjectsPagination
             currentPage={currentPage}
             totalPages={totalPages}
             onPageChange={goToPage}
           />
         )}
 
-        <UploadSubjectsActionsForm
+        <UploadSubjectsActions
           subjectsCount={subjects.length}
           isSubmitting={isSubmitting}
           onCancel={handleCancel}
@@ -100,4 +105,4 @@ const FormCreateSubject = () => {
   );
 };
 
-export default FormCreateSubject;
+export default UploadSubjects;

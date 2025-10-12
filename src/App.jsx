@@ -21,6 +21,7 @@ import FormEditSubject from "./modules/admin/components/FormEditSubject";
 import GroupDetail from "./pages/admin/GroupDetail";
 import UploadUsers from "./pages/admin/UploadUsers";
 import UploadGroups from "./modules/admin/components/UploadGroups";
+import UploadSubjects from "./pages/admin/UploadSubjects";
 
 // docente
 import GroupsProfessor from "./pages/professor/Groups";
@@ -101,6 +102,7 @@ function App() {
 
             <Route path="upload-users" element={<UploadUsers />} />
             <Route path="upload-groups" element={<UploadGroups />} />
+            <Route path="upload-subjects" element={<UploadSubjects />} />
           </Route>
 
           {/* ==================== RUTAS DOCENTE ==================== */}

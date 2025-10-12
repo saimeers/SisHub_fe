@@ -27,7 +27,15 @@ axiosInstance.interceptors.response.use(
   },
   (error) => {
     if (error.response) {
-      const message = error.response.data?.error || error.response.data?.message || "Error en el servidor";
+      let message = error.response.data?.error || error.response.data?.message || "Error en el servidor";
+      
+      // Mejorar mensajes de error específicos
+      if (message.includes("código ya existe") || message.includes("El código ya existe")) {
+        message = "El código ya existe en la base de datos";
+      } else if (message.includes("nombre ya existe") || message.includes("El nombre ya existe")) {
+        message = "El nombre ya existe en la base de datos";
+      }
+      
       console.error("Error de respuesta:", message);
       console.error("Error completo del servidor:", error.response);
       
