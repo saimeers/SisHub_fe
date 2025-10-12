@@ -37,6 +37,7 @@ import GroupDetailStudent from "./pages/student/GroupDetail";
 
 // stand by
 import CuentaPendiente from "./pages/standby/CuentaPendiente";
+import JoinGroup from "./modules/student/components/JoinGroup";
 
 function App() {
   return (
@@ -84,12 +85,18 @@ function App() {
           >
             <Route path="dashboard" element={<AdminDashboard />} />
             <Route path=":codigo_materia/groups" element={<GroupsAdmin />} />
-            <Route path=":codigo_materia/create-group" element={<CreateGroupAdmin />} />
+            <Route
+              path=":codigo_materia/create-group"
+              element={<CreateGroupAdmin />}
+            />
             <Route path="all-groups" element={<AllGroupsAdmin />} />
             <Route path="subjects" element={<SubjectsAdmin />} />
             <Route path="subjects/create" element={<FormCreateSubject />} />
             <Route path="subjects/edit/:id" element={<FormEditSubject />} />
-            <Route path="groups/:codigo_materia/:nombre/:periodo/:anio" element={<GroupDetail />} />
+            <Route
+              path="groups/:codigo_materia/:nombre/:periodo/:anio"
+              element={<GroupDetail />}
+            />
             <Route path="upload-users" element={<UploadUsers />} />
           </Route>
 
@@ -105,7 +112,10 @@ function App() {
             />
             <Route path="my-groups" element={<MyGroupsProfessor />} />
             <Route path="subjects" element={<SubjectsProfessor />} />
-            <Route path="groups/:codigo_materia/:nombre_grupo/:periodo_grupo/:anio_grupo" element={<GroupDetailProfessor />} />
+            <Route
+              path="my-group/:codigo_materia/:nombre/:periodo/:anio"
+              element={<GroupDetailProfessor />}
+            />
           </Route>
           <Route
             path="/establecer-contrasena"
@@ -125,11 +135,15 @@ function App() {
             <Route path=":codigo_materia/groups" element={<GroupsStudent />} />
             <Route path="my-groups" element={<StudentMyGroups />} />
             <Route path="subjects" element={<SubjectsStudent />} />
-            <Route path="my-groups/:codigo_materia/:nombre_grupo/:periodo_grupo/:anio_grupo" element={<GroupDetailStudent />} />
+            <Route
+              path="my-group/:codigo_materia/:nombre/:periodo/:anio"
+              element={<GroupDetailStudent />}
+            />
           </Route>
 
           {/* ==================== RUTAS ESPECIALES ==================== */}
           <Route path="/account-pending" element={<CuentaPendiente />} />
+          <Route path="/join-group" element={<JoinGroup />} />
 
           {/* ==================== REDIRECTS ==================== */}
           <Route path="/" element={<Navigate to="/login" replace />} />

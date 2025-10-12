@@ -44,7 +44,9 @@ const GroupCard = ({
         : role === "professor"
         ? "/professor"
         : "/student";
-    navigate(`${basePath}/groups/${group.codigo_materia}/${group.nombre_grupo}/${group.periodo_grupo}/${group.anio_grupo}`);
+    navigate(
+      `${basePath}/my-group/${group.codigo_materia}/${group.nombre_grupo}/${group.periodo_grupo}/${group.anio_grupo}`
+    );
   };
 
   const handleEstadoChange = async (e) => {

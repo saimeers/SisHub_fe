@@ -9,10 +9,14 @@ import { useToast } from "../../hooks/useToast";
 import { useAuth } from "../../contexts/AuthContext";
 
 const GroupDetail = () => {
-  const { codigo_materia, nombre_grupo, periodo_grupo, anio_grupo } = useParams();
+  // 🔹 Los nombres aquí DEBEN coincidir con los definidos en la ruta:
+  // /professor/my-group/:codigo_materia/:nombre/:periodo/:anio
+  const { codigo_materia, nombre, periodo, anio } = useParams();
+
   const navigate = useNavigate();
   const { error } = useToast();
   const { userData } = useAuth();
+
   const [participants, setParticipants] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("participantes");
@@ -25,66 +29,75 @@ const GroupDetail = () => {
     const loadGroupData = async () => {
       if (hasLoaded.current) return;
       hasLoaded.current = true;
-      if (!codigo_materia || !nombre_grupo || !periodo_grupo || !anio_grupo || !userData?.codigo) return;
+
+      if (!codigo_materia || !nombre || !periodo || !anio || !userData?.codigo)
+        return;
 
       setIsLoading(true);
       setValidationError(null);
-      
+
       try {
-        // Verificar si el profesor está asignado a este grupo
+        // 🔹 Verificar si el profesor está asignado a este grupo
         const professorGroups = await listarGruposPorUsuario(userData.codigo);
-        console.log("🔍 Grupos del profesor:", professorGroups);
-        console.log("🔍 Parámetros de la URL:", { codigo_materia, nombre_grupo, periodo_grupo, anio_grupo });
-        
-        const isAssignedToGroup = professorGroups.some(group => {
-          const match = String(group.codigo_materia) === String(codigo_materia) &&
-            String(group.nombre_grupo) === String(nombre_grupo) &&
-            String(group.periodo_grupo) === String(periodo_grupo) &&
-            String(group.anio_grupo) === String(anio_grupo);
-          console.log("🔍 Comparando grupo:", {
-            group: {
-              codigo_materia: group.codigo_materia,
-              nombre_grupo: group.nombre_grupo,
-              periodo_grupo: group.periodo_grupo,
-              anio_grupo: group.anio_grupo
-            },
-            url: { codigo_materia, nombre_grupo, periodo_grupo, anio_grupo },
-            match
-          });
+
+        console.log("📘 Grupos del profesor:", professorGroups);
+        console.log("📥 Parámetros de la URL:", {
+          codigo_materia,
+          nombre,
+          periodo,
+          anio,
+        });
+
+        const isAssignedToGroup = professorGroups.some((group) => {
+          const match =
+            String(group.codigo_materia) === String(codigo_materia) &&
+            String(group.nombre_grupo) === String(nombre) &&
+            String(group.periodo_grupo) === String(periodo) &&
+            String(group.anio_grupo) === String(anio);
+
           return match;
         });
-        
-        console.log("🔍 ¿Está asignado al grupo?", isAssignedToGroup);
+
+        console.log("✅ ¿Profesor asignado al grupo?", isAssignedToGroup);
 
         if (!isAssignedToGroup) {
-          setValidationError("No estás asignado a este grupo o la materia no existe en el catálogo.");
+          setValidationError(
+            "No estás asignado a este grupo o la materia no existe en el catálogo."
+          );
           setIsAuthorized(false);
           setIsLoading(false);
           return;
         }
 
-        // Si está asignado, cargar los datos del grupo
+        // 🔹 Si está asignado, cargar los participantes desde el backend
         const participantsData = await listarParticipantesGrupo(
-          codigo_materia, 
-          nombre_grupo, 
-          periodo_grupo, 
-          anio_grupo
+          codigo_materia,
+          nombre,
+          periodo,
+          anio
         );
+
+        console.log("📥 Participantes del grupo:", participantsData);
+
         setParticipants(
           Array.isArray(participantsData) ? participantsData : []
         );
         setGroupInfo({
           nombre: codigo_materia,
-          grupo: nombre_grupo,
-          periodo: `${periodo_grupo}-${anio_grupo}`,
+          grupo: nombre,
+          periodo: `${periodo}-${anio}`,
         });
         setIsAuthorized(true);
       } catch (err) {
         console.error("❌ Error al cargar datos del grupo:", err);
         if (err.response?.status === 404) {
-          setValidationError("Esta materia no existe en el catálogo o no estás asignado a este grupo.");
+          setValidationError(
+            "Esta materia no existe en el catálogo o no estás asignado a este grupo."
+          );
         } else {
-          setValidationError("Error al cargar los datos del grupo. Por favor, intenta nuevamente.");
+          setValidationError(
+            "Error al cargar los datos del grupo. Por favor, intenta nuevamente."
+          );
         }
         setIsAuthorized(false);
         error("No se pudieron cargar los datos del grupo");
@@ -94,7 +107,7 @@ const GroupDetail = () => {
     };
 
     loadGroupData();
-  }, [codigo_materia, nombre_grupo, periodo_grupo, anio_grupo, userData, error]);
+  }, [codigo_materia, nombre, periodo, anio, userData, error]);
 
   const tabs = [
     { id: "proyecto", label: "Proyecto" },
@@ -102,7 +115,7 @@ const GroupDetail = () => {
     { id: "participantes", label: "Participantes" },
   ];
 
-  // Si hay error de validación y no está autorizado, mostrar mensaje de error
+  // 🔹 Mostrar mensaje de error si no está autorizado
   if (validationError && !isAuthorized && !isLoading) {
     return (
       <ProfessorLayout title="Acceso Denegado">
@@ -128,7 +141,7 @@ const GroupDetail = () => {
       }
     >
       <div className="w-full max-w-5xl mx-auto py-10 px-6 bg-white rounded-2xl shadow-sm">
-        {/* Tabs centradas */}
+        {/* 🔹 Tabs */}
         <div className="flex justify-center mb-8">
           <div className="flex justify-center space-x-2 bg-gray-100 p-1 rounded-full w-fit mx-auto">
             {tabs.map((tab) => (
@@ -147,7 +160,7 @@ const GroupDetail = () => {
           </div>
         </div>
 
-        {/* Contenido - Solo mostrar si está autorizado */}
+        {/* 🔹 Contenido */}
         {isAuthorized && (
           <div className="rounded-xl">
             {activeTab === "participantes" && (
@@ -186,20 +199,6 @@ const GroupDetail = () => {
             )}
           </div>
         )}
-
-        {/* Botón volver 
-        <div className="mt-10">
-          <button
-            onClick={() => {
-              navigate("/admin/groups");
-              window.location.reload();
-            }}
-            className="inline-flex items-center px-5 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 shadow-sm transition"
-          >
-            ← Volver a Grupos
-          </button>
-        </div>
-        */}
       </div>
     </ProfessorLayout>
   );

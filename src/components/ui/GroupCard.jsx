@@ -37,9 +37,13 @@ const GroupCard = ({
         : role === "professor"
         ? "/professor"
         : "/student";
-    const groupsPath = role === "student" ? "my-groups" : "groups";
+    const groupsPath = role === "student" ? "my-group" : "groups";
     navigate(
-      `${basePath}/${groupsPath}/${group.codigo_materia}/${group.nombre_grupo}/${group.periodo_grupo || group.periodo}/${group.anio_grupo || group.anio}`
+      `${basePath}/${groupsPath}/${group.codigo_materia}/${
+        group.nombre_grupo
+      }/${group.periodo_grupo || group.periodo}/${
+        group.anio_grupo || group.anio
+      }`
     );
   };
 

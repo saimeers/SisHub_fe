@@ -26,16 +26,24 @@ export const joinGroupByAccessKey = async ({
   }
 };
 
-export const listarParticipantesGrupo = async (codigo_materia, nombre_grupo, periodo, anio) => {
+export const listarParticipantesGrupo = async (
+  codigo_materia,
+  nombre_grupo,
+  periodo,
+  anio
+) => {
   try {
-    const response = await axiosInstance.get(`${GROUP_USERS_BASE}/grupo/participantes`, {
-      params: {
-        codigo_materia,
-        nombre_grupo,
-        periodo,
-        anio,
-      },
-    });
+    const response = await axiosInstance.get(
+      `${GROUP_USERS_BASE}/grupo/participantes`,
+      {
+        params: {
+          codigo_materia,
+          nombre_grupo,
+          periodo,
+          anio,
+        },
+      }
+    );
     return response.data;
   } catch (error) {
     console.error("Error al listar participantes del grupo:", error);

@@ -4,7 +4,7 @@ import {
   signOutAccount,
   signInWithGoogle,
   signInWithEmail,
-  deleteCurrentUser
+  deleteCurrentUser,
 } from "../../../services/authService";
 import { obtenerUsuario } from "../../../services/userServices";
 import { getAuthErrorMessage } from "../utils/authErrorHandler";
@@ -42,7 +42,7 @@ export const useAuth = () => {
         { autoClose: 6000 }
       );
       navigate("/cuenta-pendiente");
-      return false;
+      return { valido: false, rol };
     }
 
     if (estado === "RECHAZADO") {
@@ -53,7 +53,7 @@ export const useAuth = () => {
       signOutAccount();
       localStorage.clear();
       navigate("/login");
-      return false;
+      return { valido: false, rol };
     }
 
     if (estado === "INHABILITADO") {
@@ -64,22 +64,19 @@ export const useAuth = () => {
       signOutAccount();
       localStorage.clear();
       navigate("/login");
-      return false;
+      return { valido: false, rol };
     }
 
-    // ✅ VALIDACIÓN DE PASSWORD SOLO PARA DOCENTES
     if (rol === "DOCENTE" && !userHasPasswordProvider()) {
       toast.warning(
         "Como docente, debes establecer una contraseña para continuar.",
         { autoClose: 6000 }
       );
       navigate("/establecer-contrasena");
-      return false;
+      return { valido: false, rol };
     }
 
-    toast.success(`¡Bienvenido ${formatShortName(userName) || ""}!`);
-    navigate(`/${rol.toLowerCase()}/dashboard`);
-    return true;
+    return { valido: true, rol };
   };
 
   const validarYRedirigirUsuario = async (user, token) => {
@@ -87,23 +84,40 @@ export const useAuth = () => {
 
     try {
       const res = await obtenerUsuario();
-      console.log("🔍 obtenerUsuario:", res);
+      const usuario = res?.data?.usuario || res?.data || res?.usuario || res;
 
-      const usuario =
-        res?.data?.usuario ||
-        res?.data ||
-        res?.usuario ||
-        res;
+      console.log("🔍 Usuario obtenido:", usuario);
 
       if (usuario && (usuario.id || usuario.IdUsuario || usuario.Rol)) {
-        verificarEstadoUsuario(usuario, user.displayName);
+        const { valido, rol } = verificarEstadoUsuario(
+          usuario,
+          user.displayName
+        );
+        if (!valido) return;
+
+        const pendingJoin = localStorage.getItem("pendingJoinGroup");
+
+        console.log("🔗 Pending join detectado:", pendingJoin);
+
+        toast.success(
+          `¡Bienvenido ${formatShortName(user.displayName) || ""}!`
+        );
+
+        if (pendingJoin) {
+          console.log("➡️ Redirigiendo a join-group con:", pendingJoin);
+          // IMPORTANTE: No eliminar pendingJoinGroup aquí, lo hace JoinGroup
+          navigate(`/join-group${pendingJoin}`);
+        } else {
+          console.log("➡️ Redirigiendo a dashboard:", rol);
+          navigate(`/${rol?.toLowerCase()}/dashboard`);
+        }
       } else {
+        console.log("⚠️ Usuario sin datos completos");
         toast.warning("Debes completar tu registro antes de continuar.");
         navigate("/signup");
       }
     } catch (error) {
-      console.error("Error al obtener usuario:", error);
-
+      console.error("❌ Error al obtener usuario:", error);
       if (error.response?.status === 404) {
         toast.warning("Debes completar tu registro antes de continuar.");
         navigate("/signup");

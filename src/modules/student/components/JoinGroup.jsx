@@ -1,15 +1,22 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { joinGroupByAccessKey } from "../../services/groupUserServices";
-import { useAuth } from "../../contexts/AuthContext";
+import { joinGroupByAccessKey } from "../../../services/groupUserServices";
+import { useAuth } from "../../../contexts/AuthContext";
 
 const JoinGroup = () => {
   const { userData } = useAuth();
   const navigate = useNavigate();
+  const hasExecuted = useRef(false); // 🔥 Ref para controlar ejecución
 
   const [status, setStatus] = useState("Verificando sesión...");
 
   useEffect(() => {
+    // 🔥 BLOQUEO ABSOLUTO: Si ya se ejecutó, salir inmediatamente
+    if (hasExecuted.current) {
+      console.log("⏹️ useEffect bloqueado - ya se ejecutó");
+      return;
+    }
+
     const ejecutarJoin = async () => {
       // Obtener parámetros
       const pendingJoin = localStorage.getItem("pendingJoinGroup");
@@ -25,10 +32,16 @@ const JoinGroup = () => {
       // Crear una clave única para este intento de join específico
       const joinKey = `join_${codigo_materia}_${nombre}_${periodo}_${anio}_${clave_acceso}`;
 
-      // 🔥 VERIFICAR SI YA SE INTENTÓ ESTE JOIN ESPECÍFICO
+      // 🔥 VERIFICAR SI YA SE INTENTÓ ESTE JOIN ESPECÍFICO EN SESSIONSTORAGE
       const alreadyAttempted = sessionStorage.getItem(joinKey);
-      if (alreadyAttempted === "true") {
-        console.log("⏹️ Este join ya fue procesado anteriormente");
+      if (
+        alreadyAttempted === "processing" ||
+        alreadyAttempted === "completed"
+      ) {
+        console.log(
+          "⏹️ Este join ya está siendo procesado o completado:",
+          alreadyAttempted
+        );
         setStatus("✅ Ya procesado. Redirigiendo...");
 
         // Limpiar y redirigir
@@ -57,6 +70,7 @@ const JoinGroup = () => {
       if (!codigo_materia || !nombre || !periodo || !anio || !clave_acceso) {
         console.error("❌ Parámetros inválidos");
         setStatus("❌ Enlace inválido o datos incompletos.");
+        hasExecuted.current = true; // 🔥 Marcar como ejecutado
         return;
       }
 
@@ -70,13 +84,15 @@ const JoinGroup = () => {
         }
 
         setStatus("🔒 Debes iniciar sesión para unirte al grupo.");
+        hasExecuted.current = true; // 🔥 Marcar como ejecutado
         setTimeout(() => navigate("/login"), 1500);
         return;
       }
 
-      // 🔥 MARCAR COMO INTENTADO ANTES DE LA PETICIÓN
-      sessionStorage.setItem(joinKey, "true");
-      console.log("🔒 Join marcado como intentado:", joinKey);
+      // 🔥 MARCAR COMO "PROCESSING" ANTES DE LA PETICIÓN
+      sessionStorage.setItem(joinKey, "processing");
+      hasExecuted.current = true; // 🔥 Marcar como ejecutado
+      console.log("🔒 Join marcado como PROCESSING:", joinKey);
 
       setStatus("Uniéndose al grupo...");
 
@@ -95,6 +111,10 @@ const JoinGroup = () => {
         const response = await joinGroupByAccessKey(payload);
 
         console.log("✅ Respuesta exitosa:", response);
+
+        // 🔥 MARCAR COMO COMPLETADO
+        sessionStorage.setItem(joinKey, "completed");
+
         setStatus("🎉 Te has unido correctamente al grupo.");
 
         // Limpiar pendingJoinGroup
@@ -120,6 +140,7 @@ const JoinGroup = () => {
           error.response?.status === 409 ||
           errorMessage?.includes("ya está")
         ) {
+          sessionStorage.setItem(joinKey, "completed"); // Ya estaba inscrito
           setStatus("⚠️ Ya estás inscrito en este grupo.");
           localStorage.removeItem("pendingJoinGroup");
           setTimeout(
@@ -130,6 +151,7 @@ const JoinGroup = () => {
           setStatus(`❌ Error: ${errorMessage || "No se pudo unir al grupo"}`);
           // 🔥 Si falla, permitir reintentar eliminando la marca
           sessionStorage.removeItem(joinKey);
+          hasExecuted.current = false; // Permitir reintentar
         }
       }
     };
@@ -148,6 +170,7 @@ const JoinGroup = () => {
         {/* Debug info */}
         <div className="text-xs text-gray-400 text-left mt-4 p-2 bg-gray-50 rounded">
           <p>Usuario: {userData?.codigo || "No disponible"}</p>
+          <p>Ejecutado: {hasExecuted.current ? "Sí" : "No"}</p>
         </div>
 
         {status.includes("❌") && (
@@ -162,6 +185,7 @@ const JoinGroup = () => {
                 "anio"
               )}_${params.get("clave")}`;
               sessionStorage.removeItem(joinKey);
+              hasExecuted.current = false;
               window.location.reload();
             }}
             className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
