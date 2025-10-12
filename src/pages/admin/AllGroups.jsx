@@ -62,9 +62,13 @@ const AllGroups = () => {
       );
 
       // Generamos la URL de destino del QR (por ejemplo, una ruta para unirse al grupo)
-      const joinUrl = `https://sishub.vercel.app/join-group/${
-        response?.clave_acceso || group.clave_acceso
-      }`;
+      //probar con app desplegada https://sishub-fe.vercel.app/
+      //porbar con local http://localhost:5173/
+      const joinUrl = `https://sishub-fe.vercel.app/join-group?codigo_materia=${
+        group.codigo_materia
+      }&nombre=${group.nombre_grupo}&periodo=${group.periodo}&anio=${
+        group.anio
+      }&clave=${response?.clave_acceso || group.clave_acceso}`;
 
       setQrData({
         clave_acceso: response?.clave_acceso,
@@ -108,7 +112,11 @@ const AllGroups = () => {
 
         {/* Grilla */}
         {!isLoading && !error && (
-          <GroupGrid groups={filteredGroups} onQRCode={handleOpenQRCode} role="admin" />
+          <GroupGrid
+            groups={filteredGroups}
+            onQRCode={handleOpenQRCode}
+            role="admin"
+          />
         )}
       </div>
 

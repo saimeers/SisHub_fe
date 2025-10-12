@@ -11,7 +11,6 @@ const JoinGroup = () => {
 
   useEffect(() => {
     const ejecutarJoin = async () => {
-      // Obtener parámetros
       const pendingJoin = localStorage.getItem("pendingJoinGroup");
       const search = pendingJoin || window.location.search;
       const params = new URLSearchParams(search);
@@ -22,16 +21,10 @@ const JoinGroup = () => {
       const anio = params.get("anio");
       const clave_acceso = params.get("clave");
 
-      // Crear una clave única para este intento de join específico
       const joinKey = `join_${codigo_materia}_${nombre}_${periodo}_${anio}_${clave_acceso}`;
 
-      // 🔥 VERIFICAR SI YA SE INTENTÓ ESTE JOIN ESPECÍFICO
       const alreadyAttempted = sessionStorage.getItem(joinKey);
       if (alreadyAttempted === "true") {
-        console.log("⏹️ Este join ya fue procesado anteriormente");
-        setStatus("✅ Ya procesado. Redirigiendo...");
-
-        // Limpiar y redirigir
         localStorage.removeItem("pendingJoinGroup");
         setTimeout(() => {
           navigate("/student/my-groups", { replace: true });
@@ -39,47 +32,20 @@ const JoinGroup = () => {
         return;
       }
 
-      console.log("🔍 Estado actual:", {
-        userData: userData ? "Sí" : "No",
-        codigo: userData?.codigo,
-        joinKey,
-      });
-
-      console.log("📋 Parámetros extraídos:", {
-        codigo_materia,
-        nombre,
-        periodo,
-        anio,
-        clave_acceso,
-      });
-
-      // Validar parámetros primero
       if (!codigo_materia || !nombre || !periodo || !anio || !clave_acceso) {
-        console.error("❌ Parámetros inválidos");
-        setStatus("❌ Enlace inválido o datos incompletos.");
         return;
       }
-
-      // Si no hay userData, redirigir a login
       if (!userData || !userData.codigo) {
         console.log("🔒 Sin userData, redirigiendo a login");
 
         if (!pendingJoin) {
           localStorage.setItem("pendingJoinGroup", window.location.search);
-          console.log("💾 Join guardado en localStorage");
         }
-
-        setStatus("🔒 Debes iniciar sesión para unirte al grupo.");
         setTimeout(() => navigate("/login"), 1500);
         return;
       }
 
-      // 🔥 MARCAR COMO INTENTADO ANTES DE LA PETICIÓN
       sessionStorage.setItem(joinKey, "true");
-      console.log("🔒 Join marcado como intentado:", joinKey);
-
-      setStatus("Uniéndose al grupo...");
-
       const payload = {
         codigo_usuario: userData.codigo,
         codigo_materia,
@@ -94,23 +60,11 @@ const JoinGroup = () => {
       try {
         const response = await joinGroupByAccessKey(payload);
 
-        console.log("✅ Respuesta exitosa:", response);
-        setStatus("🎉 Te has unido correctamente al grupo.");
-
-        // Limpiar pendingJoinGroup
-        localStorage.removeItem("pendingJoinGroup");
-        console.log("🗑️ pendingJoinGroup eliminado");
-
         setTimeout(() => {
           console.log("➡️ Navegando a my-groups");
           navigate("/student/my-groups", { replace: true });
         }, 2000);
       } catch (error) {
-        console.error("❌ Error completo:", error);
-        console.error("📄 Error response:", error.response);
-        console.error("📄 Error data:", error.response?.data);
-        console.error("📄 Error status:", error.response?.status);
-
         const errorMessage =
           error.response?.data?.message ||
           error.response?.data?.error ||
@@ -120,7 +74,7 @@ const JoinGroup = () => {
           error.response?.status === 409 ||
           errorMessage?.includes("ya está")
         ) {
-          setStatus("⚠️ Ya estás inscrito en este grupo.");
+          setStatus("Ya estás inscrito en este grupo.");
           localStorage.removeItem("pendingJoinGroup");
           setTimeout(
             () => navigate("/student/my-groups", { replace: true }),
@@ -128,7 +82,6 @@ const JoinGroup = () => {
           );
         } else {
           setStatus(`❌ Error: ${errorMessage || "No se pudo unir al grupo"}`);
-          // 🔥 Si falla, permitir reintentar eliminando la marca
           sessionStorage.removeItem(joinKey);
         }
       }
@@ -153,8 +106,6 @@ const JoinGroup = () => {
         {status.includes("❌") && (
           <button
             onClick={() => {
-              console.log("🔄 Recargando página...");
-              // Limpiar el intento previo para permitir reintentar
               const params = new URLSearchParams(window.location.search);
               const joinKey = `join_${params.get(
                 "codigo_materia"

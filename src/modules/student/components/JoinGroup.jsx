@@ -2,23 +2,21 @@ import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { joinGroupByAccessKey } from "../../../services/groupUserServices";
 import { useAuth } from "../../../contexts/AuthContext";
+import { Loader2, CheckCircle, XCircle, LogIn } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 const JoinGroup = () => {
   const { userData } = useAuth();
   const navigate = useNavigate();
-  const hasExecuted = useRef(false); // 🔥 Ref para controlar ejecución
+  const hasExecuted = useRef(false);
 
   const [status, setStatus] = useState("Verificando sesión...");
+  const [statusType, setStatusType] = useState("loading");
 
   useEffect(() => {
-    // 🔥 BLOQUEO ABSOLUTO: Si ya se ejecutó, salir inmediatamente
-    if (hasExecuted.current) {
-      console.log("⏹️ useEffect bloqueado - ya se ejecutó");
-      return;
-    }
+    if (hasExecuted.current) return;
 
     const ejecutarJoin = async () => {
-      // Obtener parámetros
       const pendingJoin = localStorage.getItem("pendingJoinGroup");
       const search = pendingJoin || window.location.search;
       const params = new URLSearchParams(search);
@@ -29,72 +27,45 @@ const JoinGroup = () => {
       const anio = params.get("anio");
       const clave_acceso = params.get("clave");
 
-      // Crear una clave única para este intento de join específico
       const joinKey = `join_${codigo_materia}_${nombre}_${periodo}_${anio}_${clave_acceso}`;
-
-      // 🔥 VERIFICAR SI YA SE INTENTÓ ESTE JOIN ESPECÍFICO EN SESSIONSTORAGE
       const alreadyAttempted = sessionStorage.getItem(joinKey);
+
       if (
         alreadyAttempted === "processing" ||
         alreadyAttempted === "completed"
       ) {
-        console.log(
-          "⏹️ Este join ya está siendo procesado o completado:",
-          alreadyAttempted
-        );
         setStatus("✅ Ya procesado. Redirigiendo...");
-
-        // Limpiar y redirigir
+        setStatusType("success");
         localStorage.removeItem("pendingJoinGroup");
-        setTimeout(() => {
-          navigate("/student/my-groups", { replace: true });
-        }, 1000);
+        setTimeout(
+          () => navigate("/student/my-groups", { replace: true }),
+          1200
+        );
         return;
       }
 
-      console.log("🔍 Estado actual:", {
-        userData: userData ? "Sí" : "No",
-        codigo: userData?.codigo,
-        joinKey,
-      });
-
-      console.log("📋 Parámetros extraídos:", {
-        codigo_materia,
-        nombre,
-        periodo,
-        anio,
-        clave_acceso,
-      });
-
-      // Validar parámetros primero
       if (!codigo_materia || !nombre || !periodo || !anio || !clave_acceso) {
-        console.error("❌ Parámetros inválidos");
         setStatus("❌ Enlace inválido o datos incompletos.");
-        hasExecuted.current = true; // 🔥 Marcar como ejecutado
+        setStatusType("error");
+        hasExecuted.current = true;
         return;
       }
 
-      // Si no hay userData, redirigir a login
       if (!userData || !userData.codigo) {
-        console.log("🔒 Sin userData, redirigiendo a login");
-
-        if (!pendingJoin) {
-          localStorage.setItem("pendingJoinGroup", window.location.search);
-          console.log("💾 Join guardado en localStorage");
-        }
-
         setStatus("🔒 Debes iniciar sesión para unirte al grupo.");
-        hasExecuted.current = true; // 🔥 Marcar como ejecutado
+        setStatusType("warning");
+        hasExecuted.current = true;
+        if (!pendingJoin)
+          localStorage.setItem("pendingJoinGroup", window.location.search);
         setTimeout(() => navigate("/login"), 1500);
         return;
       }
 
-      // 🔥 MARCAR COMO "PROCESSING" ANTES DE LA PETICIÓN
       sessionStorage.setItem(joinKey, "processing");
-      hasExecuted.current = true; // 🔥 Marcar como ejecutado
-      console.log("🔒 Join marcado como PROCESSING:", joinKey);
+      hasExecuted.current = true;
 
       setStatus("Uniéndose al grupo...");
+      setStatusType("loading");
 
       const payload = {
         codigo_usuario: userData.codigo,
@@ -105,32 +76,17 @@ const JoinGroup = () => {
         clave_acceso,
       };
 
-      console.log("🚀 Enviando petición con:", payload);
-
       try {
         const response = await joinGroupByAccessKey(payload);
-
-        console.log("✅ Respuesta exitosa:", response);
-
-        // 🔥 MARCAR COMO COMPLETADO
         sessionStorage.setItem(joinKey, "completed");
-
         setStatus("🎉 Te has unido correctamente al grupo.");
-
-        // Limpiar pendingJoinGroup
+        setStatusType("success");
         localStorage.removeItem("pendingJoinGroup");
-        console.log("🗑️ pendingJoinGroup eliminado");
-
-        setTimeout(() => {
-          console.log("➡️ Navegando a my-groups");
-          navigate("/student/my-groups", { replace: true });
-        }, 2000);
+        setTimeout(
+          () => navigate("/student/my-groups", { replace: true }),
+          2000
+        );
       } catch (error) {
-        console.error("❌ Error completo:", error);
-        console.error("📄 Error response:", error.response);
-        console.error("📄 Error data:", error.response?.data);
-        console.error("📄 Error status:", error.response?.status);
-
         const errorMessage =
           error.response?.data?.message ||
           error.response?.data?.error ||
@@ -140,8 +96,9 @@ const JoinGroup = () => {
           error.response?.status === 409 ||
           errorMessage?.includes("ya está")
         ) {
-          sessionStorage.setItem(joinKey, "completed"); // Ya estaba inscrito
+          sessionStorage.setItem(joinKey, "completed");
           setStatus("⚠️ Ya estás inscrito en este grupo.");
+          setStatusType("warning");
           localStorage.removeItem("pendingJoinGroup");
           setTimeout(
             () => navigate("/student/my-groups", { replace: true }),
@@ -149,9 +106,9 @@ const JoinGroup = () => {
           );
         } else {
           setStatus(`❌ Error: ${errorMessage || "No se pudo unir al grupo"}`);
-          // 🔥 Si falla, permitir reintentar eliminando la marca
+          setStatusType("error");
           sessionStorage.removeItem(joinKey);
-          hasExecuted.current = false; // Permitir reintentar
+          hasExecuted.current = false;
         }
       }
     };
@@ -159,41 +116,66 @@ const JoinGroup = () => {
     ejecutarJoin();
   }, [userData, navigate]);
 
+  const getIcon = () => {
+    switch (statusType) {
+      case "success":
+        return <CheckCircle className="text-red-500 w-10 h-10 mb-3" />;
+      case "error":
+        return <XCircle className="text-red-600 w-10 h-10 mb-3" />;
+      case "warning":
+        return <LogIn className="text-orange-500 w-10 h-10 mb-3" />;
+      default:
+        return <Loader2 className="animate-spin text-red-500 w-10 h-10 mb-3" />;
+    }
+  };
+
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50">
-      <div className="bg-white p-6 rounded-lg shadow text-center w-96">
-        <h1 className="text-xl font-bold text-gray-800 mb-2">
-          Unirse al grupo
-        </h1>
-        <p className="text-gray-600 mb-4">{status}</p>
+    <div className="min-h-screen bg-gradient-to-br from-rose-50 via-white to-red-100 flex items-center justify-center px-4">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.4 }}
+        className="bg-white/90 backdrop-blur-md shadow-2xl rounded-2xl p-8 w-full max-w-md text-center border border-red-100"
+      >
+        <div className="flex flex-col items-center">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={statusType}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.3 }}
+            >
+              {getIcon()}
+            </motion.div>
+          </AnimatePresence>
 
-        {/* Debug info */}
-        <div className="text-xs text-gray-400 text-left mt-4 p-2 bg-gray-50 rounded">
-          <p>Usuario: {userData?.codigo || "No disponible"}</p>
-          <p>Ejecutado: {hasExecuted.current ? "Sí" : "No"}</p>
-        </div>
-
-        {status.includes("❌") && (
-          <button
-            onClick={() => {
-              console.log("🔄 Recargando página...");
-              // Limpiar el intento previo para permitir reintentar
-              const params = new URLSearchParams(window.location.search);
-              const joinKey = `join_${params.get(
-                "codigo_materia"
-              )}_${params.get("nombre")}_${params.get("periodo")}_${params.get(
-                "anio"
-              )}_${params.get("clave")}`;
-              sessionStorage.removeItem(joinKey);
-              hasExecuted.current = false;
-              window.location.reload();
-            }}
-            className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          <h1 className="text-2xl font-extrabold text-red-700 mb-2">
+            Unirse al grupo
+          </h1>
+          <p
+            className={`text-base mb-4 ${
+              statusType === "error"
+                ? "text-red-600"
+                : statusType === "success"
+                ? "text-green-600"
+                : "text-gray-700"
+            }`}
           >
-            Reintentar
-          </button>
-        )}
-      </div>
+            {status}
+          </p>
+
+          {statusType === "error" && (
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              className="mt-6 px-5 py-2 bg-red-600 text-white font-semibold rounded-lg shadow hover:bg-red-700 transition-colors"
+              onClick={() => window.location.reload()}
+            >
+              Reintentar
+            </motion.button>
+          )}
+        </div>
+      </motion.div>
     </div>
   );
 };
