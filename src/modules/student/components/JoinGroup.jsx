@@ -34,7 +34,7 @@ const JoinGroup = () => {
         alreadyAttempted === "processing" ||
         alreadyAttempted === "completed"
       ) {
-        setStatus("✅ Ya procesado. Redirigiendo...");
+        setStatus(" Ya procesado. Redirigiendo...");
         setStatusType("success");
         localStorage.removeItem("pendingJoinGroup");
         setTimeout(
@@ -45,7 +45,7 @@ const JoinGroup = () => {
       }
 
       if (!codigo_materia || !nombre || !periodo || !anio || !clave_acceso) {
-        setStatus("❌ Enlace inválido o datos incompletos.");
+        setStatus(" Enlace inválido o datos incompletos.");
         setStatusType("error");
         hasExecuted.current = true;
         return;
@@ -58,6 +58,22 @@ const JoinGroup = () => {
         if (!pendingJoin)
           localStorage.setItem("pendingJoinGroup", window.location.search);
         setTimeout(() => navigate("/login"), 1500);
+        return;
+      }
+
+      // Validar que solo estudiantes puedan unirse
+      const rol = userData.Rol?.descripcion || userData.rol;
+      if (rol && rol.toUpperCase() !== "ESTUDIANTE") {
+        setStatus(
+          "Solo los estudiantes pueden unirse a grupos mediante código de acceso."
+        );
+        setStatusType("error");
+        hasExecuted.current = true;
+        localStorage.removeItem("pendingJoinGroup");
+        setTimeout(() => {
+          const dashboardRoute = `/${rol.toLowerCase()}/dashboard`;
+          navigate(dashboardRoute, { replace: true });
+        }, 3000);
         return;
       }
 
@@ -79,7 +95,7 @@ const JoinGroup = () => {
       try {
         const response = await joinGroupByAccessKey(payload);
         sessionStorage.setItem(joinKey, "completed");
-        setStatus("🎉 Te has unido correctamente al grupo.");
+        setStatus(" Te has unido correctamente al grupo.");
         setStatusType("success");
         localStorage.removeItem("pendingJoinGroup");
         setTimeout(
@@ -97,7 +113,7 @@ const JoinGroup = () => {
           errorMessage?.includes("ya está")
         ) {
           sessionStorage.setItem(joinKey, "completed");
-          setStatus("⚠️ Ya estás inscrito en este grupo.");
+          setStatus(" Ya estás inscrito en este grupo.");
           setStatusType("warning");
           localStorage.removeItem("pendingJoinGroup");
           setTimeout(
