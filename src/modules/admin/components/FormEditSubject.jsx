@@ -118,7 +118,9 @@ const FormEditSubject = () => {
   );
 
   const prerequisiteOptions = useMemo(() => {
-    const options = existingCodes.map((code) => ({
+    const options = existingCodes
+    .filter((code) => code.codigo !== form.codigo) // Excluir el código actual
+    .map((code) => ({
       value: code.codigo,
       label: `${code.codigo} - ${code.nombre}`,
     }));
@@ -128,7 +130,7 @@ const FormEditSubject = () => {
       { value: "ninguno", label: "Ninguno" },
       ...options
     ];
-  }, [existingCodes]);
+  }, [existingCodes, form.codigo]);
 
   // Handlers
   const handleChange = (e) => {
