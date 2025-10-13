@@ -8,9 +8,10 @@ import {
   listarGruposPorUsuario,
   obtenerClaveYCodigoQR,
   actualizarEstado,
+  actualizarClaveAcceso,
 } from "../../services/groupServices";
 import { useAuth } from "../../contexts/AuthContext";
-import GroupAccessModal from "../../components/ui/GroupAccessModal";
+import GroupAccessModal from "../../modules/professor/components/GroupAccessModal";
 import ConfirmModal from "../../components/ui/ConfirmModal";
 import { useToast } from "../../hooks/useToast";
 
@@ -180,6 +181,49 @@ const MyGroups = () => {
     }
   };
 
+  const handleUpdateAccessKey = async (group, newKey) => {
+    try {
+      // Actualizar en el backend
+      await actualizarClaveAcceso(
+        group.codigo_materia,
+        group.nombre_grupo,
+        group.periodo_grupo || group.periodo,
+        group.anio_grupo || group.anio,
+        newKey
+      );
+
+      // Obtener la nueva información con QR actualizado
+      const response = await obtenerClaveYCodigoQR(
+        group.codigo_materia,
+        group.nombre_grupo,
+        group.periodo_grupo || group.periodo,
+        group.anio_grupo || group.anio
+      );
+
+      const joinUrl = `https://sishub-fe.vercel.app/join-group?codigo_materia=${encodeURIComponent(
+        group.codigo_materia
+      )}&nombre=${encodeURIComponent(
+        group.nombre_grupo
+      )}&periodo=${encodeURIComponent(
+        group.periodo_grupo || group.periodo
+      )}&anio=${encodeURIComponent(
+        group.anio_grupo || group.anio
+      )}&clave=${encodeURIComponent(response?.clave_acceso)}`;
+
+      // Actualizar el estado local del QR
+      setQrData({
+        clave_acceso: response?.clave_acceso,
+        qr_url: joinUrl,
+      });
+
+      toastSuccess("Clave de acceso actualizada correctamente");
+    } catch (error) {
+      console.error("Error al actualizar clave:", error);
+      toastError("No se pudo actualizar la clave de acceso");
+      throw error;
+    }
+  };
+
   const closeModal = () => {
     setIsModalOpen(false);
     setSelectedGroup(null);
@@ -278,6 +322,7 @@ const MyGroups = () => {
         onClose={closeModal}
         group={selectedGroup}
         qrData={qrData}
+        onUpdateAccessKey={handleUpdateAccessKey}
       />
       <ConfirmModal
         isOpen={showEstadoConfirm}

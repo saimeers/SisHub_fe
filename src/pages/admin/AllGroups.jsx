@@ -8,7 +8,7 @@ import {
   obtenerGrupos,
   obtenerClaveYCodigoQR,
 } from "../../services/groupServices";
-import GroupAccessModal from "../../components/ui/GroupAccessModal";
+import GroupAccessModal from "../../modules/admin/components/GroupAccessModal";
 
 const AllGroups = () => {
   const [groups, setGroups] = useState([]);
