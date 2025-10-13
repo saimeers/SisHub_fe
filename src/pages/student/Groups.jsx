@@ -47,8 +47,9 @@ const Groups = () => {
     try {
       setJoining(true);
       // Parsear el selectedGroupId para obtener los componentes individuales
-      const [codigo_materia, nombre_grupo, periodo, anio] = selectedGroupId.split('-');
-      
+      const [codigo_materia, nombre_grupo, periodo, anio] =
+        selectedGroupId.split("-");
+
       const payload = {
         codigo_usuario: userData.codigo,
         codigo_materia,
@@ -61,18 +62,22 @@ const Groups = () => {
       await joinGroupByAccessKey(payload);
       toast.success("Te uniste al grupo correctamente");
       setAccessKey("");
+      navigate(
+        `/student/my-group/${codigo_materia}/${nombre_grupo}/${periodo}/${anio}`,
+        {
+          state: { groupName: selectedGroupName },
+        }
+      );
     } catch (err) {
       console.error("Error unirse a grupo:", err);
 
-      const mensaje = err?.response?.data?.message || err.message;
+      const mensaje =
+        err?.response?.data?.message ||
+        err?.response?.data?.error ||
+        err.message ||
+        "Error desconocido";
 
-      if (mensaje.includes("ya pertenece")) {
-        toast.warning("Ya estás inscrito en este grupo");
-      } else if (mensaje.includes("clave")) {
-        toast.error("Clave de acceso incorrecta");
-      } else {
-        toast.error("No se pudo unir al grupo. Intenta nuevamente");
-      }
+      toast.error(mensaje);
     } finally {
       setJoining(false);
     }
