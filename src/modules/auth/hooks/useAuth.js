@@ -86,8 +86,6 @@ export const useAuth = () => {
       const res = await obtenerUsuario();
       const usuario = res?.data?.usuario || res?.data || res?.usuario || res;
 
-      console.log("🔍 Usuario obtenido:", usuario);
-
       if (usuario && (usuario.id || usuario.IdUsuario || usuario.Rol)) {
         const { valido, rol } = verificarEstadoUsuario(
           usuario,
@@ -96,23 +94,31 @@ export const useAuth = () => {
         if (!valido) return;
 
         const pendingJoin = localStorage.getItem("pendingJoinGroup");
-
-        console.log("🔗 Pending join detectado:", pendingJoin);
-
         toast.success(
           `¡Bienvenido ${formatShortName(user.displayName) || ""}!`
         );
 
+        // Solo redirigir a join-group si es ESTUDIANTE
         if (pendingJoin) {
-          console.log("Redirigiendo a join-group con:", pendingJoin);
-          // IMPORTANTE: No eliminar pendingJoinGroup aquí, lo hace JoinGroup
-          navigate(`/join-group${pendingJoin}`);
+          if (rol?.toUpperCase() === "ESTUDIANTE") {
+            // Limpiar la flag aquí porque ya se va a usar
+            localStorage.removeItem("intentionalLogoutForJoin");
+            navigate(`/join-group${pendingJoin}`);
+          } else {
+            console.log("No estudiante - Limpiando pendingJoinGroup");
+            localStorage.removeItem("pendingJoinGroup");
+            localStorage.removeItem("intentionalLogoutForJoin");
+            toast.warning(
+              "Solo los estudiantes pueden unirse a grupos mediante código de acceso."
+            );
+            navigate(`/${rol?.toLowerCase()}/dashboard`);
+          }
         } else {
-          console.log(" Redirigiendo a dashboard:", rol);
+          console.log("Sin pendingJoin - Redirigiendo a dashboard:", rol);
+          // Limpiar cualquier flag residual
           navigate(`/${rol?.toLowerCase()}/dashboard`);
         }
       } else {
-        console.log(" Usuario sin datos completos");
         toast.warning("Debes completar tu registro antes de continuar.");
         navigate("/signup");
       }
@@ -140,8 +146,26 @@ export const useAuth = () => {
         formData.password
       );
 
-      localStorage.clean(); // Limpiar localStorage antes de guardar nuevos datos
-      
+      // Preservar pendingJoinGroup si existe (venga de donde venga)
+      const pendingJoin = localStorage.getItem("pendingJoinGroup");
+      const intentionalLogout = localStorage.getItem(
+        "intentionalLogoutForJoin"
+      );
+
+      localStorage.clear();
+
+      // Restaurar pendingJoinGroup si existe
+      if (pendingJoin) {
+        localStorage.setItem("pendingJoinGroup", pendingJoin);
+      } else {
+        console.log(" Login normal, sin pendingJoinGroup");
+      }
+
+      // Restaurar flag si existía
+      if (intentionalLogout === "true") {
+        localStorage.setItem("intentionalLogoutForJoin", "true");
+      }
+
       if (!isEmailDomainAllowed(user.email, ALLOWED_DOMAINS)) {
         await deleteCurrentUser();
         toast.warning(`Solo se permiten correos institucionales.`, {
@@ -153,7 +177,22 @@ export const useAuth = () => {
 
       await validarYRedirigirUsuario(user, token);
     } catch (err) {
+      // En caso de error también preservar si es necesario
+      const pendingJoin = localStorage.getItem("pendingJoinGroup");
+      const intentionalLogout = localStorage.getItem(
+        "intentionalLogoutForJoin"
+      );
+
       localStorage.clear();
+
+      if (pendingJoin) {
+        localStorage.setItem("pendingJoinGroup", pendingJoin);
+      }
+
+      if (intentionalLogout === "true") {
+        localStorage.setItem("intentionalLogoutForJoin", "true");
+      }
+
       console.error("Error login:", err);
       toast.error(getAuthErrorMessage(err.code));
     } finally {
@@ -167,7 +206,25 @@ export const useAuth = () => {
     try {
       const { user, token } = await signInWithGoogle();
 
-      localStorage.clean(); // Limpiar localStorage antes de guardar nuevos datos
+      // Preservar pendingJoinGroup si existe (venga de donde venga)
+      const pendingJoin = localStorage.getItem("pendingJoinGroup");
+      const intentionalLogout = localStorage.getItem(
+        "intentionalLogoutForJoin"
+      );
+
+      localStorage.clear();
+
+      // Restaurar pendingJoinGroup si existe
+      if (pendingJoin) {
+        localStorage.setItem("pendingJoinGroup", pendingJoin);
+      } else {
+        console.log("Login normal, sin pendingJoinGroup");
+      }
+
+      // Restaurar flag si existía
+      if (intentionalLogout === "true") {
+        localStorage.setItem("intentionalLogoutForJoin", "true");
+      }
 
       if (!isEmailDomainAllowed(user.email, ALLOWED_DOMAINS)) {
         await deleteCurrentUser();
@@ -181,6 +238,22 @@ export const useAuth = () => {
       await validarYRedirigirUsuario(user, token);
     } catch (err) {
       console.error("Error Google login:", err);
+
+      const pendingJoin = localStorage.getItem("pendingJoinGroup");
+      const intentionalLogout = localStorage.getItem(
+        "intentionalLogoutForJoin"
+      );
+
+      localStorage.clear();
+
+      if (pendingJoin) {
+        localStorage.setItem("pendingJoinGroup", pendingJoin);
+      }
+
+      if (intentionalLogout === "true") {
+        localStorage.setItem("intentionalLogoutForJoin", "true");
+      }
+
       toast.error(getAuthErrorMessage(err.code));
     } finally {
       setLoading(false);
