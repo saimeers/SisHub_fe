@@ -15,7 +15,11 @@ const GroupAccessModal = ({ isOpen, onClose, group, qrData }) => {
         </button>
 
         <h2 className="text-xl md:text-2xl font-bold text-gray-800 mb-4 text-center">
-          {group ? `${group.codigo_materia}-${group.nombre_grupo}-${group.periodo_grupo || group.periodo}-${group.anio_grupo || group.anio}` : "Grupo"}
+          {group
+            ? `${group.codigo_materia}-${group.nombre_grupo}-${
+                group.periodo_grupo || group.periodo
+              }-${group.anio_grupo || group.anio}`
+            : "Grupo"}
         </h2>
 
         {!qrData ? (

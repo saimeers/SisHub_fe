@@ -143,6 +143,32 @@ export const cargarGruposDesdeCSV = async (file) => {
     throw error.response?.data || { message: "Error al procesar CSV" };
   }
 };
+
+export const actualizarClaveAcceso = async (
+  codigo_materia,
+  nombre,
+  periodo,
+  anio,
+  nueva_clave
+) => {
+  try {
+    const response = await axiosInstance.patch(
+      `${GROUPS_BASE}/actualizar-clave`,
+      {
+        codigo_materia,
+        nombre,
+        periodo,
+        anio,
+        nueva_clave,
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error al actualizar clave de acceso:", error);
+    throw error;
+  }
+};
+
 export default {
   obtenerGrupos,
   crearGrupo,
@@ -154,4 +180,5 @@ export default {
   listarGruposHabilitadosPorMateria,
   listarGruposPorUsuario,
   cargarGruposDesdeCSV,
+  actualizarClaveAcceso,
 };
