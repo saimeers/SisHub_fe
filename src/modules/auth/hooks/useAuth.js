@@ -140,6 +140,8 @@ export const useAuth = () => {
         formData.password
       );
 
+      localStorage.clean(); // Limpiar localStorage antes de guardar nuevos datos
+      
       if (!isEmailDomainAllowed(user.email, ALLOWED_DOMAINS)) {
         await deleteCurrentUser();
         toast.warning(`Solo se permiten correos institucionales.`, {
@@ -164,6 +166,8 @@ export const useAuth = () => {
 
     try {
       const { user, token } = await signInWithGoogle();
+
+      localStorage.clean(); // Limpiar localStorage antes de guardar nuevos datos
 
       if (!isEmailDomainAllowed(user.email, ALLOWED_DOMAINS)) {
         await deleteCurrentUser();
