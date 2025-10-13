@@ -35,10 +35,19 @@ export async function updateSubjectByCode(codigo, subjectPayload) {
   return data;
 }
 
-export async function getSubjectCodes() {
-  const { data } = await axiosInstance.get(`${SUBJECTS_BASE}/codigos`);
-  return data;
-}
+export const getSubjectCodes = async (semestre = null) => {
+  try {
+    const url = semestre 
+      ? `${SUBJECTS_BASE}/codigos?semestre=${semestre}`
+      : `${SUBJECTS_BASE}/codigos`;
+    
+    const response = await axiosInstance.get(url);
+    return response.data;
+  } catch (error) {
+    console.error("Error al obtener códigos de materias:", error);
+    throw error;
+  }
+};
 
 export async function uploadSubjectsCSV(file) {
   const formData = new FormData();

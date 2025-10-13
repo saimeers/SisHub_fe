@@ -45,18 +45,18 @@ const FormEditSubject = () => {
       setIsLoading(true);
       try {
         console.log("🔹 Solicitando listado de materias para encontrar:", codigo);
-        
+
         // Cargar todas las materias para encontrar la que tiene el código
         const allSubjects = await fetchSubjects();
         const subjectsList = Array.isArray(allSubjects) ? allSubjects : [];
         const subjectData = subjectsList.find(subject => subject.codigo === codigo);
-        
+
         if (!subjectData) {
           error("No se encontró la materia con el código especificado");
           navigate("/admin/subjects");
           return;
         }
-        
+
         console.log("✅ Materia encontrada:", subjectData);
 
         console.log("🔹 Solicitando listado de áreas...");
@@ -70,7 +70,7 @@ const FormEditSubject = () => {
         setIsLoadingCodes(true);
         let codesList = [];
         try {
-          const codes = await getSubjectCodes();
+          const codes = await getSubjectCodes(subjectData.semestre);
           codesList = Array.isArray(codes) ? codes : [];
           setExistingCodes(codesList);
           setIsLoadingCodes(false);
@@ -112,6 +112,46 @@ const FormEditSubject = () => {
     loadData();
   }, [codigo]); // ← solo depende del código
 
+  useEffect(() => {
+    const loadPrerequisitesBySemester = async () => {
+      if (!form.semestre || isLoading) return;
+
+      setIsLoadingCodes(true);
+      try {
+        const codes = await getSubjectCodes(form.semestre);
+        const codesList = Array.isArray(codes) ? codes : [];
+        setExistingCodes(codesList);
+        console.log(`🔄 Prerrequisitos actualizados para semestre ${form.semestre}:`, codesList.length);
+
+        // Limpiar prerrequisitos seleccionados que ya no están disponibles
+        if (selectedPrerequisites.length > 0 && !selectedPrerequisites.some(p => p.value === "ninguno")) {
+          const validPrereqs = selectedPrerequisites.filter(
+            prereq => codesList.some(code => code.codigo === prereq.value)
+          );
+
+          if (validPrereqs.length !== selectedPrerequisites.length) {
+            console.log("⚠️ Algunos prerrequisitos ya no están disponibles, limpiando...");
+            if (validPrereqs.length > 0) {
+              setSelectedPrerequisites(validPrereqs);
+              const codes = validPrereqs.map(opt => opt.value).join(", ");
+              setForm(prev => ({ ...prev, prerrequisitos: codes }));
+            } else {
+              setSelectedPrerequisites([{ value: "ninguno", label: "Ninguno" }]);
+              setForm(prev => ({ ...prev, prerrequisitos: "Ninguno" }));
+            }
+          }
+        }
+      } catch (err) {
+        console.warn("Error al recargar prerrequisitos:", err);
+        setExistingCodes([]);
+      } finally {
+        setIsLoadingCodes(false);
+      }
+    };
+
+    loadPrerequisitesBySemester();
+  }, [form.semestre]);
+
   const areaOptions = useMemo(
     () => areas.map((a) => ({ value: a.id_area, label: a.nombre })),
     [areas]
@@ -119,12 +159,12 @@ const FormEditSubject = () => {
 
   const prerequisiteOptions = useMemo(() => {
     const options = existingCodes
-    .filter((code) => code.codigo !== form.codigo) // Excluir el código actual
-    .map((code) => ({
-      value: code.codigo,
-      label: `${code.codigo} - ${code.nombre}`,
-    }));
-    
+      .filter((code) => code.codigo !== form.codigo) // Excluir el código actual
+      .map((code) => ({
+        value: code.codigo,
+        label: `${code.codigo} - ${code.nombre}`,
+      }));
+
     // Agregar opción "Ninguno" al inicio
     return [
       { value: "ninguno", label: "Ninguno" },
@@ -164,7 +204,7 @@ const FormEditSubject = () => {
   const handlePrerequisitesChange = (selectedOptions) => {
     const options = selectedOptions || [];
     setSelectedPrerequisites(options);
-    
+
     // Si se selecciona "ninguno", limpiar otras selecciones
     if (options.some && options.some(opt => opt.value === "ninguno")) {
       setSelectedPrerequisites([{ value: "ninguno", label: "Ninguno" }]);
@@ -173,7 +213,7 @@ const FormEditSubject = () => {
       // Filtrar "ninguno" si está seleccionado junto con otros
       const filteredOptions = options.filter ? options.filter(opt => opt.value !== "ninguno") : [];
       setSelectedPrerequisites(filteredOptions);
-      
+
       if (filteredOptions.length === 0) {
         setForm((prev) => ({ ...prev, prerrequisitos: "" }));
       } else {
@@ -186,26 +226,26 @@ const FormEditSubject = () => {
   const validate = () => {
     if (!form.codigo || !form.nombre || !form.semestre || !form.tipo)
       return "Complete los campos requeridos.";
-    
+
     // Validar que semestre sea un número entero positivo (mayor que cero)
     const semestreNum = parseInt(form.semestre);
     if (!Number.isInteger(semestreNum) || semestreNum <= 0) {
       return "El semestre debe ser un número entero mayor que cero";
     }
-    
+
     // Validar que créditos sea un número entero positivo
     const creditosNum = parseInt(form.creditos);
     if (!Number.isInteger(creditosNum) || creditosNum <= 0) {
       return "Los créditos deben ser un número entero positivo";
     }
-    
+
     if (!form.id_area) return "Seleccione un área del conocimiento.";
-    
+
     // Validar prerrequisitos - si no se seleccionó "ninguno", debe tener al menos uno
     if (selectedPrerequisites.length === 0) {
       return "Seleccione al menos un prerrequisito o 'Ninguno'";
     }
-    
+
     return null;
   };
 
@@ -218,7 +258,7 @@ const FormEditSubject = () => {
     try {
       // Crear payload solo con los campos que se quieren modificar
       const payload = {};
-      
+
       if (form.nombre) payload.nombre = String(form.nombre).trim();
       if (form.semestre) payload.semestre = String(form.semestre).trim();
       if (form.creditos) payload.creditos = parseInt(form.creditos);
@@ -341,8 +381,8 @@ const FormEditSubject = () => {
                 isLoadingCodes
                   ? "Cargando materias..."
                   : prerequisiteOptions.length === 0
-                  ? "No hay materias disponibles"
-                  : "Seleccione los prerrequisitos"
+                    ? "No hay materias disponibles"
+                    : "Seleccione los prerrequisitos"
               }
               isMulti={true}
               isClearable={true}
