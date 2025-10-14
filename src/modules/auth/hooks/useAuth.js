@@ -105,7 +105,6 @@ export const useAuth = () => {
             localStorage.removeItem("intentionalLogoutForJoin");
             navigate(`/join-group${pendingJoin}`);
           } else {
-            console.log("No estudiante - Limpiando pendingJoinGroup");
             localStorage.removeItem("pendingJoinGroup");
             localStorage.removeItem("intentionalLogoutForJoin");
             toast.warning(
@@ -114,8 +113,6 @@ export const useAuth = () => {
             navigate(`/${rol?.toLowerCase()}/dashboard`);
           }
         } else {
-          console.log("Sin pendingJoin - Redirigiendo a dashboard:", rol);
-          // Limpiar cualquier flag residual
           navigate(`/${rol?.toLowerCase()}/dashboard`);
         }
       } else {
@@ -157,10 +154,7 @@ export const useAuth = () => {
       // Restaurar pendingJoinGroup si existe
       if (pendingJoin) {
         localStorage.setItem("pendingJoinGroup", pendingJoin);
-      } else {
-        console.log(" Login normal, sin pendingJoinGroup");
-      }
-
+      } 
       // Restaurar flag si existía
       if (intentionalLogout === "true") {
         localStorage.setItem("intentionalLogoutForJoin", "true");

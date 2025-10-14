@@ -2,7 +2,10 @@
 
 // Función para parsear CSV de grupos
 const parseGroupsCSV = (text, existingGroups = []) => {
-  const lines = text.split("\n").filter((line) => line.trim());
+  const lines = text
+    .split("\n")
+    .map((line) => line.replace(/\r/g, "").replace(/\uFEFF/g, "")) // 🔥 limpia BOM y \r
+    .filter((line) => line.trim());
 
   if (lines.length === 0) {
     return {
@@ -15,17 +18,19 @@ const parseGroupsCSV = (text, existingGroups = []) => {
   const errors = [];
   const duplicatesFound = [];
 
-  const seenCodes = new Set();
-  const seenNames = new Set();
+  // 🔥 CAMBIO CRÍTICO: Usar llave compuesta
+  const seenKeys = new Set();
 
+  // Agregar grupos existentes al Set con llave compuesta
   existingGroups.forEach((g) => {
-    seenCodes.add(g.codigo_materia?.toLowerCase());
-    seenNames.add(g.nombre_grupo?.toLowerCase());
+    const key =
+      `${g.codigo_materia}-${g.nombre_grupo}-${g.periodo}-${g.anio}`.toLowerCase();
+    seenKeys.add(key);
   });
 
   let startIndex = 0;
 
-  // Detectar encabezado: si la primera línea tiene letras o palabras clave
+  // Detectar encabezado
   const firstLineValues = lines[0]
     .trim()
     .split(";")
@@ -35,24 +40,24 @@ const parseGroupsCSV = (text, existingGroups = []) => {
     firstLineValues.some((v) => isNaN(v)) &&
     firstLineValues.some((v) => /codigo|nombre|periodo|anio|docente/.test(v))
   ) {
-    startIndex = 1; // ignorar primera línea
+    startIndex = 1;
   }
 
   for (let i = startIndex; i < lines.length; i++) {
     const lineNumber = i + 1;
-    const values = lines[i]
-      .trim()
-      .split(";")
-      .map((v) => v.trim());
+    const line = lines[i].trim();
+
+    const values = line.split(";").map((v) => v.trim());
 
     if (values.length < 5) {
-      errors.push(`Línea ${lineNumber}: No contiene las 5 columnas requeridas`);
+      const error = `Línea ${lineNumber}: No contiene las 5 columnas requeridas (tiene ${values.length})`;
+      errors.push(error);
       continue;
     }
 
-    const [codigo_materia, nombre_grupo, periodo, anio, codigo_docente] =
-      values;
+    let [codigo_materia, nombre_grupo, periodo, anio, codigo_docente] = values;
 
+    // Validar campos obligatorios
     if (
       !codigo_materia ||
       !nombre_grupo ||
@@ -60,55 +65,66 @@ const parseGroupsCSV = (text, existingGroups = []) => {
       !anio ||
       !codigo_docente
     ) {
-      errors.push(
-        `Línea ${lineNumber} (${
-          nombre_grupo || "sin nombre"
-        }): Faltan campos obligatorios`
-      );
+      const error = `Línea ${lineNumber} (${
+        nombre_grupo || "sin nombre"
+      }): Faltan campos obligatorios`;
+      errors.push(error);
       continue;
     }
 
+    // Validar año (debe ser 4 dígitos)
     if (!/^\d{4}$/.test(anio)) {
-      errors.push(
-        `Línea ${lineNumber} (${nombre_grupo}): El año debe tener 4 dígitos`
-      );
+      const error = `Línea ${lineNumber} (${nombre_grupo}): El año debe tener 4 dígitos (recibido: "${anio}")`;
+      errors.push(error);
       continue;
     }
 
-    if (!/^(1|2|I|II)$/i.test(periodo)) {
-      errors.push(
-        `Línea ${lineNumber} (${nombre_grupo}): El periodo debe ser 1, 2, I o II`
-      );
+    // Normalizar y validar periodo
+    let periodoNormalizado = periodo.trim();
+
+    // Convertir I/II a 01/02
+    if (periodoNormalizado.toUpperCase() === "I") {
+      periodoNormalizado = "01";
+    } else if (periodoNormalizado.toUpperCase() === "II") {
+      periodoNormalizado = "02";
+    } else if (periodoNormalizado === "1") {
+      periodoNormalizado = "01";
+    } else if (periodoNormalizado === "2") {
+      periodoNormalizado = "02";
+    }
+
+    if (!/^(01|02)$/.test(periodoNormalizado)) {
+      const error = `Línea ${lineNumber} (${nombre_grupo}): El periodo debe ser 1, 2, 01, 02, I o II (recibido: "${periodo}")`;
+      errors.push(error);
       continue;
     }
 
-    const lowerCode = codigo_materia.toLowerCase();
-    const lowerName = nombre_grupo.toLowerCase();
+    // 🔥 VALIDAR DUPLICADOS CON LLAVE COMPUESTA
+    const key =
+      `${codigo_materia}-${nombre_grupo}-${periodoNormalizado}-${anio}`.toLowerCase();
 
-    if (seenCodes.has(lowerCode)) {
-      duplicatesFound.push(
-        `Línea ${lineNumber}: Código de materia duplicado (${codigo_materia})`
-      );
+    if (seenKeys.has(key)) {
+      const duplicate = `Línea ${lineNumber}: Grupo duplicado (${codigo_materia}-${nombre_grupo}-${anio}-${periodoNormalizado})`;
+      duplicatesFound.push(duplicate);
       continue;
     }
 
-    if (seenNames.has(lowerName)) {
-      duplicatesFound.push(
-        `Línea ${lineNumber}: Nombre de grupo duplicado (${nombre_grupo})`
-      );
-      continue;
-    }
+    // Agregar al Set
+    seenKeys.add(key);
 
-    seenCodes.add(lowerCode);
-    seenNames.add(lowerName);
+    // Normalizar nombre del grupo a mayúsculas
+    const nombreGrupoNormalizado = nombre_grupo.toUpperCase();
 
-    newGroups.push({
+    const grupo = {
       codigo_materia,
-      nombre_grupo,
-      periodo,
+      nombre_grupo: nombreGrupoNormalizado,
+      periodo: periodoNormalizado,
       anio,
       codigo_docente,
-    });
+      id: Date.now() + Math.random(), // ID único temporal
+    };
+
+    newGroups.push(grupo);
   }
 
   return {
