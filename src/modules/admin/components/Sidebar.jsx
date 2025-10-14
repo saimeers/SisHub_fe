@@ -6,7 +6,7 @@ import { MdGroups2 } from "react-icons/md";
 import { IoIosSchool } from "react-icons/io";
 import { ImStatsDots } from "react-icons/im";
 import UserProfile from "../../../components/ui/UserProfile";
-import { useAuth } from "../../auth/hooks/useAuth";
+import { useAuth } from "../../../contexts/AuthContext"; 
 import { Menu } from "lucide-react";
 
 const Sidebar = () => {
