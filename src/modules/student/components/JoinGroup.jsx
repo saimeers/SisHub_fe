@@ -299,7 +299,7 @@ const JoinGroup = () => {
                 ) : (
                   <>
                     <LogOut className="w-4 h-4" />
-                    Cerrar sesión e ingresar como estudiante
+                    Cerrar sesión
                   </>
                 )}
               </motion.button>

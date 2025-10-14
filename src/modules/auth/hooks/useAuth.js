@@ -13,7 +13,7 @@ import { userHasPasswordProvider } from "../utils/passwordValidator";
 import { useToast } from "../../../hooks/useToast";
 import { formatShortName } from "../../../utils/nameFormatter";
 
-export const useAuth = () => {
+export const useAuthForm = () => {
   const navigate = useNavigate();
   const toast = useToast();
   const [formData, setFormData] = useState({ email: "", password: "" });
@@ -94,18 +94,18 @@ export const useAuth = () => {
         if (!valido) return;
 
         const pendingJoin = localStorage.getItem("pendingJoinGroup");
+
+        localStorage.setItem("userData", JSON.stringify(usuario));
+
         toast.success(
           `¡Bienvenido ${formatShortName(user.displayName) || ""}!`
         );
 
-        // Solo redirigir a join-group si es ESTUDIANTE
         if (pendingJoin) {
           if (rol?.toUpperCase() === "ESTUDIANTE") {
-            // Limpiar la flag aquí porque ya se va a usar
             localStorage.removeItem("intentionalLogoutForJoin");
             navigate(`/join-group${pendingJoin}`);
           } else {
-            console.log("No estudiante - Limpiando pendingJoinGroup");
             localStorage.removeItem("pendingJoinGroup");
             localStorage.removeItem("intentionalLogoutForJoin");
             toast.warning(
@@ -114,8 +114,6 @@ export const useAuth = () => {
             navigate(`/${rol?.toLowerCase()}/dashboard`);
           }
         } else {
-          console.log("Sin pendingJoin - Redirigiendo a dashboard:", rol);
-          // Limpiar cualquier flag residual
           navigate(`/${rol?.toLowerCase()}/dashboard`);
         }
       } else {
@@ -157,10 +155,7 @@ export const useAuth = () => {
       // Restaurar pendingJoinGroup si existe
       if (pendingJoin) {
         localStorage.setItem("pendingJoinGroup", pendingJoin);
-      } else {
-        console.log(" Login normal, sin pendingJoinGroup");
       }
-
       // Restaurar flag si existía
       if (intentionalLogout === "true") {
         localStorage.setItem("intentionalLogoutForJoin", "true");
@@ -264,12 +259,14 @@ export const useAuth = () => {
     try {
       const userName = localStorage.getItem("userName") || "";
       toast.success(
-        `¡Hasta luego${
-          formatShortName(userName) ? " " + formatShortName(userName) : ""
+        `¡Hasta luego${formatShortName(userName) ? " " + formatShortName(userName) : ""
         }!`
       );
 
       await signOutAccount();
+
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       localStorage.clear();
       navigate("/login");
     } catch (error) {

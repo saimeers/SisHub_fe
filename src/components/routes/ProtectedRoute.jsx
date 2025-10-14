@@ -3,7 +3,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { LoadingScreen } from '../ui/LoadingScreen';
 
 export const ProtectedRoute = ({ children, allowedRoles = [] }) => {
-    const { isAuthenticated, rol, estado, loading, needsPassword } = useAuth();
+    const { isAuthenticated, rol, estado, loading, needsPassword, userData } = useAuth();
     const location = useLocation();
 
     if (loading) {
@@ -14,17 +14,23 @@ export const ProtectedRoute = ({ children, allowedRoles = [] }) => {
         return <Navigate to="/login" state={{ from: location }} replace />;
     }
 
-    // Si ya está logueado pero no tiene rol -> completar perfil
-    if (!rol && location.pathname !== "/complete-profile") {
-        return <Navigate to="/complete-profile" replace />;
+    // ✅ IMPORTANTE: Solo redirigir a complete-profile si:
+    // 1. No tiene rol Y
+    // 2. Ya intentó cargar userData (userData es null después de la carga)
+    // 3. No está ya en la página de complete-profile
+    if (!rol && !loading && location.pathname !== "/complete-profile") {
+        // ✅ Verificar que realmente no tenga datos, no solo que esté cargando
+        if (userData === null) {
+            return <Navigate to="/complete-profile" replace />;
+        }
     }
 
     // Si está en espera
-    if (estado === "STAND_BY") {
+    if (estado === "STAND_BY" && location.pathname !== "/account-pending") {
         return <Navigate to="/account-pending" replace />;
     }
 
-    // ✅ VALIDACIÓN: Si es docente y no tiene contraseña, redirigir a establecer contraseña
+    // ✅ Si es docente y no tiene contraseña, redirigir a establecer contraseña
     if (needsPassword && location.pathname !== "/establecer-contrasena") {
         return <Navigate to="/establecer-contrasena" replace />;
     }

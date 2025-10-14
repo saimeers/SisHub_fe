@@ -91,7 +91,12 @@ const UploadGroups = () => {
     try {
       info("Procesando archivo CSV, por favor espera...");
 
-      const text = await file.text();
+      let text = await file.text();
+
+      if (text.charCodeAt(0) === 0xfeff) {
+        text = text.slice(1);
+      }
+
       const {
         success: parseSuccess,
         data,
@@ -106,8 +111,11 @@ const UploadGroups = () => {
         return;
       }
 
-      // Guardamos el archivo original
-      setCsvFile(file);
+      const blob = new Blob([text], { type: "text/csv;charset=utf-8" });
+      const cleanFile = new File([blob], file.name, { type: file.type });
+
+      // Guardamos el archivo limpio (no el original)
+      setCsvFile(cleanFile);
 
       success(`Se cargaron ${data.length} grupos correctamente.`);
       setGroups((prev) => [...prev, ...data]);
@@ -207,7 +215,6 @@ const UploadGroups = () => {
       });
     }
   };
-
   const handleSubmit = async () => {
     if (groups.length === 0) {
       warning("No hay grupos para cargar");
@@ -231,20 +238,44 @@ const UploadGroups = () => {
     try {
       const csvContent = [
         "codigo_materia;nombre_grupo;periodo;anio;codigo_docente",
-        ...groups.map(
-          (g) =>
-            `${g.codigo_materia};${g.nombre_grupo};${g.periodo};${g.anio};${g.codigo_docente}`
-        ),
-      ].join("\n");
+        ...groups.map((g, index) => {
+          // Asegurarnos que todos los campos existan y estén limpios
+          const row = [
+            String(g.codigo_materia || "").trim(),
+            String(g.nombre_grupo || "").trim(),
+            String(g.periodo || "")
+              .trim()
+              .padStart(2, "0"),
+            String(g.anio || "").trim(),
+            String(g.codigo_docente || "").trim(),
+          ];
 
-      const blob = new Blob([csvContent], { type: "text/csv" });
-      const file = new File([blob], "grupos.csv", { type: "text/csv" });
+          // Validar que ningún campo esté vacío
+          if (row.some((field) => field === "")) {
+            console.warn(` Fila ${index + 1} tiene campos vacíos!`);
+          }
+
+          return row.join(";");
+        }),
+      ].join("\r\n");
+
+      // Crear el Blob con BOM para mejor compatibilidad
+      const BOM = "\uFEFF";
+      const blob = new Blob([BOM + csvContent], {
+        type: "text/csv;charset=utf-8;",
+      });
+
+      const file = new File([blob], "grupos.csv", {
+        type: "text/csv;charset=utf-8;",
+      });
 
       const response = await cargarGruposDesdeCSV(file);
+
       const { resultado } = response;
+
       // Construir mensaje con scroll
       let mensaje = `<div class="text-left" style="font-family: system-ui, -apple-system, sans-serif;">`;
-      mensaje += `<p class="font-semibold mb-3" style="font-size: 16px; color: #1f2937;"> Resumen:</p>`;
+      mensaje += `<p class="font-semibold mb-3" style="font-size: 16px; color: #1f2937;">Resumen:</p>`;
 
       // Exitosos con scroll
       if (resultado.exitosos > 0) {
@@ -260,7 +291,7 @@ const UploadGroups = () => {
 
       // Errores con scroll
       if (resultado.fallidos > 0) {
-        mensaje += `<p style="font-weight: 600; color: #dc2626; margin-bottom: 8px;"> ${resultado.fallidos} Error(es) encontrado(s):</p>`;
+        mensaje += `<p style="font-weight: 600; color: #dc2626; margin-bottom: 8px;">${resultado.fallidos} Error(es):</p>`;
         mensaje += `<div style="max-height: 160px; overflow-y: auto; background-color: #fef2f2; border: 1px solid #fca5a5; border-radius: 6px; padding: 12px; margin-bottom: 16px;">`;
         mensaje += `<ul style="margin: 0; padding: 0; list-style: none;">`;
         resultado.detalles_errores.forEach((err) => {
@@ -296,7 +327,9 @@ const UploadGroups = () => {
         navigate("/admin/grupos");
       }
     } catch (err) {
-      console.error("Error al subir grupos:", err);
+      console.error("Error completo al subir grupos:", err);
+      console.error("Stack trace:", err.stack);
+      console.error("Respuesta del error:", err.response?.data);
       error(err.message || "Error al subir los grupos");
     } finally {
       setIsSubmitting(false);

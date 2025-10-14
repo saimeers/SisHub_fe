@@ -2,7 +2,7 @@ import React from "react";
 import AuthLayout from "../../modules/auth/components/AuthLayout";
 import LoginForm from "../../modules/auth/components/LoginForm";
 import SocialLoginSection from "../../modules/auth/components/SocialLoginSection";
-import { useAuth } from "../../modules/auth/hooks/useAuth";
+import { useAuthForm  } from "../../modules/auth/hooks/useAuth";
 
 function Login() {
   const {
@@ -12,7 +12,7 @@ function Login() {
     handleChange,
     handleEmailLogin,
     handleGoogleLogin,
-  } = useAuth();
+  } = useAuthForm ();
 
   return (
     <AuthLayout>
