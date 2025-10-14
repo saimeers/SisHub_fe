@@ -15,7 +15,7 @@ const UploadSubjectsTable = ({
   onDeleteSubject
 }) => {
   return (
-    <div className="hidden md:block bg-white rounded-lg shadow overflow-hidden">
+    <div className="hidden md:block bg-white rounded-lg shadow overflow-visible">
       <table className="min-w-full text-sm">
         <thead className="bg-gray-50 border-b border-gray-200 text-xs">
           <tr>
@@ -216,3 +216,5 @@ const UploadSubjectsTable = ({
 };
 
 export default UploadSubjectsTable;
+
+

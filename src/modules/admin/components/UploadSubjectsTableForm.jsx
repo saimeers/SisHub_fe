@@ -1,11 +1,12 @@
 import React from "react";
 import { Edit2, Trash2, Check, X } from "lucide-react";
 import SelectField from "../../../components/ui/SelectField";
+import "./UploadSubjectsTableForm.css";
 
-const UploadSubjectsTableForm = ({ 
-  subjects, 
-  newSubject, 
-  editingIndex, 
+const UploadSubjectsTableForm = ({
+  subjects,
+  newSubject,
+  editingIndex,
   editingSubject,
   onInputChange,
   onEditInputChange,
@@ -21,7 +22,7 @@ const UploadSubjectsTableForm = ({
   editingPrerequisites = []
 }) => {
   return (
-    <div className="bg-white rounded-lg shadow overflow-hidden">
+    <div className="bg-white rounded-lg shadow overflow-visible relative z-10">
       <table className="min-w-full text-sm">
         <thead className="bg-gray-50 border-b border-gray-200 text-xs">
           <tr>
@@ -87,7 +88,9 @@ const UploadSubjectsTableForm = ({
                   placeholder="Seleccionar prerrequisitos"
                   isMulti={true}
                   isClearable={true}
-                  className="text-sm"
+                  className="text-sm prerequisite-dropdown"
+                  menuPortalTarget={document.body}
+                  menuPosition="fixed"
                   styles={{
                     control: (provided) => ({
                       ...provided,
@@ -115,13 +118,59 @@ const UploadSubjectsTableForm = ({
                     }),
                     menu: (provided) => ({
                       ...provided,
-                      maxHeight: '300px',
-                      zIndex: 9999
+                      maxHeight: '500px',
+                      zIndex: 99999,
+                      position: 'fixed',
+                      top: 'auto',
+                      left: 'auto',
+                      right: 'auto',
+                      boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+                      border: '1px solid #e2e8f0',
+                      borderRadius: '8px'
                     }),
                     menuList: (provided) => ({
                       ...provided,
-                      maxHeight: '280px',
-                      padding: '8px'
+                      maxHeight: '480px',
+                      padding: '4px',
+                      overflowY: 'auto',
+                      scrollbarWidth: 'thin',
+                      scrollbarColor: '#cbd5e0 #f7fafc',
+                      '&::-webkit-scrollbar': {
+                        width: '8px'
+                      },
+                      '&::-webkit-scrollbar-track': {
+                        background: '#f7fafc',
+                        borderRadius: '4px'
+                      },
+                      '&::-webkit-scrollbar-thumb': {
+                        background: '#cbd5e0',
+                        borderRadius: '4px'
+                      },
+                      '&::-webkit-scrollbar-thumb:hover': {
+                        background: '#a0aec0'
+                      }
+                    }),
+                    option: (provided, state) => ({
+                      ...provided,
+                      padding: '8px 12px',
+                      fontSize: '14px',
+                      backgroundColor: state.isSelected
+                        ? '#0ea5e9'
+                        : state.isFocused
+                          ? '#e0f2fe'
+                          : 'white',
+                      color: state.isSelected ? 'white' : '#374151',
+                      cursor: 'pointer',
+                      '&:hover': {
+                        backgroundColor: state.isSelected ? '#0284c7' : '#f0f9ff'
+                      }
+                    }),
+                    noOptionsMessage: (provided) => ({
+                      ...provided,
+                      padding: '12px',
+                      textAlign: 'center',
+                      color: '#6b7280',
+                      fontSize: '14px'
                     })
                   }}
                 />
@@ -208,7 +257,9 @@ const UploadSubjectsTableForm = ({
                         placeholder="Seleccionar prerrequisitos"
                         isMulti={true}
                         isClearable={true}
-                        className="text-sm"
+                        className="text-sm prerequisite-dropdown"
+                        menuPortalTarget={document.body}
+                        menuPosition="fixed"
                         styles={{
                           control: (provided) => ({
                             ...provided,
@@ -236,13 +287,59 @@ const UploadSubjectsTableForm = ({
                           }),
                           menu: (provided) => ({
                             ...provided,
-                            maxHeight: '300px',
-                            zIndex: 9999
+                            maxHeight: '500px',
+                            zIndex: 99999,
+                            position: 'fixed',
+                            top: 'auto',
+                            left: 'auto',
+                            right: 'auto',
+                            boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+                            border: '1px solid #e2e8f0',
+                            borderRadius: '8px'
                           }),
                           menuList: (provided) => ({
                             ...provided,
-                            maxHeight: '280px',
-                            padding: '8px'
+                            maxHeight: '480px',
+                            padding: '4px',
+                            overflowY: 'auto',
+                            scrollbarWidth: 'thin',
+                            scrollbarColor: '#cbd5e0 #f7fafc',
+                            '&::-webkit-scrollbar': {
+                              width: '8px'
+                            },
+                            '&::-webkit-scrollbar-track': {
+                              background: '#f7fafc',
+                              borderRadius: '4px'
+                            },
+                            '&::-webkit-scrollbar-thumb': {
+                              background: '#cbd5e0',
+                              borderRadius: '4px'
+                            },
+                            '&::-webkit-scrollbar-thumb:hover': {
+                              background: '#a0aec0'
+                            }
+                          }),
+                          option: (provided, state) => ({
+                            ...provided,
+                            padding: '8px 12px',
+                            fontSize: '14px',
+                            backgroundColor: state.isSelected
+                              ? '#0ea5e9'
+                              : state.isFocused
+                                ? '#e0f2fe'
+                                : 'white',
+                            color: state.isSelected ? 'white' : '#374151',
+                            cursor: 'pointer',
+                            '&:hover': {
+                              backgroundColor: state.isSelected ? '#0284c7' : '#f0f9ff'
+                            }
+                          }),
+                          noOptionsMessage: (provided) => ({
+                            ...provided,
+                            padding: '12px',
+                            textAlign: 'center',
+                            color: '#6b7280',
+                            fontSize: '14px'
                           })
                         }}
                       />
@@ -292,7 +389,7 @@ const UploadSubjectsTableForm = ({
                       {subject.prerrequisitos ? (
                         <div className="flex flex-wrap gap-1">
                           {subject.prerrequisitos.split(',').map((prereq, index) => (
-                            <span 
+                            <span
                               key={index}
                               className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full"
                             >

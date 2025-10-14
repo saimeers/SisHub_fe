@@ -106,3 +106,5 @@ const UploadSubjects = () => {
 };
 
 export default UploadSubjects;
+
+
