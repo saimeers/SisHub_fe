@@ -75,7 +75,7 @@ const Sidebar = () => {
 
           <div className="flex items-center justify-center">
             <img
-              src={collapsed ? "/icon.png" : "/img/logo.png"}
+              src={collapsed ? "/icon.webp" : "/img/logo.webp"}
               alt="Logo"
               className={`object-contain transition-all duration-300 ${
                 collapsed ? "h-10 w-10" : "h-45 w-45"
