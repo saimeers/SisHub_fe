@@ -1,0 +1,138 @@
+/* Estilos personalizados para el dropdown de prerrequisitos */
+.prerequisite-dropdown .react-select__menu-list {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e0 #f7fafc;
+}
+
+.prerequisite-dropdown .react-select__menu-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.prerequisite-dropdown .react-select__menu-list::-webkit-scrollbar-track {
+  background: #f7fafc;
+  border-radius: 4px;
+}
+
+.prerequisite-dropdown .react-select__menu-list::-webkit-scrollbar-thumb {
+  background: #cbd5e0;
+  border-radius: 4px;
+}
+
+.prerequisite-dropdown .react-select__menu-list::-webkit-scrollbar-thumb:hover {
+  background: #a0aec0;
+}
+
+/* Mejorar la visualización de las opciones */
+.prerequisite-dropdown .react-select__option {
+  padding: 10px 12px !important;
+  font-size: 14px !important;
+  line-height: 1.4 !important;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.prerequisite-dropdown .react-select__option:last-child {
+  border-bottom: none;
+}
+
+/* Estilo para opciones seleccionadas */
+.prerequisite-dropdown .react-select__option--is-selected {
+  background-color: #0ea5e9 !important;
+  color: white !important;
+  font-weight: 500;
+}
+
+/* Estilo para opciones en hover */
+.prerequisite-dropdown .react-select__option--is-focused {
+  background-color: #e0f2fe !important;
+  color: #0c4a6e !important;
+}
+
+/* Mejorar el contenedor del dropdown */
+.prerequisite-dropdown .react-select__menu {
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  position: fixed !important;
+  z-index: 99999 !important;
+}
+
+/* Estilo para el mensaje de "no hay opciones" */
+.prerequisite-dropdown .react-select__no-options-message {
+  padding: 16px 12px !important;
+  text-align: center !important;
+  color: #6b7280 !important;
+  font-size: 14px !important;
+  font-style: italic;
+}
+
+/* Mejorar el control principal */
+.prerequisite-dropdown .react-select__control {
+  border-radius: 6px !important;
+  border: 1px solid #d1d5db !important;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+}
+
+.prerequisite-dropdown .react-select__control:hover {
+  border-color: #9ca3af !important;
+}
+
+.prerequisite-dropdown .react-select__control--is-focused {
+  border-color: #0ea5e9 !important;
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1) !important;
+}
+
+/* Mejorar los valores múltiples */
+.prerequisite-dropdown .react-select__multi-value {
+  background-color: #e0f2fe !important;
+  border: 1px solid #bae6fd !important;
+  border-radius: 4px !important;
+}
+
+.prerequisite-dropdown .react-select__multi-value__label {
+  color: #0c4a6e !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+}
+
+.prerequisite-dropdown .react-select__multi-value__remove {
+  color: #0c4a6e !important;
+}
+
+.prerequisite-dropdown .react-select__multi-value__remove:hover {
+  background-color: #0284c7 !important;
+  color: white !important;
+}
+
+/* Estilos específicos para el portal del dropdown */
+body .react-select__menu {
+  position: fixed !important;
+  z-index: 99999 !important;
+  max-height: 500px !important;
+  overflow-y: auto !important;
+}
+
+body .react-select__menu-list {
+  max-height: 480px !important;
+  padding: 4px !important;
+  overflow-y: auto !important;
+  scrollbar-width: thin !important;
+  scrollbar-color: #cbd5e0 #f7fafc !important;
+}
+
+body .react-select__menu-list::-webkit-scrollbar {
+  width: 8px !important;
+}
+
+body .react-select__menu-list::-webkit-scrollbar-track {
+  background: #f7fafc !important;
+  border-radius: 4px !important;
+}
+
+body .react-select__menu-list::-webkit-scrollbar-thumb {
+  background: #cbd5e0 !important;
+  border-radius: 4px !important;
+}
+
+body .react-select__menu-list::-webkit-scrollbar-thumb:hover {
+  background: #a0aec0 !important;
+}

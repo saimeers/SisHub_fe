@@ -46,7 +46,7 @@ export const useSubjectForm = () => {
         const subjects = await fetchSubjects();
         const subjectsList = Array.isArray(subjects) ? subjects : [];
         setExistingSubjects(subjectsList);
-
+        
         console.log("📚 Materias existentes cargadas:", subjectsList.length);
       } catch (err) {
         console.warn("No se pudieron cargar los datos existentes:", err);
@@ -149,13 +149,14 @@ export const useSubjectForm = () => {
       value: code.codigo,
       label: `${code.codigo} - ${code.nombre}`,
     }));
-
+    
     // Agregar opción "Ninguno" al inicio
     return [
       { value: "ninguno", label: "Ninguno" },
       ...options
     ];
   }, [existingCodes]);
+
 
   const { handleFileUpload } = useSubjectFileUpload({
     subjects,
@@ -277,7 +278,7 @@ export const useSubjectForm = () => {
   const handleEditPrerequisitesChange = (selectedOptions) => {
     const options = selectedOptions || [];
     setEditingPrerequisites(options);
-
+    
     // Si se selecciona "ninguno", limpiar otras selecciones
     if (options.some && options.some(opt => opt.value === "ninguno")) {
       setEditingPrerequisites([{ value: "ninguno", label: "Ninguno" }]);
@@ -286,7 +287,7 @@ export const useSubjectForm = () => {
       // Filtrar "ninguno" si está seleccionado junto con otros
       const filteredOptions = options.filter ? options.filter(opt => opt.value !== "ninguno") : [];
       setEditingPrerequisites(filteredOptions);
-
+      
       if (filteredOptions.length === 0) {
         setEditingSubject(prev => ({ ...prev, prerrequisitos: "" }));
       } else {
@@ -295,6 +296,7 @@ export const useSubjectForm = () => {
       }
     }
   };
+
 
   const handleCancel = async () => {
     if (subjects.length > 0) {

@@ -77,3 +77,5 @@ const UploadSubjectsPagination = ({ currentPage, totalPages, onPageChange }) => 
 };
 
 export default UploadSubjectsPagination;
+
+
