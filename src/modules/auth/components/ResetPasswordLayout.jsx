@@ -5,7 +5,7 @@ function ResetPasswordLayout({ children }) {
     <div className="relative min-h-screen w-screen overflow-hidden flex items-center justify-center">
       <div className="absolute inset-0">
         <img
-          src="/img/fondo-restablecer.png"
+          src="/img/fondo-restablecer.webp"
           alt="Fondo"
           className="w-full h-full object-cover"
         />

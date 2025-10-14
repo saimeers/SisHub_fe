@@ -7,7 +7,7 @@ function AuthLayout({ children }) {
         <div className="w-[65%] h-full bg-white"></div>
         <div className="w-[35%] h-full">
           <img
-            src="/img/fondo.png"
+            src="/img/fondo.webp"
             alt="Fondo"
             className="w-full h-full object-cover"
           />
@@ -16,7 +16,7 @@ function AuthLayout({ children }) {
 
       <div className="absolute inset-0 md:hidden">
         <img
-          src="/img/fondo.png"
+          src="/img/fondo.webp"
           alt="Fondo"
           className="w-full h-full object-cover"
         />
@@ -29,7 +29,7 @@ function AuthLayout({ children }) {
             <div className="w-full mx-auto flex flex-col items-center">
               <div className="mb-6">
                 <img
-                  src="/img/logo.png"
+                  src="/img/logo.webp"
                   alt="Logo SisHub"
                   className="w-48 object-contain"
                 />
@@ -44,7 +44,7 @@ function AuthLayout({ children }) {
             <div className="w-[75%] mx-auto flex flex-col items-center">
               <div className="mb-6">
                 <img
-                  src="/img/logo.png"
+                  src="/img/logo.webp"
                   alt="Logo SisHub"
                   className="w-72 md:w-60 object-contain"
                 />
