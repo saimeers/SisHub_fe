@@ -4,7 +4,7 @@ import { GoHomeFill } from "react-icons/go";
 import { FaBook, FaFolder, FaSignOutAlt } from "react-icons/fa";
 import { MdGroups2 } from "react-icons/md";
 import UserProfile from "../../../components/ui/UserProfile";
-import { useAuth } from "../../../contexts/AuthContext";
+import { useAuth } from "../../../contexts/AuthContext"; 
 import { Menu } from "lucide-react";
 
 const Sidebar = () => {
