@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import AdminLayout from "../layouts/AdminLayout";
 import UploadGroupsTable from "./UploadGroupsTable";
+import UploadGroupsMobile from "./UploadGroupsMobile";
 import { useToast } from "../../../hooks/useToast";
 import Swal from "sweetalert2";
 import { cargarGruposDesdeCSV } from "../../../services/groupServices";
@@ -13,7 +14,6 @@ const UploadGroups = () => {
 
   // ==================== ESTADOS ====================
   const [groups, setGroups] = useState([]);
-  const [csvFile, setCsvFile] = useState(null);
   const [newGroup, setNewGroup] = useState({
     codigo_materia: "",
     nombre_grupo: "",
@@ -24,11 +24,57 @@ const UploadGroups = () => {
   const [editingIndex, setEditingIndex] = useState(null);
   const [editingGroup, setEditingGroup] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [wasModified, setWasModified] = useState(false); // Track manual changes
+
+  // ==================== VALIDACIONES CENTRALIZADAS ====================
+  const validateGroup = (group) => {
+    const { codigo_materia, nombre_grupo, periodo, anio, codigo_docente } =
+      group;
+
+    // Validar campos vacíos
+    if (
+      !codigo_materia?.toString().trim() ||
+      !nombre_grupo?.toString().trim() ||
+      !periodo?.toString().trim() ||
+      !anio?.toString().trim() ||
+      !codigo_docente?.toString().trim()
+    ) {
+      return {
+        valid: false,
+        message: "Por favor completa todos los campos obligatorios",
+      };
+    }
+
+    // Validar año (debe ser 4 dígitos)
+    const anioStr = anio.toString().trim();
+    if (!/^\d{4}$/.test(anioStr)) {
+      return {
+        valid: false,
+        message: "El año debe tener exactamente 4 dígitos (ej: 2025)",
+      };
+    }
+
+    // Validar periodo (debe ser 01 o 02)
+    const periodoStr = periodo.toString().trim();
+    const periodoNormalizado = periodoStr.padStart(2, "0");
+    if (!/^(01|02)$/.test(periodoNormalizado)) {
+      return {
+        valid: false,
+        message: "El periodo debe ser: 01 o 02 (puedes escribir 1 o 2)",
+      };
+    }
+
+    return {
+      valid: true,
+      normalized: {
+        ...group,
+        periodo: periodoNormalizado,
+        anio: anioStr,
+      },
+    };
+  };
 
   // ==================== HANDLERS ====================
-
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setNewGroup((prev) => ({ ...prev, [name]: value }));
@@ -39,29 +85,20 @@ const UploadGroups = () => {
   };
 
   const addGroup = () => {
-    const camposVacios = Object.values(newGroup).some((v) => !v.trim());
-    if (camposVacios) {
-      warning("Por favor completa todos los campos obligatorios");
-      return;
-    }
+    const validation = validateGroup(newGroup);
 
-    // Validar año (debe ser 4 dígitos)
-    if (!/^\d{4}$/.test(newGroup.anio.trim())) {
-      error("El año debe tener exactamente 4 dígitos (ej: 2025)");
-      return;
-    }
-
-    // Validar periodo (debe ser 01 o 02)
-    const periodoNormalizado = newGroup.periodo.trim().padStart(2, "0");
-    if (!/^(01|02)$/.test(periodoNormalizado)) {
-      error("El periodo debe ser: 01 o 02");
+    if (!validation.valid) {
+      validation.message.includes("año")
+        ? error(validation.message)
+        : warning(validation.message);
       return;
     }
 
     setGroups((prev) => [
       ...prev,
-      { ...newGroup, periodo: periodoNormalizado, id: Date.now() },
+      { ...validation.normalized, id: `${Date.now()}-${Math.random()}` },
     ]);
+
     setNewGroup({
       codigo_materia: "",
       nombre_grupo: "",
@@ -69,11 +106,12 @@ const UploadGroups = () => {
       anio: "",
       codigo_docente: "",
     });
-    setCurrentPage(1);
+
+    setWasModified(true);
     success(`Grupo ${newGroup.nombre_grupo} agregado correctamente`);
   };
 
-  // 📂 Cargar CSV
+  // 📂 Cargar CSV - REEMPLAZA grupos existentes
   const handleFileUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -91,18 +129,13 @@ const UploadGroups = () => {
     try {
       info("Procesando archivo CSV, por favor espera...");
 
-      let text = await file.text();
-
-      if (text.charCodeAt(0) === 0xfeff) {
-        text = text.slice(1);
-      }
-
+      const text = await file.text();
       const {
         success: parseSuccess,
         data,
         errors,
         duplicatesFound,
-      } = parseGroupsCSV(text, groups);
+      } = parseGroupsCSV(text);
 
       if (!parseSuccess || data.length === 0) {
         const mensaje =
@@ -111,73 +144,46 @@ const UploadGroups = () => {
         return;
       }
 
-      const blob = new Blob([text], { type: "text/csv;charset=utf-8" });
-      const cleanFile = new File([blob], file.name, { type: file.type });
-
-      // Guardamos el archivo limpio (no el original)
-      setCsvFile(cleanFile);
+      // 🔥 REEMPLAZAR en lugar de agregar
+      setGroups(data);
+      setWasModified(false); // CSV original, no modificado
 
       success(`Se cargaron ${data.length} grupos correctamente.`);
-      setGroups((prev) => [...prev, ...data]);
+
+      if (duplicatesFound.length > 0) {
+        warning(`Se omitieron ${duplicatesFound.length} duplicados`);
+      }
     } catch (err) {
       error("Error al procesar el archivo CSV. Verifica el formato.");
+      console.error(err);
     } finally {
       e.target.value = "";
     }
   };
 
   const startEdit = (index) => {
-    const actualIndex = (currentPage - 1) * itemsPerPage + index;
-    setEditingIndex(actualIndex);
-    setEditingGroup({ ...groups[actualIndex] });
+    setEditingIndex(index);
+    setEditingGroup({ ...groups[index] });
   };
 
   const saveEdit = (index) => {
-    // Validar campos vacíos
-    const { codigo_materia, nombre_grupo, periodo, anio, codigo_docente } =
-      editingGroup;
+    const validation = validateGroup(editingGroup);
 
-    if (
-      !codigo_materia?.toString().trim() ||
-      !nombre_grupo?.toString().trim() ||
-      !periodo?.toString().trim() ||
-      !anio?.toString().trim() ||
-      !codigo_docente?.toString().trim()
-    ) {
-      warning("Por favor completa todos los campos obligatorios");
+    if (!validation.valid) {
+      validation.message.includes("año")
+        ? error(validation.message)
+        : warning(validation.message);
       return;
     }
 
-    // Validar año (debe ser 4 dígitos)
-    const anioStr = anio.toString().trim();
-    if (!/^\d{4}$/.test(anioStr)) {
-      error("El año debe tener exactamente 4 dígitos (ej: 2025)");
-      return;
-    }
-
-    // Validar periodo (debe ser 01 o 02)
-    const periodoStr = periodo.toString().trim();
-    const periodoNormalizado = periodoStr.padStart(2, "0");
-    if (!/^(01|02)$/.test(periodoNormalizado)) {
-      error("El periodo debe ser: 01 o 02 (puedes escribir 1 o 2)");
-      return;
-    }
-
-    const actualIndex = (currentPage - 1) * itemsPerPage + index;
     const updated = [...groups];
-    updated[actualIndex] = {
-      ...editingGroup,
-      periodo: periodoNormalizado,
-      anio: anioStr,
-    };
+    updated[index] = validation.normalized;
     setGroups(updated);
     setEditingIndex(null);
     setEditingGroup(null);
+    setWasModified(true); // Mark as modified
 
-    // Si editamos, invalidamos el archivo CSV original
-    setCsvFile(null);
-
-    success(`Grupo ${nombre_grupo} actualizado`);
+    success(`Grupo ${validation.normalized.nombre_grupo} actualizado`);
   };
 
   const cancelEdit = () => {
@@ -186,8 +192,7 @@ const UploadGroups = () => {
   };
 
   const deleteGroup = async (index) => {
-    const actualIndex = (currentPage - 1) * itemsPerPage + index;
-    const groupName = groups[actualIndex].nombre_grupo;
+    const groupName = groups[index].nombre_grupo;
 
     const result = await Swal.fire({
       title: `¿Eliminar ${groupName}?`,
@@ -201,10 +206,8 @@ const UploadGroups = () => {
     });
 
     if (result.isConfirmed) {
-      setGroups((prev) => prev.filter((_, i) => i !== actualIndex));
-
-      // Si eliminamos, invalidamos el archivo CSV original
-      setCsvFile(null);
+      setGroups((prev) => prev.filter((_, i) => i !== index));
+      setWasModified(true); // Mark as modified
 
       Swal.fire({
         title: "Eliminado",
@@ -215,6 +218,7 @@ const UploadGroups = () => {
       });
     }
   };
+
   const handleSubmit = async () => {
     if (groups.length === 0) {
       warning("No hay grupos para cargar");
@@ -236,48 +240,36 @@ const UploadGroups = () => {
 
     setIsSubmitting(true);
     try {
+      // Construir CSV solo cuando sea necesario
       const csvContent = [
         "codigo_materia;nombre_grupo;periodo;anio;codigo_docente",
-        ...groups.map((g, index) => {
-          // Asegurarnos que todos los campos existan y estén limpios
-          const row = [
-            String(g.codigo_materia || "").trim(),
-            String(g.nombre_grupo || "").trim(),
-            String(g.periodo || "")
-              .trim()
-              .padStart(2, "0"),
-            String(g.anio || "").trim(),
-            String(g.codigo_docente || "").trim(),
-          ];
-
-          // Validar que ningún campo esté vacío
-          if (row.some((field) => field === "")) {
-            console.warn(` Fila ${index + 1} tiene campos vacíos!`);
-          }
-
-          return row.join(";");
+        ...groups.map((g) => {
+          return [
+            g.codigo_materia,
+            g.nombre_grupo,
+            g.periodo,
+            g.anio,
+            g.codigo_docente,
+          ].join(";");
         }),
       ].join("\r\n");
 
-      // Crear el Blob con BOM para mejor compatibilidad
       const BOM = "\uFEFF";
       const blob = new Blob([BOM + csvContent], {
         type: "text/csv;charset=utf-8;",
       });
-
       const file = new File([blob], "grupos.csv", {
         type: "text/csv;charset=utf-8;",
       });
 
       const response = await cargarGruposDesdeCSV(file);
-
       const { resultado } = response;
 
       // Construir mensaje con scroll
       let mensaje = `<div class="text-left" style="font-family: system-ui, -apple-system, sans-serif;">`;
       mensaje += `<p class="font-semibold mb-3" style="font-size: 16px; color: #1f2937;">Resumen:</p>`;
 
-      // Exitosos con scroll
+      // Exitosos
       if (resultado.exitosos > 0) {
         mensaje += `<p style="font-weight: 600; color: #059669; margin-bottom: 8px;">${resultado.exitosos} Exitoso(s)</p>`;
         mensaje += `<div style="max-height: 160px; overflow-y: auto; background-color: #f0fdf4; border: 1px solid #86efac; border-radius: 6px; padding: 12px; margin-bottom: 16px;">`;
@@ -285,11 +277,10 @@ const UploadGroups = () => {
         resultado.detalles_exitosos.forEach((msg) => {
           mensaje += `<li style="margin-bottom: 6px; color: #047857; font-size: 14px;">• ${msg}</li>`;
         });
-        mensaje += `</ul>`;
-        mensaje += `</div>`;
+        mensaje += `</ul></div>`;
       }
 
-      // Errores con scroll
+      // Errores
       if (resultado.fallidos > 0) {
         mensaje += `<p style="font-weight: 600; color: #dc2626; margin-bottom: 8px;">${resultado.fallidos} Error(es):</p>`;
         mensaje += `<div style="max-height: 160px; overflow-y: auto; background-color: #fef2f2; border: 1px solid #fca5a5; border-radius: 6px; padding: 12px; margin-bottom: 16px;">`;
@@ -297,8 +288,7 @@ const UploadGroups = () => {
         resultado.detalles_errores.forEach((err) => {
           mensaje += `<li style="margin-bottom: 6px; color: #b91c1c; font-size: 14px;">• ${err}</li>`;
         });
-        mensaje += `</ul>`;
-        mensaje += `</div>`;
+        mensaje += `</ul></div>`;
       }
 
       mensaje += `</div>`;
@@ -318,37 +308,18 @@ const UploadGroups = () => {
         confirmButtonText: "Entendido",
         confirmButtonColor: "#B70000",
         width: "650px",
-        customClass: {
-          popup: "swal-scrollable",
-        },
+        customClass: { popup: "swal-scrollable" },
       });
 
       if (resultado.exitosos > 0) {
         navigate("/admin/grupos");
       }
     } catch (err) {
-      console.error("Error completo al subir grupos:", err);
-      console.error("Stack trace:", err.stack);
-      console.error("Respuesta del error:", err.response?.data);
+      console.error("Error al subir grupos:", err);
       error(err.message || "Error al subir los grupos");
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  const totalPages = Math.ceil(groups.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedGroups = groups.slice(startIndex, startIndex + itemsPerPage);
-  const adjustedEditingIndex =
-    editingIndex !== null &&
-    editingIndex >= startIndex &&
-    editingIndex < startIndex + itemsPerPage
-      ? editingIndex - startIndex
-      : null;
-
-  const goToPage = (page) => {
-    setCurrentPage(page);
-    setEditingIndex(null);
   };
 
   // ==================== RENDER ====================
@@ -357,44 +328,41 @@ const UploadGroups = () => {
       <div className="space-y-6">
         {/* Header */}
         <div>
-          {/* Header */}
-          <div>
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-2">
-              <p className="text-gray-600">
-                Añade grupos manualmente o importa desde un archivo CSV
-              </p>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-2">
+            <p className="text-gray-600">
+              Añade grupos manualmente o importa desde un archivo CSV
+            </p>
 
-              {/* Botón Importar CSV */}
-              <label className="cursor-pointer self-end sm:self-auto">
-                <input
-                  type="file"
-                  accept=".csv"
-                  onChange={handleFileUpload}
-                  className="hidden"
-                  disabled={isSubmitting}
-                />
-                <div
-                  className={`bg-[#B70000] hover:bg-red-800 text-white px-6 py-3 rounded-xl font-semibold transition-colors flex items-center gap-2 text-base shadow-md ${
-                    isSubmitting ? "opacity-50 cursor-not-allowed" : ""
-                  }`}
+            {/* Botón Importar CSV */}
+            <label className="cursor-pointer self-end sm:self-auto">
+              <input
+                type="file"
+                accept=".csv"
+                onChange={handleFileUpload}
+                className="hidden"
+                disabled={isSubmitting}
+              />
+              <div
+                className={`bg-[#B70000] hover:bg-red-800 text-white px-6 py-3 rounded-xl font-semibold transition-colors flex items-center gap-2 text-base shadow-md ${
+                  isSubmitting ? "opacity-50 cursor-not-allowed" : ""
+                }`}
+              >
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
                 >
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                    />
-                  </svg>
-                  Importar CSV
-                </div>
-              </label>
-            </div>
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                  />
+                </svg>
+                Importar CSV
+              </div>
+            </label>
           </div>
 
           <p className="text-sm text-gray-500">
@@ -402,11 +370,26 @@ const UploadGroups = () => {
           </p>
         </div>
 
-        {/* Tabla */}
+        {/* Tabla Desktop*/}
         <UploadGroupsTable
           groups={groups}
           newGroup={newGroup}
-          editingIndex={adjustedEditingIndex}
+          editingIndex={editingIndex}
+          editingGroup={editingGroup}
+          onInputChange={handleInputChange}
+          onEditInputChange={handleEditInputChange}
+          onAddGroup={addGroup}
+          onStartEdit={startEdit}
+          onSaveEdit={saveEdit}
+          onCancelEdit={cancelEdit}
+          onDeleteGroup={deleteGroup}
+        />
+
+        {/* Vista Mobile */}
+        <UploadGroupsMobile
+          groups={groups}
+          newGroup={newGroup}
+          editingIndex={editingIndex}
           editingGroup={editingGroup}
           onInputChange={handleInputChange}
           onEditInputChange={handleEditInputChange}
