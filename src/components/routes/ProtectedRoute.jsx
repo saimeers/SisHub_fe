@@ -6,7 +6,7 @@ export const ProtectedRoute = ({ children, allowedRoles = [] }) => {
     const { isAuthenticated, rol, estado, loading, needsPassword, userData } = useAuth();
     const location = useLocation();
 
-    if (loading || (isAuthenticated && userData === undefined)) {
+    if (loading || (isAuthenticated && (userData === undefined || userData === null && !rol))) {
         return <LoadingScreen />;
     }
 
@@ -14,7 +14,7 @@ export const ProtectedRoute = ({ children, allowedRoles = [] }) => {
         return <Navigate to="/login" state={{ from: location }} replace />;
     }
 
-    if (isAuthenticated && !rol && userData === undefined) {
+    if (!rol && userData && location.pathname !== "/complete-profile") {
         return <LoadingScreen />;
     }
 
