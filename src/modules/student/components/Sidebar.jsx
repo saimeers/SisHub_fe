@@ -4,11 +4,11 @@ import { GoHomeFill } from "react-icons/go";
 import { FaBook, FaFolder, FaSignOutAlt } from "react-icons/fa";
 import { MdGroups2 } from "react-icons/md";
 import UserProfile from "../../../components/ui/UserProfile";
-import { useAuth } from "../../../contexts/AuthContext"; 
+import { useAuthForm } from "../../../modules/auth/hooks/useAuth"; 
 import { Menu } from "lucide-react";
 
 const Sidebar = () => {
-  const { handleSignOut } = useAuth();
+  const { handleSignOut } = useAuthForm();
   const navigate = useNavigate();
   const [collapsed, setCollapsed] = useState(false);
 

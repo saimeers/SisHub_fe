@@ -6,7 +6,7 @@ function SignupLayout({ children }) {
       {/* Logo izquierdo */}
       <div className="hidden md:flex w-1/2 bg-[#C03030] justify-center items-center">
         <img
-          src="/img/logo.png"
+          src="/img/logo.webp"
           alt="Logo SisHub"
           className="w-60 md:w-72 object-contain"
         />
