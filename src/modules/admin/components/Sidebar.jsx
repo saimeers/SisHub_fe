@@ -6,12 +6,12 @@ import { MdGroups2 } from "react-icons/md";
 import { IoIosSchool } from "react-icons/io";
 import { ImStatsDots } from "react-icons/im";
 import UserProfile from "../../../components/ui/UserProfile";
-import { useAuth } from "../../../contexts/AuthContext"; 
+import { useAuthForm } from "../../../modules/auth/hooks/useAuth"; 
 import { Menu } from "lucide-react";
 
 const Sidebar = () => {
   const [collapsed, setCollapsed] = useState(false);
-  const { handleSignOut } = useAuth();
+  const { handleSignOut } = useAuthForm();
   const navigate = useNavigate();
 
   useEffect(() => {

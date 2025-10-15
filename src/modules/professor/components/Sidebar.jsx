@@ -5,13 +5,13 @@ import { FaBook, FaFolder, FaSignOutAlt } from "react-icons/fa";
 import { MdGroups2 } from "react-icons/md";
 import { IoIosSchool } from "react-icons/io";
 import UserProfile from "../../../components/ui/UserProfile";
-import { useAuth } from "../../../contexts/AuthContext"; 
+import { useAuthForm } from "../../../modules/auth/hooks/useAuth"; 
 import { Menu } from "lucide-react";
 
 const Sidebar = () => {
   const [collapsed, setCollapsed] = useState(false);
   const navigate = useNavigate();
-  const { handleSignOut } = useAuth();
+  const { handleSignOut } = useAuthForm();
 
   useEffect(() => {
     const handleResize = () => {
