@@ -33,7 +33,7 @@ const parseGroupsCSV = (text, existingGroups = []) => {
   // Detectar encabezado
   const firstLineValues = lines[0]
     .trim()
-    .split(";")
+    .split(",")
     .map((v) => v.trim().toLowerCase());
 
   if (
@@ -47,7 +47,7 @@ const parseGroupsCSV = (text, existingGroups = []) => {
     const lineNumber = i + 1;
     const line = lines[i].trim();
 
-    const values = line.split(";").map((v) => v.trim());
+    const values = line.split(",").map((v) => v.trim());
 
     if (values.length < 5) {
       const error = `Línea ${lineNumber}: No contiene las 5 columnas requeridas (tiene ${values.length})`;
