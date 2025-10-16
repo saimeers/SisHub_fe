@@ -242,7 +242,7 @@ const UploadGroups = () => {
     try {
       // Construir CSV solo cuando sea necesario
       const csvContent = [
-        "codigo_materia;nombre_grupo;periodo;anio;codigo_docente",
+        "codigo_materia,nombre_grupo,periodo,anio,codigo_docente",
         ...groups.map((g) => {
           return [
             g.codigo_materia,
@@ -250,7 +250,7 @@ const UploadGroups = () => {
             g.periodo,
             g.anio,
             g.codigo_docente,
-          ].join(";");
+          ].join(",");
         }),
       ].join("\r\n");
 
