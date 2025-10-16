@@ -107,12 +107,25 @@ export const rechazarPostulacion = async (codigo) => {
 
 export const cargarDocentesMasivamente = async (docentes) => {
   try {
-    const response = await axiosInstance.post("/usuarios/cargar-docentes", {
-      docentes
-    });
+    console.log("🚀 Enviando petición a:", axiosInstance.defaults.baseURL);
+    console.log("📦 Docentes a cargar:", docentes.length);
+    
+    const response = await axiosInstance.post(
+      "/usuarios/cargar-docentes",
+      { docentes },
+      { timeout: 60000 }
+    );
+    
+    console.log("✅ Respuesta recibida:", response.status);
     return response.data;
   } catch (error) {
-    console.error("Error al cargar docentes masivamente:", error);
+    console.error("❌ Error completo:", {
+      message: error.message,
+      code: error.code,
+      hasResponse: !!error.response,
+      status: error.response?.status,
+      data: error.response?.data
+    });
     throw error;
   }
 };
