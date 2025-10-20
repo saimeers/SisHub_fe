@@ -54,6 +54,12 @@ export const AuthProvider = ({ children }) => {
                                 } else {
                                     setNeedsPassword(false);
                                 }
+
+                                  if (rol === "ESTUDIANTE" && !hasPassword) {
+                                    setNeedsPassword(true);
+                                } else {
+                                    setNeedsPassword(false);
+                                }
                                 
                                 // ✅ Si hay cache válido, quitar loading inmediatamente
                                 setLoading(false);
@@ -79,6 +85,13 @@ export const AuthProvider = ({ children }) => {
                         } else {
                             setNeedsPassword(false);
                         }
+
+                         if (rol === "ESTUDIANTE" && !hasPassword) {
+                            setNeedsPassword(true);
+                        } else {
+                            setNeedsPassword(false);
+                        }
+
                     } catch (error) {
                         // ✅ Si falla y NO hay cache, marcar userData como null
                         if (!hasCachedData) {

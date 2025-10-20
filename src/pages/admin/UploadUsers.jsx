@@ -6,6 +6,7 @@ import UploadUsersTable from "../../modules/admin/components/uploadProfessor/Upl
 import UploadUsersMobile from "../../modules/admin/components/uploadProfessor/UploadUsersMobile";
 import UploadUsersPagination from "../../modules/admin/components/uploadProfessor/UploadUsersPagination";
 import UploadUsersActions from "../../modules/admin/components/uploadProfessor/UploadUsersActions";
+import ProgressModal from "../../modules/admin/components/ProgressModal"; 
 import { useUploadUsers } from "../../modules/admin/hooks/uploadProfessor/useUploadUsers";
 
 const UploadUsers = () => {
@@ -35,6 +36,9 @@ const UploadUsers = () => {
     setItemsPerPage,
     setCurrentPage,
     goToPage,
+    showProgressModal,
+    progressData,
+    handleCloseProgress,
   } = useUploadUsers();
 
   return (
@@ -101,6 +105,14 @@ const UploadUsers = () => {
           onSubmit={handleSubmit}
         />
       </div>
+
+      {/* Modal de Progreso - Reutilizado del de estudiantes */}
+      {showProgressModal && (
+        <ProgressModal 
+          progress={progressData} 
+          onClose={handleCloseProgress}
+        />
+      )}
     </AdminLayout>
   );
 };

@@ -1,57 +1,20 @@
 import { useCallback } from 'react';
+import { userSchema } from '../../../../utils/userSchema';
+import { ZodError } from 'zod';
 
 export const useUserValidation = () => {
-  const validateEmail = useCallback((email) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) return false;
-    if (!email.toLowerCase().endsWith('@ufps.edu.co')) return false;
-    return true;
-  }, []);
-
-  const validateDocument = useCallback((doc) => {
-    return /^\d{6,10}$/.test(doc);
-  }, []);
-
-  const validateCode = useCallback((code) => {
-    return code.trim().length >= 3;
-  }, []);
-
-  const validateName = useCallback((name) => {
-    return name.trim().length >= 3;
-  }, []);
-
-  const validatePhone = useCallback((phone) => {
-    if (!phone || phone.trim() === '') return true;
-    const clean = phone
-      .toString()
-      .trim()
-      .replace(/^"|"$/g, '')
-      .replace(/\t/g, '')
-      .replace(/\D/g, '');
-    return /^\d{7,10}$/.test(clean);
-  }, []);
-
   const validateUser = useCallback((user) => {
-    const errors = [];
-
-    if (!validateCode(user.codigo)) {
-      errors.push('Código inválido (mínimo 3 caracteres)');
+    try {
+      userSchema.parse(user);
+      return []; 
+    } catch (err) {
+      if (err instanceof ZodError) {
+        return err.issues.map(e => `${e.path[0]}: ${e.message}`);
+      }
+      console.error(err);
+      return ["Error desconocido al validar el usuario"];
     }
-    if (!validateName(user.nombre)) {
-      errors.push('Nombre inválido (mínimo 3 caracteres)');
-    }
-    if (!validateDocument(user.documento)) {
-      errors.push('Documento inválido (6-10 dígitos numéricos)');
-    }
-    if (!validateEmail(user.correo)) {
-      errors.push('Correo debe ser @ufps.edu.co');
-    }
-    if (!validatePhone(user.telefono)) {
-      errors.push('Teléfono inválido (7-10 dígitos)');
-    }
-
-    return errors;
-  }, [validateCode, validateName, validateDocument, validateEmail, validatePhone]);
+  }, []);
 
   const checkDuplicates = useCallback((user, users, excludeIndex = null) => {
     const duplicates = [];
@@ -59,7 +22,7 @@ export const useUserValidation = () => {
     users.forEach((existingUser, index) => {
       if (excludeIndex !== null && index === excludeIndex) return;
 
-      if (existingUser.codigo.toLowerCase() === user.codigo.toLowerCase()) {
+      if (existingUser.codigo === user.codigo) {
         duplicates.push(`código ${user.codigo}`);
       }
       if (existingUser.documento === user.documento) {
@@ -73,13 +36,5 @@ export const useUserValidation = () => {
     return [...new Set(duplicates)];
   }, []);
 
-  return {
-    validateEmail,
-    validateDocument,
-    validateCode,
-    validateName,
-    validatePhone,
-    validateUser,
-    checkDuplicates
-  };
+  return { validateUser, checkDuplicates };
 };

@@ -139,19 +139,26 @@ export const rechazarPostulacion = async (codigo) => {
 
 export const cargarDocentesMasivamente = async (docentes) => {
   try {
-    console.log("🚀 Enviando petición a:", axiosInstance.defaults.baseURL);
-    console.log("📦 Docentes a cargar:", docentes.length);
+    console.log("🚀 Servicio - Enviando petición con:", { docentes });
+    console.log("📦 URL:", axiosInstance.defaults.baseURL + "/usuarios/cargar-docentes");
 
     const response = await axiosInstance.post(
       "/usuarios/cargar-docentes",
       { docentes },
-      { timeout: 60000 }
+      {
+        timeout: 60000,
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      }
     );
 
-    console.log("✅ Respuesta recibida:", response.status);
+    console.log("✅ Servicio - Respuesta recibida:", response.status, response.data);
+
+    // El backend retorna { progressId, totalDocentes, ... }
     return response.data;
   } catch (error) {
-    console.error("❌ Error completo:", {
+    console.error("❌ Servicio - Error completo:", {
       message: error.message,
       code: error.code,
       hasResponse: !!error.response,
