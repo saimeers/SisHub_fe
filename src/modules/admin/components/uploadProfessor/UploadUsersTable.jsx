@@ -1,5 +1,5 @@
 import React from "react";
-import { Edit2, Trash2, Check, X } from "lucide-react";
+import { Users, Edit2, Trash2, Check, X } from "lucide-react";
 
 const UploadUsersTable = ({ 
   users, 
@@ -182,7 +182,9 @@ const UploadUsersTable = ({
           {users.length === 0 && (
             <tr>
               <td colSpan="6" className="px-4 py-8 text-center text-gray-500">
-                No hay docentes agregados. Añade uno manualmente o importa desde CSV
+                <Users className="w-12 h-12 mx-auto text-gray-300 mb-2" />
+                <p>No hay docentes agregados.</p>
+                <p>Añade uno manualmente o importa desde CSV</p>
               </td>
             </tr>
           )}

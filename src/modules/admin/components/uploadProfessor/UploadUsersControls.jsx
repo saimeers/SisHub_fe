@@ -1,5 +1,5 @@
 import React from "react";
-import QuantitySelector from "./QuantitySelector";
+import QuantitySelector from "../QuantitySelector";
 
 const UploadUsersControls = ({ 
   itemsPerPage, 

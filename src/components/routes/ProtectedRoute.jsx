@@ -14,13 +14,13 @@ export const ProtectedRoute = ({ children, allowedRoles = [] }) => {
         return <Navigate to="/login" state={{ from: location }} replace />;
     }
 
-    if (!rol && userData && location.pathname !== "/complete-profile") {
+/*     if (!rol && userData && location.pathname !== "/complete-profile") {
         return <LoadingScreen />;
-    }
+    } */
 
-    if (!rol && userData === null && location.pathname !== "/complete-profile") {
+/*     if (!rol && userData === null && location.pathname !== "/complete-profile") {
         return <Navigate to="/complete-profile" replace />;
-    }
+    } */
 
     if (estado === "STAND_BY" && location.pathname !== "/account-pending") {
         return <Navigate to="/account-pending" replace />;

@@ -232,6 +232,30 @@ const Dashboard = () => {
     }
   };
 
+  const handleCreateUser = async () => {
+    const { value: userType } = await Swal.fire({
+      title: "Crear Usuario",
+      text: "¿Qué tipo de usuario deseas registrar?",
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonColor: "#0891b2",
+      cancelButtonColor: "#6b7280",
+      confirmButtonText: "Docente",
+      cancelButtonText: "Cancelar",
+      showDenyButton: true,
+      denyButtonText: "Estudiante",
+      denyButtonColor: "#dc2626",
+    });
+
+    if (userType === true) {
+      // Seleccionó Docente
+      navigate("/admin/upload-professors");
+    } else if (userType === false) {
+      // Seleccionó Estudiante
+      navigate("/admin/upload-students");
+    }
+  };
+
   if (loading) {
     return <LoadingScreen />;
   }
@@ -239,10 +263,9 @@ const Dashboard = () => {
   return (
     <AdminLayout title="Inicio">
       <div className="space-y-4 md:space-y-6">
-        {/* Header con botón de crear usuario */}
         <div className="flex justify-end">
           <button
-            onClick={() => navigate("/admin/upload-users")}
+            onClick={handleCreateUser}
             className="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center gap-2"
           >
             <svg
@@ -260,7 +283,6 @@ const Dashboard = () => {
             </svg>
             Crear Usuario
           </button>
-
         </div>
 
 
