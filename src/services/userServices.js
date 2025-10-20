@@ -11,6 +11,16 @@ export const registrarUsuario = async (userData) => {
   }
 };
 
+export const obtenerTodosLosEstudiantes = async () => {
+  try {
+    const response = await axiosInstance.get("/usuarios/estudiantes");
+    return response.data;
+  } catch (error) {
+    console.error("Error al obtener estudiantes:", error);
+    throw error;
+  }
+};
+
 export const obtenerUsuario = async () => {
   try {
     const response = await axiosInstance.get("/usuarios/me");
@@ -129,3 +139,54 @@ export const cargarDocentesMasivamente = async (docentes) => {
     throw error;
   }
 };
+
+export const matricularEstudiantesMasivamente = async (matriculas) => {
+  try {
+    console.log("🚀 Servicio - Enviando petición con:", { matriculas });
+    console.log("📦 URL:", axiosInstance.defaults.baseURL + "/grupos-usuarios/matricular-masivamente");
+    
+    const response = await axiosInstance.post(
+      "/grupos-usuarios/matricular-masivamente",
+      { matriculas }, // Enviar con la clave "matriculas"
+      { 
+        timeout: 60000,
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+    
+    console.log("✅ Servicio - Respuesta recibida:", response.status, response.data);
+    
+    // El backend retorna { progressId, totalEstudiantes, totalGrupos, ... }
+    return response.data;
+  } catch (error) {
+    console.error("❌ Servicio - Error completo:", {
+      message: error.message,
+      code: error.code,
+      hasResponse: !!error.response,
+      status: error.response?.status,
+      data: error.response?.data
+    });
+    throw error;
+  }
+};
+
+export const buscarEstudiantePorCodigo = async (codigo) => {
+  try {
+    if (!codigo) {
+      throw new Error("Debe proporcionar un código de estudiante válido");
+    }
+
+    const response = await axiosInstance.get(`/usuarios/estudiantes/${codigo}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error al buscar estudiante por código:", {
+      message: error.message,
+      status: error.response?.status,
+      data: error.response?.data
+    });
+    throw error;
+  }
+};
+

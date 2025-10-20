@@ -1,12 +1,12 @@
 import React from "react";
 import AdminLayout from "../../modules/admin/layouts/AdminLayout";
-import UploadUsersHeader from "../../modules/admin/components/UploadUsersHeader";
-import UploadUsersControls from "../../modules/admin/components/UploadUsersControls";
-import UploadUsersTable from "../../modules/admin/components/UploadUsersTable";
-import UploadUsersMobile from "../../modules/admin/components/UploadUsersMobile";
-import UploadUsersPagination from "../../modules/admin/components/UploadUsersPagination";
-import UploadUsersActions from "../../modules/admin/components/UploadUsersActions";
-import { useUploadUsers } from "../../modules/admin/hooks/useUploadUsers";
+import UploadUsersHeader from "../../modules/admin/components/uploadProfessor/UploadUsersHeader";
+import UploadUsersControls from "../../modules/admin/components/uploadProfessor/UploadUsersControls";
+import UploadUsersTable from "../../modules/admin/components/uploadProfessor/UploadUsersTable";
+import UploadUsersMobile from "../../modules/admin/components/uploadProfessor/UploadUsersMobile";
+import UploadUsersPagination from "../../modules/admin/components/uploadProfessor/UploadUsersPagination";
+import UploadUsersActions from "../../modules/admin/components/uploadProfessor/UploadUsersActions";
+import { useUploadUsers } from "../../modules/admin/hooks/uploadProfessor/useUploadUsers";
 
 const UploadUsers = () => {
   const {

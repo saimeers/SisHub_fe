@@ -56,6 +56,7 @@ function LoginForm({ formData, loading, error, onSubmit, onChange }) {
                 </div>
             </form>
 
+            {/*             
             <p className="text-sm text-gray-600 text-center mt-2">
                 ¿No tienes cuenta?{" "}
                 <a
@@ -64,7 +65,9 @@ function LoginForm({ formData, loading, error, onSubmit, onChange }) {
                 >
                     Regístrate
                 </a>
-            </p>
+            </p> 
+            */}
+            
             <ForgotPasswordModal
                 isOpen={showForgotPasswordModal}
                 onClose={() => setShowForgotPasswordModal(false)}

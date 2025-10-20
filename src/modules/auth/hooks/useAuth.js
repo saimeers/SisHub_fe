@@ -76,6 +76,14 @@ export const useAuthForm = () => {
       return { valido: false, rol };
     }
 
+    if (rol === "ESTUDIANTE" && !userHasPasswordProvider()) {
+      toast.warning("Debes establecer una contraseña para continuar.", {
+        autoClose: 6000,
+      });
+      navigate("/establecer-contrasena");
+      return { valido: false, rol };
+    }
+
     return { valido: true, rol };
   };
 
@@ -86,20 +94,15 @@ export const useAuthForm = () => {
       const res = await obtenerUsuario();
       const usuario = res?.data?.usuario || res?.data || res?.usuario || res;
 
+      // ✅ Verificar si el usuario existe realmente en la BD
       if (usuario && (usuario.id || usuario.IdUsuario || usuario.Rol)) {
-        const { valido, rol } = verificarEstadoUsuario(
-          usuario,
-          user.displayName
-        );
+        const { valido, rol } = verificarEstadoUsuario(usuario, user.displayName);
         if (!valido) return;
 
         const pendingJoin = localStorage.getItem("pendingJoinGroup");
-
         localStorage.setItem("userData", JSON.stringify(usuario));
 
-        toast.success(
-          `¡Bienvenido ${formatShortName(user.displayName) || ""}!`
-        );
+        toast.success(`¡Bienvenido ${formatShortName(user.displayName) || ""}!`);
 
         if (pendingJoin) {
           if (rol?.toUpperCase() === "ESTUDIANTE") {
@@ -117,14 +120,27 @@ export const useAuthForm = () => {
           navigate(`/${rol?.toLowerCase()}/dashboard`);
         }
       } else {
-        toast.warning("Debes completar tu registro antes de continuar.");
-        navigate("/signup");
+        // 🚫 Usuario autenticado en Firebase pero NO registrado en BD
+        await deleteCurrentUser();
+        toast.error(
+          "Tu cuenta no está registrada en el sistema. Acceso denegado.",
+          { autoClose: 6000 }
+        );
+        localStorage.clear();
+        navigate("/login");
+        return;
       }
     } catch (error) {
-      console.error(" Error al obtener usuario:", error);
+      console.error("Error al obtener usuario:", error);
+
       if (error.response?.status === 404) {
-        toast.warning("Debes completar tu registro antes de continuar.");
-        navigate("/signup");
+        await deleteCurrentUser();
+        toast.error(
+          "Tu cuenta no está registrada en el sistema. Acceso denegado.",
+          { autoClose: 6000 }
+        );
+        localStorage.clear();
+        navigate("/login");
       } else {
         toast.error("Error al validar tu cuenta. Intenta de nuevo.");
         await signOutAccount();
@@ -133,6 +149,7 @@ export const useAuthForm = () => {
       }
     }
   };
+
 
   const handleEmailLogin = async (e) => {
     e.preventDefault();
@@ -266,7 +283,7 @@ export const useAuthForm = () => {
       await signOutAccount();
 
       await new Promise(resolve => setTimeout(resolve, 100));
-      
+
       localStorage.clear();
       navigate("/login");
     } catch (error) {
