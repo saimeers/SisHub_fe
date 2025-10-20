@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useToast } from "../../../hooks/useToast";
+import { useToast } from "../../../../hooks/useToast";
 import { useUserValidation } from "./useUserValidation";
 import { useUserOperations } from "./useUserOperations";
-import { useFileUpload } from "./useFileUpload";
+import { useFileUpload } from "../useFileUpload";
 import { useUserSubmit } from "./useUserSubmit";
 
 export const useUploadUsers = () => {

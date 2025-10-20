@@ -22,6 +22,7 @@ import GroupDetail from "./pages/admin/GroupDetail";
 import UploadUsers from "./pages/admin/UploadUsers";
 import UploadGroups from "./modules/admin/components/UploadGroups";
 import UploadSubjects from "./pages/admin/UploadSubjects";
+import UploadStudents from "./pages/admin/UploadStudents";
 
 // docente
 import GroupsProfessor from "./pages/professor/Groups";
@@ -55,7 +56,7 @@ function App() {
               </PublicRoute>
             }
           />
-          <Route
+{/*           <Route
             path="/signup"
             element={
               <PublicRoute>
@@ -70,13 +71,21 @@ function App() {
                 <FormRegister />
               </ProtectedRoute>
             }
-          />
+          /> */}
           <Route
             path="/reset-password"
             element={
               <PublicRoute>
                 <ResetPassword />
               </PublicRoute>
+            }
+          />
+          <Route
+            path="/establecer-contrasena"
+            element={
+              <ProtectedRoute>
+                <FormPassword />
+              </ProtectedRoute>
             }
           />
 
@@ -100,7 +109,8 @@ function App() {
               element={<GroupDetail />}
             />
 
-            <Route path="upload-users" element={<UploadUsers />} />
+            <Route path="upload-professors" element={<UploadUsers />} />
+            <Route path="upload-students" element={<UploadStudents />} />
             <Route path="upload-groups" element={<UploadGroups />} />
             <Route path="upload-subjects" element={<UploadSubjects />} />
           </Route>
@@ -122,14 +132,7 @@ function App() {
               element={<GroupDetailProfessor />}
             />
           </Route>
-          <Route
-            path="/establecer-contrasena"
-            element={
-              <ProtectedRoute>
-                <FormPassword />
-              </ProtectedRoute>
-            }
-          />
+
 
           {/* ==================== RUTAS ESTUDIANTE ==================== */}
           <Route
