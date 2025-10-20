@@ -80,8 +80,6 @@ export const AuthProvider = ({ children }) => {
                             setNeedsPassword(false);
                         }
                     } catch (error) {
-                        console.error("Error fetching user data:", error);
-                        
                         // ✅ Si falla y NO hay cache, marcar userData como null
                         if (!hasCachedData) {
                             setUserData(null);
