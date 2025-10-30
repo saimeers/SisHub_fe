@@ -30,6 +30,7 @@ import DashboardProfessor from "./pages/professor/Dashboard";
 import SubjectsProfessor from "./pages/professor/Subjects";
 import MyGroupsProfessor from "./pages/professor/MyGroups";
 import GroupDetailProfessor from "./pages/professor/GroupDetail";
+import ProjectReview from "./pages/student/ProjectReview";
 
 // estudiante
 import DashboardStudent from "./pages/student/Dashboard";
@@ -118,7 +119,7 @@ function App() {
           {/* ==================== RUTAS DOCENTE ==================== */}
           <Route
             path="/professor"
-            element={<ProtectedRoute allowedRoles={["DOCENTE"]} />}
+            element={<ProtectedRoute allowedRoles={["DOCENTE","ADMIN"]} />}
           >
             <Route path="dashboard" element={<DashboardProfessor />} />
             <Route
@@ -143,6 +144,7 @@ function App() {
             <Route path=":codigo_materia/groups" element={<GroupsStudent />} />
             <Route path="my-groups" element={<StudentMyGroups />} />
             <Route path="subjects" element={<SubjectsStudent />} />
+            <Route path="project-review" element={<ProjectReview />} />
             <Route
               path="my-group/:codigo_materia/:nombre/:periodo/:anio"
               element={<GroupDetailStudent />}
