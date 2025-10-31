@@ -23,6 +23,7 @@ import UploadUsers from "./pages/admin/UploadUsers";
 import UploadGroups from "./modules/admin/components/UploadGroups";
 import UploadSubjects from "./pages/admin/UploadSubjects";
 import UploadStudents from "./pages/admin/UploadStudents";
+import MyProjectsAdmin from "./pages/admin/MyProjects";
 
 // docente
 import GroupsProfessor from "./pages/professor/Groups";
@@ -30,6 +31,7 @@ import DashboardProfessor from "./pages/professor/Dashboard";
 import SubjectsProfessor from "./pages/professor/Subjects";
 import MyGroupsProfessor from "./pages/professor/MyGroups";
 import GroupDetailProfessor from "./pages/professor/GroupDetail";
+import MyProjectsProfessor from "./pages/professor/MyProjects";
 
 // estudiante
 import DashboardStudent from "./pages/student/Dashboard";
@@ -37,6 +39,7 @@ import GroupsStudent from "./pages/student/Groups";
 import StudentMyGroups from "./pages/student/MyGroups";
 import SubjectsStudent from "./pages/student/Subjects";
 import GroupDetailStudent from "./pages/student/GroupDetail";
+import MyProjectsStudent from "./pages/student/MyProjects";
 
 // stand by
 import CuentaPendiente from "./pages/standby/CuentaPendiente";
@@ -113,6 +116,7 @@ function App() {
             <Route path="upload-students" element={<UploadStudents />} />
             <Route path="upload-groups" element={<UploadGroups />} />
             <Route path="upload-subjects" element={<UploadSubjects />} />
+            <Route path="my-projects" element={<MyProjectsAdmin />} />
           </Route>
 
           {/* ==================== RUTAS DOCENTE ==================== */}
@@ -131,6 +135,7 @@ function App() {
               path="my-group/:codigo_materia/:nombre/:periodo/:anio"
               element={<GroupDetailProfessor />}
             />
+            <Route path="my-projects" element={<MyProjectsProfessor />} />
           </Route>
 
 
@@ -147,6 +152,7 @@ function App() {
               path="my-group/:codigo_materia/:nombre/:periodo/:anio"
               element={<GroupDetailStudent />}
             />
+            <Route path="my-projects" element={<MyProjectsStudent />} />
           </Route>
 
           {/* ==================== RUTAS ESPECIALES ==================== */}
