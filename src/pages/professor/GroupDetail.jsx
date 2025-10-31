@@ -7,6 +7,7 @@ import { listarParticipantesGrupo } from "../../services/groupUserServices";
 import { listarGruposPorUsuario } from "../../services/groupServices";
 import { useToast } from "../../hooks/useToast";
 import { useAuth } from "../../contexts/AuthContext";
+import ProjectTabContent from "../../components/ui/ProjectTabContent";
 
 const GroupDetail = () => {
   // 🔹 Los nombres aquí DEBEN coincidir con los definidos en la ruta:
@@ -187,9 +188,7 @@ const GroupDetail = () => {
             )}
 
             {activeTab === "proyecto" && (
-              <div className="text-center py-12 text-gray-500">
-                <p>Contenido del proyecto próximamente...</p>
-              </div>
+              <ProjectTabContent perfil="docente" onCrearActividad={() => {}} />
             )}
 
             {activeTab === "equipo" && (

@@ -7,6 +7,9 @@ import { listarParticipantesGrupo } from "../../services/groupUserServices";
 import { listarGruposPorUsuario } from "../../services/groupServices";
 import { useToast } from "../../hooks/useToast";
 import { useAuth } from "../../contexts/AuthContext";
+import IdeasBank from "../../components/ui/IdeasBank";
+import Button from "../../components/ui/Button";
+import IdeaForm from "../../components/ui/IdeaForm";
 
 const GroupDetail = () => {
   // Deben coincidir con lo que definiste en las rutas: :codigo_materia/:nombre/:periodo/:anio
@@ -22,6 +25,12 @@ const GroupDetail = () => {
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [validationError, setValidationError] = useState(null);
   const hasLoaded = useRef(false);
+
+  // Estado para formulario de ideas
+  const [showIdeaForm, setShowIdeaForm] = useState(false);
+  const [ideaReadOnly, setIdeaReadOnly] = useState(false);
+  const [ideaInitialData, setIdeaInitialData] = useState({ titulo: "", problematica: "", justificacion: "", objetivos: "" });
+  const [defaultSelectedMembers, setDefaultSelectedMembers] = useState([]);
 
   useEffect(() => {
     const loadGroupData = async () => {
@@ -137,6 +146,26 @@ const GroupDetail = () => {
     { id: "participantes", label: "Participantes" },
   ];
 
+  const groupParams = { codigo_materia, nombre, periodo, anio };
+
+  const openCreateIdea = () => {
+    setIdeaInitialData({ titulo: "", problematica: "", justificacion: "", objetivos: "" });
+    setDefaultSelectedMembers([]);
+    setIdeaReadOnly(false);
+    setShowIdeaForm(true);
+  };
+
+  const openViewIdea = (titulo) => {
+    // Prefill con título y seleccionar por defecto a todos los participantes del grupo
+    const preselected = (participants || []).map((p) => ({ value: p.codigo, label: p.nombre }));
+    setIdeaInitialData({ titulo, problematica: "", justificacion: "", objetivos: "" });
+    setDefaultSelectedMembers(preselected);
+    setIdeaReadOnly(true);
+    setShowIdeaForm(true);
+  };
+
+  const closeIdeaForm = () => setShowIdeaForm(false);
+
   if (validationError && !isAuthorized && !isLoading) {
     return (
       <StudentLayout title="Acceso Denegado">
@@ -206,8 +235,55 @@ const GroupDetail = () => {
             )}
 
             {activeTab === "proyecto" && (
-              <div className="text-center py-12 text-gray-500">
-                <p>Contenido del proyecto próximamente...</p>
+              <div>
+                {!showIdeaForm ? (
+                  <>
+                    <div className="flex justify-end mb-6">
+                      <Button text={"+ Proponer Idea"} onClick={openCreateIdea} />
+                    </div>
+                    <IdeasBank
+                      title="Banco de ideas"
+                      items={[
+                        "Software para optimizar la toma de decisiones",
+                        "Software gimnasio klisman",
+                        "Aplicativo web para rendimiento estudiantil",
+                        "Aplicativo web para gestión de aulas",
+                      ]}
+                      onView={openViewIdea}
+                    />
+                    <IdeasBank
+                      title="Banco de Propuestas"
+                      items={[
+                        "Software para optimizar la toma de decisiones",
+                        "Software gimnasio klisman",
+                        "Aplicativo web para rendimiento estudiantil",
+                      ]}
+                      onView={openViewIdea}
+                    />
+                  </>
+                ) : (
+                  <div>
+                    <div className="flex justify-between items-center mb-6">
+                      <button
+                        type="button"
+                        onClick={closeIdeaForm}
+                        className="px-4 py-2 rounded-full text-sm font-medium border border-gray-300 bg-white hover:bg-gray-50"
+                      >
+                        ← Volver
+                      </button>
+                    </div>
+                    <IdeaForm
+                      groupParams={groupParams}
+                      initialData={ideaInitialData}
+                      readOnly={ideaReadOnly}
+                      defaultSelectedMembers={defaultSelectedMembers}
+                      onSubmit={(payload) => {
+                        console.log("Enviar idea:", payload);
+                        // Aquí luego se integrará con el backend
+                      }}
+                    />
+                  </div>
+                )}
               </div>
             )}
 

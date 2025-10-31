@@ -4,6 +4,7 @@ import AdminLayout from "../../modules/admin/layouts/AdminLayout";
 import GroupParticipants from "../../components/ui/GroupParticipants";
 import { listarParticipantesGrupo } from "../../services/groupUserServices";
 import { useToast } from "../../hooks/useToast";
+import ProjectTabContent from "../../components/ui/ProjectTabContent";
 
 const GroupDetail = () => {
   const { codigo_materia, nombre, periodo, anio } = useParams();
@@ -112,9 +113,7 @@ const GroupDetail = () => {
           )}
 
           {activeTab === "proyecto" && (
-            <div className="text-center py-12 text-gray-500">
-              <p>Contenido del proyecto próximamente...</p>
-            </div>
+            <ProjectTabContent perfil="admin" onCrearActividad={() => {}} />
           )}
 
           {activeTab === "equipo" && (
