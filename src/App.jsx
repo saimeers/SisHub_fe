@@ -30,7 +30,6 @@ import DashboardProfessor from "./pages/professor/Dashboard";
 import SubjectsProfessor from "./pages/professor/Subjects";
 import MyGroupsProfessor from "./pages/professor/MyGroups";
 import GroupDetailProfessor from "./pages/professor/GroupDetail";
-import ProjectReview from "./pages/student/ProjectReview";
 
 // estudiante
 import DashboardStudent from "./pages/student/Dashboard";
@@ -38,6 +37,8 @@ import GroupsStudent from "./pages/student/Groups";
 import StudentMyGroups from "./pages/student/MyGroups";
 import SubjectsStudent from "./pages/student/Subjects";
 import GroupDetailStudent from "./pages/student/GroupDetail";
+import ProjectReview from "./pages/student/ProjectReview";
+import RejectedIdea from "./pages/student/RejectedIdea";
 
 // stand by
 import CuentaPendiente from "./pages/standby/CuentaPendiente";
@@ -145,6 +146,7 @@ function App() {
             <Route path="my-groups" element={<StudentMyGroups />} />
             <Route path="subjects" element={<SubjectsStudent />} />
             <Route path="project-review" element={<ProjectReview />} />
+            <Route path="rejected-idea" element={<RejectedIdea />} />
             <Route
               path="my-group/:codigo_materia/:nombre/:periodo/:anio"
               element={<GroupDetailStudent />}

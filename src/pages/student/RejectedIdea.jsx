@@ -1,13 +1,13 @@
 import React from 'react';
 import ProfessorLayout from "../../modules/professor/layouts/ProfessorLayout";
-import SuggestionReview from "../../modules/student/components/SuggestionReview";
+import Rejected from "../../modules/student/components/RejectedIdea";
 
-const ProjectReview = () => {
+const RejectedIdea = () => {
     return (
         <ProfessorLayout title="Revisión">
-            <SuggestionReview />
+            <Rejected />
         </ProfessorLayout>
     )
 }
 
-export default ProjectReview
+export default RejectedIdea;
