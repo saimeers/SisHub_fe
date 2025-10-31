@@ -23,7 +23,7 @@ import UploadUsers from "./pages/admin/UploadUsers";
 import UploadGroups from "./modules/admin/components/uploadGroups/UploadGroups";
 import UploadSubjects from "./pages/admin/UploadSubjects";
 import UploadStudents from "./pages/admin/UploadStudents";
-import MyProjectsAdmin from "./pages/admin/MyProjects";
+import MyProjectsAdmin from "./pages/admin/Projects";
 
 // docente
 import GroupsProfessor from "./pages/professor/Groups";

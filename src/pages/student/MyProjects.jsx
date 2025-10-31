@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import StudentLayout from "../../modules/student/layouts/StudentLayout";
-import ApprovedProjectCard from "../../components/ui/ApprovedProjectCard";
+import ApprovedProjectCard from "../../components/ui/ProjectCard";
+import SearchBar from "../../components/ui/SearchBar";
 
 const MyProjects = () => {
   // Estado para proyectos - luego se cargará desde el backend
@@ -34,6 +35,17 @@ const MyProjects = () => {
     },
   ]);
 
+  const [query, setQuery] = useState("");
+  const filteredProjects = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return projects;
+    return projects.filter((p) => {
+      const inTitle = (p.title || "").toLowerCase().includes(q);
+      const inTags = (p.tags || []).some((t) => String(t).toLowerCase().includes(q));
+      return inTitle || inTags;
+    });
+  }, [projects, query]);
+
   const handleProjectClick = (project) => {
     console.log("Proyecto seleccionado:", project);
     // Aquí se abrirá el detalle del proyecto
@@ -54,22 +66,16 @@ const MyProjects = () => {
   return (
     <StudentLayout title="Mis Proyectos">
       <div className="w-full max-w-6xl mx-auto py-8 px-6">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Mis Proyectos</h1>
-          <p className="text-gray-600">
-            Aquí puedes ver todos tus proyectos creados y su estado actual.
-          </p>
+        <div className="mb-4 flex items-center">
+          <SearchBar placeholder="Buscar por nombre o tecnología" onSearch={setQuery} />
         </div>
-
-        {projects.length === 0 ? (
+        {filteredProjects.length === 0 ? (
           <div className="text-center py-12 bg-gray-100 rounded-2xl">
-            <p className="text-gray-500 text-lg">
-              No tienes proyectos creados aún.
-            </p>
+            <p className="text-gray-500 text-lg">No se encontraron proyectos.</p>
           </div>
         ) : (
           <div className="space-y-4 ">
-            {projects.map((project) => (
+            {filteredProjects.map((project) => (
               <ApprovedProjectCard
                 key={project.id}
                 title={project.title}
@@ -90,4 +96,3 @@ const MyProjects = () => {
 };
 
 export default MyProjects;
-

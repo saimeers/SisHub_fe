@@ -6,7 +6,7 @@ import { MdGroups2 } from "react-icons/md";
 import { IoIosSchool } from "react-icons/io";
 import { ImStatsDots } from "react-icons/im";
 import UserProfile from "../../../components/ui/UserProfile";
-import { useAuthForm } from "../../../modules/auth/hooks/useAuth"; 
+import { useAuthForm } from "../../../modules/auth/hooks/useAuth";
 import { Menu } from "lucide-react";
 
 const Sidebar = () => {
@@ -43,13 +43,17 @@ const Sidebar = () => {
       path: "/admin/dashboard",
     },
     { icon: <FaBook size={20} />, label: "Materias", path: "/admin/subjects" },
-    { icon: <MdGroups2 size={20} />, label: "Grupos", path: "/admin/all-groups" },
-    { 
-      icon: <FaFolder size={20} />, 
+    {
+      icon: <MdGroups2 size={20} />,
+      label: "Grupos",
+      path: "/admin/all-groups",
+    },
+    {
+      icon: <FaFolder size={20} />,
       label: "Proyectos",
       path: "/admin/my-projects",
     },
-    { icon: <IoIosSchool size={20} />, label: "Estudiantes" },
+
     { icon: <ImStatsDots size={20} />, label: "Estadísticas" },
   ];
 

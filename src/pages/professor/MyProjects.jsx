@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import ProfessorLayout from "../../modules/professor/layouts/ProfessorLayout";
-import ApprovedProjectCard from "../../components/ui/ApprovedProjectCard";
+import ApprovedProjectCard from "../../components/ui/ProjectCard";
 
 const MyProjects = () => {
   // Estado para proyectos a evaluar - luego se cargará desde el backend
@@ -60,15 +60,6 @@ const MyProjects = () => {
   return (
     <ProfessorLayout title="Mis Proyectos">
       <div className="w-full max-w-6xl mx-auto py-8 px-6">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Proyectos a Evaluar
-          </h1>
-          <p className="text-gray-600">
-            Aquí puedes ver todos los proyectos que debes evaluar o revisar.
-          </p>
-        </div>
-
         {projects.length === 0 ? (
           <div className="text-center py-12 bg-gray-50 rounded-2xl">
             <p className="text-gray-500 text-lg">
@@ -89,19 +80,6 @@ const MyProjects = () => {
                   onDocumentsClick={(e) => handleDocumentsClick(project.id, e)}
                   onCodeClick={(e) => handleCodeClick(project.id, e)}
                 />
-                {/* Información adicional para el profesor */}
-                {project.grupo && (
-                  <div className="mt-2 ml-32 text-sm text-gray-600">
-                    <span className="font-semibold">Grupo:</span> {project.grupo}
-                    {project.estudiantes && (
-                      <>
-                        {" • "}
-                        <span className="font-semibold">Estudiantes:</span>{" "}
-                        {project.estudiantes.join(", ")}
-                      </>
-                    )}
-                  </div>
-                )}
               </div>
             ))}
           </div>
@@ -112,4 +90,3 @@ const MyProjects = () => {
 };
 
 export default MyProjects;
-

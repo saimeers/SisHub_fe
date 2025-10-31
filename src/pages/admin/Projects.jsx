@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import AdminLayout from "../../modules/admin/layouts/AdminLayout";
-import ApprovedProjectCard from "../../components/ui/ApprovedProjectCard";
+import ApprovedProjectCard from "../../components/ui/ProjectCard";
 
 const MyProjects = () => {
   // Estado para proyectos - luego se cargará desde el backend
@@ -12,6 +12,7 @@ const MyProjects = () => {
         "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco.",
       tags: ["Node.js", "React.jsx"],
       status: "aprobado",
+      progress: 82,
       logo: null,
       grupo: "Fisica Mecanica | Grupo A | 2025-1",
       docente: "Profesor Ejemplo",
@@ -23,6 +24,7 @@ const MyProjects = () => {
         "Sistema web para gestionar y analizar el rendimiento académico de los estudiantes.",
       tags: ["React", "Express", "MongoDB"],
       status: "en revisión",
+      progress: 45,
       logo: null,
       grupo: "Matemáticas Discretas | Grupo B | 2025-1",
       docente: "Profesor Ejemplo 2",
@@ -49,13 +51,6 @@ const MyProjects = () => {
   return (
     <AdminLayout title="Proyectos">
       <div className="w-full max-w-6xl mx-auto py-8 px-6">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Proyectos</h1>
-          <p className="text-gray-600">
-            Vista general de todos los proyectos del sistema.
-          </p>
-        </div>
-
         {projects.length === 0 ? (
           <div className="text-center py-12 bg-gray-50 rounded-2xl">
             <p className="text-gray-500 text-lg">
@@ -72,11 +67,12 @@ const MyProjects = () => {
                   tags={project.tags}
                   logo={project.logo}
                   status={project.status}
+                  progress={project.progress}
                   onClick={() => handleProjectClick(project)}
                   onDocumentsClick={(e) => handleDocumentsClick(project.id, e)}
                   onCodeClick={(e) => handleCodeClick(project.id, e)}
                 />
-                {/* Información adicional para el admin */}
+                {/* Información adicional para el admin
                 {project.grupo && (
                   <div className="mt-2 ml-32 text-sm text-gray-600">
                     <span className="font-semibold">Grupo:</span> {project.grupo}
@@ -88,7 +84,7 @@ const MyProjects = () => {
                       </>
                     )}
                   </div>
-                )}
+                )} */}
               </div>
             ))}
           </div>
@@ -99,4 +95,3 @@ const MyProjects = () => {
 };
 
 export default MyProjects;
-
