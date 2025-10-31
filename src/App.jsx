@@ -6,7 +6,7 @@ import { PublicRoute } from "./components/routes/PublicRoute";
 // auth
 import Login from "./pages/auth/Login";
 import Signup from "./pages/auth/Signup";
-import FormRegister from "./pages/auth/FormRegister";
+/* import FormRegister from "./pages/auth/FormRegister"; */
 import ResetPassword from "./pages/auth/ResetPassword";
 import FormPassword from "./pages/auth/FormPassword";
 
@@ -39,6 +39,7 @@ import SubjectsStudent from "./pages/student/Subjects";
 import GroupDetailStudent from "./pages/student/GroupDetail";
 import ProjectReview from "./pages/student/ProjectReview";
 import RejectedIdea from "./pages/student/RejectedIdea";
+/* import CompleteData from "./pages/student/CompleteData"; */
 
 // stand by
 import CuentaPendiente from "./pages/standby/CuentaPendiente";
@@ -147,6 +148,7 @@ function App() {
             <Route path="subjects" element={<SubjectsStudent />} />
             <Route path="project-review" element={<ProjectReview />} />
             <Route path="rejected-idea" element={<RejectedIdea />} />
+            {/* <Route path="complete-data" element={<CompleteData />} /> */}
             <Route
               path="my-group/:codigo_materia/:nombre/:periodo/:anio"
               element={<GroupDetailStudent />}

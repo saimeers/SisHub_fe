@@ -1,12 +1,12 @@
 import React from 'react';
-import ProfessorLayout from "../../modules/professor/layouts/ProfessorLayout";
+import StudentLayout from "../../modules/student/layouts/StudentLayout";
 import SuggestionReview from "../../modules/student/components/SuggestionReview";
 
 const ProjectReview = () => {
     return (
-        <ProfessorLayout title="Revisión">
+        <StudentLayout title="Revisión">
             <SuggestionReview />
-        </ProfessorLayout>
+        </StudentLayout>
     )
 }
 
