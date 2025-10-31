@@ -1,5 +1,5 @@
 import React from "react";
-import Sidebar from "../components/Sidebar"; 
+import Sidebar from "../components/Sidebar";
 import { motion } from "framer-motion";
 
 const AdminLayout = ({ children, title }) => {
@@ -28,9 +28,7 @@ const AdminLayout = ({ children, title }) => {
           variants={pageVariants}
           transition={{ duration: 0.25, ease: "easeInOut" }}
         >
-          <div className="max-w-7xl mx-auto">
-            {children}
-          </div>
+          <div className="max-w-7xl mx-auto">{children}</div>
         </motion.main>
       </div>
     </div>

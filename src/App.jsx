@@ -20,7 +20,7 @@ import FormCreateSubject from "./modules/admin/components/FormCreateSubject";
 import FormEditSubject from "./modules/admin/components/FormEditSubject";
 import GroupDetail from "./pages/admin/GroupDetail";
 import UploadUsers from "./pages/admin/UploadUsers";
-import UploadGroups from "./modules/admin/components/UploadGroups";
+import UploadGroups from "./modules/admin/components/uploadGroups/UploadGroups";
 import UploadSubjects from "./pages/admin/UploadSubjects";
 import UploadStudents from "./pages/admin/UploadStudents";
 import MyProjectsAdmin from "./pages/admin/MyProjects";
@@ -59,7 +59,7 @@ function App() {
               </PublicRoute>
             }
           />
-{/*           <Route
+          {/*           <Route
             path="/signup"
             element={
               <PublicRoute>
@@ -137,7 +137,6 @@ function App() {
             />
             <Route path="my-projects" element={<MyProjectsProfessor />} />
           </Route>
-
 
           {/* ==================== RUTAS ESTUDIANTE ==================== */}
           <Route
