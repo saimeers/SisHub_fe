@@ -6,11 +6,6 @@ const EyeIcon = () => (
   </svg>
 );
 
-const Badge = ({ children }) => (
-  <span className="ml-3 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-800 border border-yellow-200">
-    {children}
-  </span>
-);
 
 const IdeasBank = ({ title, items = [], onView }) => {
   const normalize = (item) =>
@@ -36,7 +31,6 @@ const IdeasBank = ({ title, items = [], onView }) => {
               >
                 <div className="flex items-center min-w-0">
                   <div className="text-gray-800 font-medium truncate">{item.title}</div>
-                  {item.hasCorrections && <Badge>Con correcciones</Badge>}
                 </div>
                 <button
                   type="button"

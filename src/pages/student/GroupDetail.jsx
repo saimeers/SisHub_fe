@@ -10,6 +10,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import IdeasBank from "../../components/ui/IdeasBank";
 import Button from "../../components/ui/Button";
 import IdeaForm from "../../components/ui/IdeaForm";
+import ActivityCard from "../../components/ui/ActivityCard";
 
 const GroupDetail = () => {
   // Deben coincidir con lo que definiste en las rutas: :codigo_materia/:nombre/:periodo/:anio
@@ -26,6 +27,10 @@ const GroupDetail = () => {
   const [validationError, setValidationError] = useState(null);
   const hasLoaded = useRef(false);
 
+  // Estado para actividades e ideas
+  const [showIdeasView, setShowIdeasView] = useState(false);
+  const [selectedActivity, setSelectedActivity] = useState(null);
+  
   // Estado para formulario de ideas
   const [showIdeaForm, setShowIdeaForm] = useState(false);
   const [ideaReadOnly, setIdeaReadOnly] = useState(false);
@@ -141,6 +146,15 @@ const GroupDetail = () => {
     loadGroupData();
   }, [codigo_materia, nombre, periodo, anio, userData, error]);
 
+  // Resetear vista de ideas cuando se cambia de tab
+  useEffect(() => {
+    if (activeTab !== "proyecto") {
+      setShowIdeasView(false);
+      setSelectedActivity(null);
+      setShowIdeaForm(false);
+    }
+  }, [activeTab]);
+
   const tabs = [
     { id: "proyecto", label: "Proyecto" },
     { id: "equipo", label: "Equipo" },
@@ -148,6 +162,20 @@ const GroupDetail = () => {
   ];
 
   const groupParams = { codigo_materia, nombre, periodo, anio };
+
+  // Función para abrir vista de ideas al seleccionar una actividad
+  const handleActivityClick = (activity) => {
+    setSelectedActivity(activity);
+    setShowIdeasView(true);
+    setShowIdeaForm(false);
+  };
+
+  // Función para volver a la vista de actividades
+  const backToActivities = () => {
+    setShowIdeasView(false);
+    setSelectedActivity(null);
+    setShowIdeaForm(false);
+  };
 
   const openCreateIdea = () => {
     setIdeaInitialData({ titulo: "", problematica: "", justificacion: "", objetivos: "" });
@@ -246,32 +274,45 @@ const GroupDetail = () => {
 
             {activeTab === "proyecto" && (
               <div>
-                {!showIdeaForm ? (
+                {!showIdeasView ? (
+                  // Vista de actividades asignadas por el docente
+                  <div className="max-w-4xl mx-auto space-y-6">
+                    <ActivityCard
+                      title="Actividad 1"
+                      description="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco."
+                      onClick={() => handleActivityClick({ id: 1, title: "Actividad 1", description: "Lorem ipsum..." })}
+                    />
+                  </div>
+                ) : !showIdeaForm ? (
+                  // Vista de banco de ideas
                   <>
-                    <div className="flex justify-end mb-6">
+                    <div className="flex justify-between items-center mb-6">
+                      <button
+                        type="button"
+                        onClick={backToActivities}
+                        className="px-4 py-2 rounded-full text-sm font-medium border border-gray-300 bg-white hover:bg-gray-50"
+                      >
+                        ← Volver a Actividades
+                      </button>
                       <Button text={"+ Proponer Idea"} onClick={openCreateIdea} />
                     </div>
                     <IdeasBank
                       title="Banco de ideas"
                       items={[
                         { title: "Software para optimizar la toma de decisiones", hasCorrections: true, problematica: "Problema A", justificacion: "Justificación A", objetivos: "Objetivos A" },
-                        { title: "Software gimnasio klisman", hasCorrections: false, problematica: "Problema B", justificacion: "Justificación B", objetivos: "Objetivos B" },
-                        { title: "Aplicativo web para rendimiento estudiantil", hasCorrections: true },
-                        { title: "Aplicativo web para gestión de aulas", hasCorrections: false },
                       ]}
                       onView={openViewIdea}
                     />
                     <IdeasBank
                       title="Banco de Propuestas"
                       items={[
-                        "Software para optimizar la toma de decisiones",
-                        "Software gimnasio klisman",
-                        "Aplicativo web para rendimiento estudiantil",
+                        { title: "Software para optimizar la toma de decisiones", hasCorrections: true },
                       ]}
                       onView={openViewIdea}
                     />
                   </>
                 ) : (
+                  // Vista de formulario de idea
                   <div>
                     <div className="flex justify-between items-center mb-6">
                       <button
