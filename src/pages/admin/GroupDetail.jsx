@@ -5,6 +5,7 @@ import GroupParticipants from "../../components/ui/GroupParticipants";
 import { listarParticipantesGrupo } from "../../services/groupUserServices";
 import { useToast } from "../../hooks/useToast";
 import ProjectTabContent from "../../components/ui/ProjectTabContent";
+import ActivityCard from "../../components/ui/ActivityCard";
 
 const GroupDetail = () => {
   const { codigo_materia, nombre, periodo, anio } = useParams();
@@ -113,7 +114,15 @@ const GroupDetail = () => {
           )}
 
           {activeTab === "proyecto" && (
-            <ProjectTabContent perfil="admin" onCrearActividad={() => {}} />
+            <div className="max-w-4xl mx-auto">
+              <div className="mb-8">
+                <ActivityCard
+                  title="Actividad 1"
+                  description="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco."
+                />
+              </div>
+              <ProjectTabContent perfil="admin" onCrearActividad={() => {}} />
+            </div>
           )}
 
           {activeTab === "equipo" && (

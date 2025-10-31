@@ -31,6 +31,7 @@ const GroupDetail = () => {
   const [ideaReadOnly, setIdeaReadOnly] = useState(false);
   const [ideaInitialData, setIdeaInitialData] = useState({ titulo: "", problematica: "", justificacion: "", objetivos: "" });
   const [defaultSelectedMembers, setDefaultSelectedMembers] = useState([]);
+  const [ideaHasCorrections, setIdeaHasCorrections] = useState(false);
 
   useEffect(() => {
     const loadGroupData = async () => {
@@ -155,12 +156,21 @@ const GroupDetail = () => {
     setShowIdeaForm(true);
   };
 
-  const openViewIdea = (titulo) => {
-    // Prefill con título y seleccionar por defecto a todos los participantes del grupo
+  const openViewIdea = (item) => {
+    const normalized =
+      typeof item === "string"
+        ? { title: item, problematica: "", justificacion: "", objetivos: "", hasCorrections: false }
+        : item;
     const preselected = (participants || []).map((p) => ({ value: p.codigo, label: p.nombre }));
-    setIdeaInitialData({ titulo, problematica: "", justificacion: "", objetivos: "" });
+    setIdeaInitialData({
+      titulo: normalized.title,
+      problematica: normalized.problematica || "",
+      justificacion: normalized.justificacion || "",
+      objetivos: normalized.objetivos || "",
+    });
     setDefaultSelectedMembers(preselected);
     setIdeaReadOnly(true);
+    setIdeaHasCorrections(!!normalized.hasCorrections);
     setShowIdeaForm(true);
   };
 
@@ -244,10 +254,10 @@ const GroupDetail = () => {
                     <IdeasBank
                       title="Banco de ideas"
                       items={[
-                        "Software para optimizar la toma de decisiones",
-                        "Software gimnasio klisman",
-                        "Aplicativo web para rendimiento estudiantil",
-                        "Aplicativo web para gestión de aulas",
+                        { title: "Software para optimizar la toma de decisiones", hasCorrections: true, problematica: "Problema A", justificacion: "Justificación A", objetivos: "Objetivos A" },
+                        { title: "Software gimnasio klisman", hasCorrections: false, problematica: "Problema B", justificacion: "Justificación B", objetivos: "Objetivos B" },
+                        { title: "Aplicativo web para rendimiento estudiantil", hasCorrections: true },
+                        { title: "Aplicativo web para gestión de aulas", hasCorrections: false },
                       ]}
                       onView={openViewIdea}
                     />
@@ -271,6 +281,14 @@ const GroupDetail = () => {
                       >
                         ← Volver
                       </button>
+                      {ideaReadOnly && ideaHasCorrections && (
+                        <div className="flex items-center gap-4">
+                          <span className="px-3 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-800 border border-yellow-200">
+                            Esta idea tiene correcciones
+                          </span>
+                          <Button text="Tomar idea" onClick={() => setIdeaReadOnly(false)} />
+                        </div>
+                      )}
                     </div>
                     <IdeaForm
                       groupParams={groupParams}

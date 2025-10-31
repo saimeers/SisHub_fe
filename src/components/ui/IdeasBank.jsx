@@ -6,7 +6,18 @@ const EyeIcon = () => (
   </svg>
 );
 
+const Badge = ({ children }) => (
+  <span className="ml-3 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-800 border border-yellow-200">
+    {children}
+  </span>
+);
+
 const IdeasBank = ({ title, items = [], onView }) => {
+  const normalize = (item) =>
+    typeof item === "string"
+      ? { title: item, hasCorrections: false }
+      : item || { title: "", hasCorrections: false };
+
   return (
     <div className="mt-6">
       <h3 className="text-lg font-semibold text-gray-800 mb-3">{title}</h3>
@@ -16,22 +27,28 @@ const IdeasBank = ({ title, items = [], onView }) => {
             No hay elementos para mostrar
           </div>
         ) : (
-          items.map((idea, idx) => (
-            <div
-              key={idx}
-              className="grid grid-cols-[1fr_auto] items-center bg-gray-100 rounded-md px-6 py-3 shadow-sm hover:bg-gray-200 transition"
-            >
-              <div className="text-gray-800 font-medium truncate">{idea}</div>
-              <button
-                type="button"
-                className="ml-4 flex items-center justify-center w-8 h-8 rounded-full bg-white border border-gray-300 hover:bg-gray-50"
-                onClick={() => onView && onView(idea)}
-                aria-label="Ver"
+          items.map((raw, idx) => {
+            const item = normalize(raw);
+            return (
+              <div
+                key={idx}
+                className="grid grid-cols-[1fr_auto] items-center bg-gray-100 rounded-md px-6 py-3 shadow-sm hover:bg-gray-200 transition"
               >
-                <EyeIcon />
-              </button>
-            </div>
-          ))
+                <div className="flex items-center min-w-0">
+                  <div className="text-gray-800 font-medium truncate">{item.title}</div>
+                  {item.hasCorrections && <Badge>Con correcciones</Badge>}
+                </div>
+                <button
+                  type="button"
+                  className="ml-4 flex items-center justify-center w-8 h-8 rounded-full bg-white border border-gray-300 hover:bg-gray-50"
+                  onClick={() => onView && onView(item)}
+                  aria-label="Ver"
+                >
+                  <EyeIcon />
+                </button>
+              </div>
+            );
+          })
         )}
       </div>
     </div>
