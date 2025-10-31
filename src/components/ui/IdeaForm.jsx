@@ -72,49 +72,60 @@ const IdeaForm = ({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-8">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div>
-          <label className="block text-gray-800 font-semibold mb-2">Título</label>
-          <input
-            className={fieldBase}
-            placeholder="Escribe el título del proyecto"
-            value={form.titulo}
-            onChange={handleChange("titulo")}
-            disabled={isReadOnly}
-          />
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+        <div className="lg:col-span-2 space-y-8">
+          <div>
+            <label className="block text-gray-800 font-semibold mb-2">Título</label>
+            <input
+              className={fieldBase}
+              placeholder="Escribe el título del proyecto"
+              value={form.titulo}
+              onChange={handleChange("titulo")}
+              disabled={isReadOnly}
+            />
+          </div>
+
+          <div>
+            <label className="block text-gray-800 font-semibold mb-2">Problemática</label>
+            <textarea
+              className={`${fieldBase} min-h-[355px] resize-none`}
+              placeholder="¿Cuál es el problema que buscas resolver?"
+              value={form.problematica}
+              onChange={handleChange("problematica")}
+              disabled={isReadOnly}
+            />
+          </div>
         </div>
-        <div>
-          <label className="block text-gray-800 font-semibold mb-2">Planteamiento de solución</label>
-          <textarea
-            className={`${fieldBase} min-h-[200px]`}
-            placeholder="Describe brevemente la solución propuesta"
-            value={form.justificacion}
-            onChange={handleChange("justificacion")}
-            disabled={isReadOnly}
-          />
-        </div>
-        <div>
-          <label className="block text-gray-800 font-semibold mb-2">Problemática</label>
-          <textarea
-            className={`${fieldBase} min-h-[200px]`}
-            placeholder="¿Cuál es el problema que buscas resolver?"
-            value={form.problematica}
-            onChange={handleChange("problematica")}
-            disabled={isReadOnly}
-          />
-        </div>
-        <div>
-          <label className="block text-gray-800 font-semibold mb-2">Objetivos</label>
-          <textarea
-            className={`${fieldBase} min-h-[200px]`}
-            placeholder="Enumera los objetivos principales"
-            value={form.objetivos}
-            onChange={handleChange("objetivos")}
-            disabled={isReadOnly}
-          />
+
+        {/* Columna derecha: Justificación y Objetivos (3 de 5 partes) */}
+        <div className="lg:col-span-3 space-y-8">
+          {/* Justificación (cambié el nombre según mockup: "Planteamiento de solución") */}
+          <div>
+            <label className="block text-gray-800 font-semibold mb-2">Planteamiento de solución</label>
+            <textarea
+              className={`${fieldBase} min-h-[200px] resize-none`}
+              placeholder="Describe brevemente la solución propuesta"
+              value={form.justificacion}
+              onChange={handleChange("justificacion")}
+              disabled={isReadOnly}
+            />
+          </div>
+
+          {/* Objetivos */}
+          <div>
+            <label className="block text-gray-800 font-semibold mb-2">Objetivos</label>
+            <textarea
+              className={`${fieldBase} min-h-[200px] resize-none`}
+              placeholder="Enumera los objetivos principales"
+              value={form.objetivos}
+              onChange={handleChange("objetivos")}
+              disabled={isReadOnly}
+            />
+          </div>
         </div>
       </div>
 
+      {/* Integrantes y botón */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-end">
         <div>
           <label className="block text-gray-800 font-semibold mb-2">Integrantes</label>
@@ -129,7 +140,11 @@ const IdeaForm = ({
         </div>
         <div className="flex md:justify-end">
           {!isReadOnly && (
-            <Button type="submit" text="Enviar a Revisión" />
+            <Button 
+              type="submit" 
+              text="Enviar a Revisión" 
+              disabled={!canSubmit}
+            />
           )}
         </div>
       </div>
@@ -138,4 +153,3 @@ const IdeaForm = ({
 };
 
 export default IdeaForm;
-
