@@ -9,6 +9,8 @@ import { useToast } from "../../hooks/useToast";
 import { useAuth } from "../../contexts/AuthContext";
 import ProjectTabContent from "../../components/ui/ProjectTabContent";
 import ActivityCard from "../../components/ui/ActivityCard";
+import ProjectCard from "../../components/ui/ProjectCard";
+import IdeaForm from "../../modules/professor/components/IdeaForm";
 
 const GroupDetail = () => {
   // 🔹 Los nombres aquí DEBEN coincidir con los definidos en la ruta:
@@ -25,6 +27,8 @@ const GroupDetail = () => {
   const [groupInfo, setGroupInfo] = useState(null);
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [validationError, setValidationError] = useState(null);
+  const [showProjects, setShowProjects] = useState(false);
+  const [selectedProject, setSelectedProject] = useState(null);
   const hasLoaded = useRef(false);
 
   useEffect(() => {
@@ -189,14 +193,60 @@ const GroupDetail = () => {
             )}
 
             {activeTab === "proyecto" && (
-              <div className="max-w-4xl mx-auto">
-                <div className="mb-8">
-                  <ActivityCard
-                    title="Actividad 1"
-                    description="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco."
-                  />
-                </div>
-                <ProjectTabContent perfil="docente" onCrearActividad={() => {}} />
+              <div className="max-w-5xl mx-auto">
+                {selectedProject ? (
+                  <div className="bg-white rounded-2xl shadow-sm p-6">
+                    <div className="mb-4 flex items-center justify-between">
+                      <h3 className="text-lg font-semibold text-gray-800">Nueva idea para: {selectedProject.title}</h3>
+                      <button
+                        className="text-sm text-gray-600 hover:text-gray-900"
+                        onClick={() => setSelectedProject(null)}
+                      >
+                        ← Volver a proyectos
+                      </button>
+                    </div>
+                    <IdeaForm
+                      groupParams={{ codigo_materia, nombre, periodo, anio }}
+                      onSubmit={(payload) => {
+                        console.log("Enviar idea:", { projectId: selectedProject.id, ...payload });
+                        setSelectedProject(null);
+                      }}
+                    />
+                  </div>
+                ) : showProjects ? (
+                  <>
+                    <div className="space-y-4">
+                      {[ 
+                        { id: 1, title: "Software gimnasio klisman", description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit...", tags: ["Node.js", "React.jsx"], status: "aprobado", progress: 82, logo: null },
+                        { id: 2, title: "Aplicativo de rendimiento estudiantil", description: "Sistema web para gestionar y analizar el rendimiento académico.", tags: ["React", "Express", "MongoDB"], status: "en revisión", progress: 45, logo: null }
+                      ].map((p) => (
+                        <ProjectCard
+                          key={p.id}
+                          title={p.title}
+                          description={p.description}
+                          tags={p.tags}
+                          logo={p.logo}
+                          status={p.status}
+                          progress={p.progress}
+                          onClick={() => setSelectedProject(p)}
+                          onDocumentsClick={() => setSelectedProject(p)}
+                          onCodeClick={() => setSelectedProject(p)}
+                        />
+                      ))}
+                    </div>
+                    <div className="mt-8">
+                      <ProjectTabContent perfil="docente" onCrearActividad={() => {}} />
+                    </div>
+                  </>
+                ) : (
+                  <div className="mb-8">
+                    <ActivityCard
+                      title="Actividad 1"
+                      description="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco."
+                      onClick={() => setShowProjects(true)}
+                    />
+                  </div>
+                )}
               </div>
             )}
 

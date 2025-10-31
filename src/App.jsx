@@ -45,6 +45,9 @@ import MyProjectsStudent from "./pages/student/MyProjects";
 import CuentaPendiente from "./pages/standby/CuentaPendiente";
 import JoinGroup from "./modules/student/components/JoinGroup";
 
+//visibilidad interfaces sin conexion
+import IdeaForm from "./components/ui/IdeaForm";
+
 function App() {
   return (
     <BrowserRouter>
@@ -157,6 +160,8 @@ function App() {
           {/* ==================== RUTAS ESPECIALES ==================== */}
           <Route path="/account-pending" element={<CuentaPendiente />} />
           <Route path="/join-group" element={<JoinGroup />} />
+
+          <Route path="/form" element={<IdeaForm />} />
 
           {/* ==================== REDIRECTS ==================== */}
           <Route path="/" element={<Navigate to="/login" replace />} />
