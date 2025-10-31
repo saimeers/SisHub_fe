@@ -98,3 +98,4 @@ const GroupFilters = ({
 };
 
 export default GroupFilters;
+
