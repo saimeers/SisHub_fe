@@ -10,8 +10,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import ProjectTabContent from "../../components/ui/ProjectTabContent";
 import ActivityCard from "../../components/ui/ActivityCard";
 import ProjectCard from "../../components/ui/ProjectCard";
-import IdeaForm from "../../modules/professor/components/IdeaForm";
-
+import IdeaForm from "../../components/ui/IdeaForm";
 const GroupDetail = () => {
   // 🔹 Los nombres aquí DEBEN coincidir con los definidos en la ruta:
   // /professor/my-group/:codigo_materia/:nombre/:periodo/:anio
@@ -197,7 +196,9 @@ const GroupDetail = () => {
                 {selectedProject ? (
                   <div className="bg-white rounded-2xl shadow-sm p-6">
                     <div className="mb-4 flex items-center justify-between">
-                      <h3 className="text-lg font-semibold text-gray-800">Nueva idea para: {selectedProject.title}</h3>
+                      <h3 className="text-lg font-semibold text-gray-800">
+                        Nueva idea para: {selectedProject.title}
+                      </h3>
                       <button
                         className="text-sm text-gray-600 hover:text-gray-900"
                         onClick={() => setSelectedProject(null)}
@@ -206,9 +207,13 @@ const GroupDetail = () => {
                       </button>
                     </div>
                     <IdeaForm
+                      role="DOCENTE"
                       groupParams={{ codigo_materia, nombre, periodo, anio }}
                       onSubmit={(payload) => {
-                        console.log("Enviar idea:", { projectId: selectedProject.id, ...payload });
+                        console.log("Enviar idea:", {
+                          projectId: selectedProject.id,
+                          ...payload,
+                        });
                         setSelectedProject(null);
                       }}
                     />
@@ -216,9 +221,27 @@ const GroupDetail = () => {
                 ) : showProjects ? (
                   <>
                     <div className="space-y-4">
-                      {[ 
-                        { id: 1, title: "Software gimnasio klisman", description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit...", tags: ["Node.js", "React.jsx"], status: "aprobado", progress: 82, logo: null },
-                        { id: 2, title: "Aplicativo de rendimiento estudiantil", description: "Sistema web para gestionar y analizar el rendimiento académico.", tags: ["React", "Express", "MongoDB"], status: "en revisión", progress: 45, logo: null }
+                      {[
+                        {
+                          id: 1,
+                          title: "Software gimnasio klisman",
+                          description:
+                            "Lorem ipsum dolor sit amet, consectetur adipiscing elit...",
+                          tags: ["Node.js", "React.jsx"],
+                          status: "aprobado",
+                          progress: 82,
+                          logo: null,
+                        },
+                        {
+                          id: 2,
+                          title: "Aplicativo de rendimiento estudiantil",
+                          description:
+                            "Sistema web para gestionar y analizar el rendimiento académico.",
+                          tags: ["React", "Express", "MongoDB"],
+                          status: "en revisión",
+                          progress: 45,
+                          logo: null,
+                        },
                       ].map((p) => (
                         <ProjectCard
                           key={p.id}
@@ -235,7 +258,10 @@ const GroupDetail = () => {
                       ))}
                     </div>
                     <div className="mt-8">
-                      <ProjectTabContent perfil="docente" onCrearActividad={() => {}} />
+                      <ProjectTabContent
+                        perfil="docente"
+                        onCrearActividad={() => {}}
+                      />
                     </div>
                   </>
                 ) : (

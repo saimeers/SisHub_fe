@@ -7,10 +7,11 @@ const fieldBase = "w-full rounded-xl border border-gray-300 bg-white px-4 py-3 f
 
 const IdeaForm = ({
   groupParams, // { codigo_materia, nombre, periodo, anio }
-  initialData = { titulo: "", problematica: "", justificacion: "", objetivos: "" },
+  initialData = { titulo: "", problematica: "", justificacion: "", objetivos: "", observaciones: "" },
   readOnly = false,
   defaultSelectedMembers = [], // array de { value, label }
   onSubmit,
+  role = "ESTUDIANTE",
 }) => {
   const [form, setForm] = useState(initialData);
   const [membersOptions, setMembersOptions] = useState([]);
@@ -19,10 +20,17 @@ const IdeaForm = ({
 
   useEffect(() => {
     setForm(initialData);
-  }, [initialData]);
+  }, [
+    initialData?.titulo,
+    initialData?.problematica,
+    initialData?.justificacion,
+    initialData?.objetivos,
+    initialData?.observaciones,
+  ]);
 
   useEffect(() => {
     const loadParticipants = async () => {
+      if (role !== "ESTUDIANTE") return;
       if (!groupParams) return;
       const { codigo_materia, nombre, periodo, anio } = groupParams;
       try {
@@ -42,14 +50,14 @@ const IdeaForm = ({
     };
     loadParticipants();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [groupParams?.codigo_materia, groupParams?.nombre, groupParams?.periodo, groupParams?.anio]);
+  }, [groupParams?.codigo_materia, groupParams?.nombre, groupParams?.periodo, groupParams?.anio, role]);
 
   const handleChange = (key) => (e) => {
     const value = e?.target ? e.target.value : e;
     setForm((prev) => ({ ...prev, [key]: value }));
   };
 
-  const canSubmit = useMemo(() => {
+  const canSubmitStudent = useMemo(() => {
     return (
       !isReadOnly &&
       form.titulo.trim() &&
@@ -60,12 +68,46 @@ const IdeaForm = ({
     );
   }, [form, selectedMembers, isReadOnly]);
 
+  const [membersText, setMembersText] = useState("");
+  const canSubmitProfessor = useMemo(() => {
+    return (
+      !isReadOnly &&
+      form.titulo.trim() &&
+      form.problematica.trim() &&
+      form.justificacion.trim() &&
+      form.objetivos.trim() &&
+      String(membersText).trim().length > 0
+    );
+  }, [form, membersText, isReadOnly]);
+
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!onSubmit) return;
+    if (role === "ESTUDIANTE") {
+      const payload = {
+        ...form,
+        integrantes: selectedMembers.map((m) => ({ codigo: m.value, nombre: m.label })),
+      };
+      onSubmit(payload);
+      return;
+    }
+  };
+
+  const buildIntegrantesFromText = () => {
+    return String(membersText)
+      .split(/\n|,/)
+      .map((s) => s.trim())
+      .filter(Boolean)
+      .map((nombre) => ({ nombre }));
+  };
+
+  const handleAction = (decision) => {
+    if (!onSubmit) return;
     const payload = {
       ...form,
-      integrantes: selectedMembers.map((m) => ({ codigo: m.value, nombre: m.label })),
+      observaciones: form.observaciones || "",
+      integrantes: buildIntegrantesFromText(),
+      decision,
     };
     onSubmit(payload);
   };
@@ -126,28 +168,77 @@ const IdeaForm = ({
       </div>
 
       {/* Integrantes y botón */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-end">
-        <div>
-          <label className="block text-gray-800 font-semibold mb-2">Integrantes</label>
-          <SelectField
-            isMulti
-            value={selectedMembers}
-            onChange={(val) => setSelectedMembers(val || [])}
-            options={membersOptions}
-            placeholder="Elige integrantes de tu equipo"
-            disabled={isReadOnly}
-          />
-        </div>
-        <div className="flex md:justify-end">
-          {!isReadOnly && (
-            <Button 
-              type="submit" 
-              text="Enviar a Revisión" 
-              disabled={!canSubmit}
+      {role === "ESTUDIANTE" ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-end">
+          <div>
+            <label className="block text-gray-800 font-semibold mb-2">Integrantes</label>
+            <SelectField
+              isMulti
+              value={selectedMembers}
+              onChange={(val) => setSelectedMembers(val || [])}
+              options={membersOptions}
+              placeholder="Elige integrantes de tu equipo"
+              disabled={isReadOnly}
             />
-          )}
+          </div>
+          <div className="flex md:justify-end">
+            {!isReadOnly && (
+              <Button 
+                type="submit" 
+                text="Enviar a Revisión" 
+                disabled={!canSubmitStudent}
+              />
+            )}
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-start">
+          <div className="lg:col-span-2">
+            <label className="block text-gray-800 font-semibold mb-2">Integrantes</label>
+            <textarea
+              className={`${fieldBase} min-h-[140px] resize-none`}
+              placeholder="Escribe los integrantes, uno por línea o separados por coma"
+              value={membersText}
+              onChange={(e) => setMembersText(e.target.value)}
+              disabled={isReadOnly}
+            />
+          </div>
+          <div className="lg:col-span-3">
+            <label className="block text-gray-800 font-semibold mb-2">Observaciones</label>
+            <textarea
+              className={`${fieldBase} min-h-[120px] resize-none`}
+              placeholder="Escribe tus observaciones (opcional)"
+              value={form.observaciones || ""}
+              onChange={handleChange("observaciones")}
+              disabled={isReadOnly}
+            />
+          </div>
+          <div className="lg:col-span-5 flex justify-center gap-3 flex-wrap">
+            {!isReadOnly && (
+              <>
+                <Button
+                  type="button"
+                  text="Aceptar sin observaciones"
+                  disabled={Boolean(String(form.observaciones || "").trim())}
+                  onClick={() => handleAction("aceptar_sin_observaciones")}
+                />
+                <Button
+                  type="button"
+                  text="Aceptar con observaciones"
+                  disabled={!String(form.observaciones || "").trim()}
+                  onClick={() => handleAction("aceptar_con_observaciones")}
+                />
+                <Button
+                  type="button"
+                  text="Rechazar"
+                  disabled={false}
+                  onClick={() => handleAction("rechazar")}
+                />
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </form>
   );
 };
