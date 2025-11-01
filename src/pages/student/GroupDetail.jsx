@@ -11,13 +11,22 @@ import IdeasBank from "../../components/ui/IdeasBank";
 import Button from "../../components/ui/Button";
 import IdeaForm from "../../components/ui/IdeaForm";
 import ActivityCard from "../../components/ui/ActivityCard";
+import {
+  crearIdea,
+  actualizarIdea,
+  obtenerIdea,
+  listarIdeasLibres,
+  listarIdeasGrupo,
+  adoptarIdea,
+  moverIdeaAlBanco,
+} from "../../services/ideaServices";
 
 const GroupDetail = () => {
   // Deben coincidir con lo que definiste en las rutas: :codigo_materia/:nombre/:periodo/:anio
   const { codigo_materia, nombre, periodo, anio } = useParams();
 
   const navigate = useNavigate();
-  const { error } = useToast();
+  const { error, success } = useToast();
   const { userData } = useAuth();
   const [participants, setParticipants] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -37,6 +46,12 @@ const GroupDetail = () => {
   const [ideaInitialData, setIdeaInitialData] = useState({ titulo: "", problematica: "", justificacion: "", objetivos: "" });
   const [defaultSelectedMembers, setDefaultSelectedMembers] = useState([]);
   const [ideaHasCorrections, setIdeaHasCorrections] = useState(false);
+  const [currentIdeaId, setCurrentIdeaId] = useState(null);
+  
+  // Estado para bancos de ideas
+  const [ideasLibres, setIdeasLibres] = useState([]);
+  const [ideasGrupo, setIdeasGrupo] = useState([]);
+  const [loadingIdeas, setLoadingIdeas] = useState(false);
 
   useEffect(() => {
     const loadGroupData = async () => {
@@ -163,6 +178,42 @@ const GroupDetail = () => {
 
   const groupParams = { codigo_materia, nombre, periodo, anio };
 
+  // Cargar ideas del grupo y libres cuando se muestra la vista
+  useEffect(() => {
+    if (showIdeasView && isAuthorized && groupParams.codigo_materia) {
+      loadIdeas();
+    }
+  }, [showIdeasView, isAuthorized, codigo_materia, nombre, periodo, anio]);
+
+  const loadIdeas = async () => {
+    setLoadingIdeas(true);
+    try {
+      // Cargar ideas del grupo
+      const grupoIdeas = await listarIdeasGrupo(groupParams);
+      const grupoData = Array.isArray(grupoIdeas.data) ? grupoIdeas.data : [];
+      
+      // Separar por estado
+      const propuestas = grupoData.filter(
+        (idea) => idea.Estado?.descripcion === "REVISION" || idea.Estado?.descripcion === "STAND_BY"
+      );
+      const ideasBanco = grupoData.filter(
+        (idea) => idea.Estado?.descripcion === "LIBRE"
+      );
+      
+      setIdeasGrupo(propuestas);
+      
+      // Cargar ideas libres del banco general
+      const libresResponse = await listarIdeasLibres();
+      const libresData = Array.isArray(libresResponse.data) ? libresResponse.data : [];
+      setIdeasLibres([...ideasBanco, ...libresData]);
+    } catch (err) {
+      console.error("Error al cargar ideas:", err);
+      error("Error al cargar las ideas");
+    } finally {
+      setLoadingIdeas(false);
+    }
+  };
+
   // Función para abrir vista de ideas al seleccionar una actividad
   const handleActivityClick = (activity) => {
     setSelectedActivity(activity);
@@ -175,34 +226,144 @@ const GroupDetail = () => {
     setShowIdeasView(false);
     setSelectedActivity(null);
     setShowIdeaForm(false);
+    setCurrentIdeaId(null);
   };
 
   const openCreateIdea = () => {
     setIdeaInitialData({ titulo: "", problematica: "", justificacion: "", objetivos: "" });
     setDefaultSelectedMembers([]);
     setIdeaReadOnly(false);
+    setCurrentIdeaId(null);
+    setIdeaHasCorrections(false);
     setShowIdeaForm(true);
   };
 
-  const openViewIdea = (item) => {
-    const normalized =
-      typeof item === "string"
-        ? { title: item, problematica: "", justificacion: "", objetivos: "", hasCorrections: false }
-        : item;
-    const preselected = (participants || []).map((p) => ({ value: p.codigo, label: p.nombre }));
-    setIdeaInitialData({
-      titulo: normalized.title,
-      problematica: normalized.problematica || "",
-      justificacion: normalized.justificacion || "",
-      objetivos: normalized.objetivos || "",
-    });
-    setDefaultSelectedMembers(preselected);
-    setIdeaReadOnly(true);
-    setIdeaHasCorrections(!!normalized.hasCorrections);
-    setShowIdeaForm(true);
+  const openViewIdea = async (item) => {
+    try {
+      // Si el item tiene id_idea, cargar datos completos
+      if (item.id_idea) {
+        const ideaCompleta = await obtenerIdea(item.id_idea);
+        const ideaData = ideaCompleta.data || ideaCompleta;
+        
+        // Mapear campos del backend al formulario
+        const estado = ideaData.Estado?.descripcion;
+        const tieneCorrecciones = estado === "STAND_BY";
+        
+        // Obtener integrantes del equipo si existe
+        const integrantes = ideaData.equipo?.Integrante_Equipos || [];
+        const preselected = integrantes
+          .filter((int) => int.codigo_usuario !== ideaData.codigo_usuario)
+          .map((int) => ({
+            value: int.Usuario?.codigo || int.codigo_usuario,
+            label: int.Usuario?.nombre || "",
+          }));
+
+        setIdeaInitialData({
+          titulo: ideaData.titulo || "",
+          problematica: ideaData.problema || "",
+          justificacion: ideaData.justificacion || "",
+          objetivos: `${ideaData.objetivo_general || ""}\n${ideaData.objetivos_especificos || ""}`.trim(),
+        });
+        setDefaultSelectedMembers(preselected);
+        setCurrentIdeaId(ideaData.id_idea);
+        setIdeaReadOnly(true);
+        setIdeaHasCorrections(tieneCorrecciones);
+      } else {
+        // Datos básicos del item
+        const preselected = (participants || []).map((p) => ({ value: p.codigo, label: p.nombre }));
+        setIdeaInitialData({
+          titulo: item.titulo || item.title || "",
+          problematica: item.problema || item.problematica || "",
+          justificacion: item.justificacion || "",
+          objetivos: item.objetivos_especificos || item.objetivos || "",
+        });
+        setDefaultSelectedMembers(preselected);
+        setCurrentIdeaId(item.id_idea || null);
+        setIdeaReadOnly(true);
+        setIdeaHasCorrections(!!item.hasCorrections || item.Estado?.descripcion === "STAND_BY");
+      }
+      setShowIdeaForm(true);
+    } catch (err) {
+      console.error("Error al cargar idea:", err);
+      error("Error al cargar la idea");
+    }
   };
 
-  const closeIdeaForm = () => setShowIdeaForm(false);
+  const handleAdoptIdea = async (item) => {
+    if (!userData?.codigo) {
+      error("No se pudo obtener tu información de usuario");
+      return;
+    }
+
+    try {
+      await adoptarIdea(item.id_idea, userData.codigo, groupParams);
+      success("Idea adoptada exitosamente");
+      loadIdeas();
+      openViewIdea(item);
+    } catch (err) {
+      error(err.message || "Error al adoptar la idea");
+    }
+  };
+
+  const handleSubmitIdea = async (payload) => {
+    if (!userData?.codigo) {
+      error("No se pudo obtener tu información de usuario");
+      return;
+    }
+
+    try {
+      // Separar objetivos en general y específicos (primer línea = general, resto = específicos)
+      const objetivosLines = (payload.objetivos || "").split("\n").filter((l) => l.trim());
+      const objetivo_general = objetivosLines[0] || "";
+      const objetivos_especificos = objetivosLines.slice(1).join("\n") || objetivo_general;
+
+      // Preparar integrantes (solo códigos para el backend)
+      const integrantes = payload.integrantes
+        ? payload.integrantes.map((m) => (typeof m === "string" ? m : m.codigo || m.value))
+        : [];
+
+      if (currentIdeaId) {
+        // Actualizar idea existente
+        const datosActualizacion = {
+          codigo_usuario: userData.codigo,
+          titulo: payload.titulo,
+          problema: payload.problematica,
+          justificacion: payload.justificacion,
+          objetivo_general,
+          objetivos_especificos,
+        };
+
+        await actualizarIdea(currentIdeaId, datosActualizacion);
+        success("Idea actualizada exitosamente");
+      } else {
+        // Crear nueva idea
+        const datosIdea = {
+          codigo_usuario: userData.codigo,
+          titulo: payload.titulo,
+          problema: payload.problematica,
+          justificacion: payload.justificacion,
+          objetivo_general,
+          objetivos_especificos,
+          grupo: groupParams,
+          integrantes,
+        };
+
+        await crearIdea(datosIdea);
+        success("Idea creada y enviada a revisión");
+      }
+
+      setShowIdeaForm(false);
+      setCurrentIdeaId(null);
+      loadIdeas();
+    } catch (err) {
+      error(err.message || "Error al guardar la idea");
+    }
+  };
+
+  const closeIdeaForm = () => {
+    setShowIdeaForm(false);
+    setCurrentIdeaId(null);
+  };
 
   if (validationError && !isAuthorized && !isLoading) {
     return (
@@ -296,20 +457,43 @@ const GroupDetail = () => {
                       </button>
                       <Button text={"+ Proponer Idea"} onClick={openCreateIdea} />
                     </div>
-                    <IdeasBank
-                      title="Banco de ideas"
-                      items={[
-                        { title: "Software para optimizar la toma de decisiones", hasCorrections: true, problematica: "Problema A", justificacion: "Justificación A", objetivos: "Objetivos A" },
-                      ]}
-                      onView={openViewIdea}
-                    />
-                    <IdeasBank
-                      title="Banco de Propuestas"
-                      items={[
-                        { title: "Software para optimizar la toma de decisiones", hasCorrections: true },
-                      ]}
-                      onView={openViewIdea}
-                    />
+                    {loadingIdeas ? (
+                      <div className="text-center py-12">
+                        <p className="text-gray-500">Cargando ideas...</p>
+                      </div>
+                    ) : (
+                      <>
+                        <IdeasBank
+                          title="Banco de Propuestas"
+                          items={ideasGrupo.map((idea) => ({
+                            id_idea: idea.id_idea,
+                            title: idea.titulo,
+                            titulo: idea.titulo,
+                            problema: idea.problema,
+                            problematica: idea.problema,
+                            justificacion: idea.justificacion,
+                            objetivos_especificos: idea.objetivos_especificos,
+                            hasCorrections: idea.Estado?.descripcion === "STAND_BY",
+                            Estado: idea.Estado,
+                          }))}
+                          onView={openViewIdea}
+                        />
+                        <IdeasBank
+                          title="Banco de ideas"
+                          items={ideasLibres.map((idea) => ({
+                            id_idea: idea.id_idea,
+                            title: idea.titulo,
+                            titulo: idea.titulo,
+                            problema: idea.problema,
+                            problematica: idea.problema,
+                            justificacion: idea.justificacion,
+                            objetivos_especificos: idea.objetivos_especificos,
+                            Estado: idea.Estado,
+                          }))}
+                          onView={(item) => handleAdoptIdea(item)}
+                        />
+                      </>
+                    )}
                   </>
                 ) : (
                   // Vista de formulario de idea
@@ -327,7 +511,13 @@ const GroupDetail = () => {
                           <span className="px-3 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-800 border border-yellow-200">
                             Esta idea tiene correcciones
                           </span>
-                          <Button text="Tomar idea" onClick={() => setIdeaReadOnly(false)} />
+                          <Button 
+                            text="Tomar idea" 
+                            onClick={() => {
+                              setIdeaReadOnly(false);
+                              setIdeaHasCorrections(false);
+                            }} 
+                          />
                         </div>
                       )}
                     </div>
@@ -336,10 +526,8 @@ const GroupDetail = () => {
                       initialData={ideaInitialData}
                       readOnly={ideaReadOnly}
                       defaultSelectedMembers={defaultSelectedMembers}
-                      onSubmit={(payload) => {
-                        console.log("Enviar idea:", payload);
-                        // Aquí luego se integrará con el backend
-                      }}
+                      onSubmit={handleSubmitIdea}
+                      role="ESTUDIANTE"
                     />
                   </div>
                 )}
