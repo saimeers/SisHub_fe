@@ -1,44 +1,44 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import ProfessorLayout from "../../modules/professor/layouts/ProfessorLayout";
 import ApprovedProjectCard from "../../components/ui/ProjectCard";
+import { useAuth } from "../../contexts/AuthContext";
+import { listarProyectosParaDocente } from "../../services/projectServices";
 
 const MyProjects = () => {
-  // Estado para proyectos a evaluar - luego se cargará desde el backend
-  const [projects] = useState([
-    {
-      id: 1,
-      title: "Software gimnasio klisman",
-      description:
-        "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco.",
-      tags: ["Node.js", "React.jsx"],
-      status: "en revisión",
-      logo: null,
-      grupo: "Fisica Mecanica | Grupo A | 2025-1",
-      estudiantes: ["Andres Lopez", "Saimer Adrian Saavedra Rojas"],
-    },
-    {
-      id: 2,
-      title: "Aplicativo web para rendimiento estudiantil",
-      description:
-        "Sistema web para gestionar y analizar el rendimiento académico de los estudiantes.",
-      tags: ["React", "Express", "MongoDB"],
-      status: "corregido",
-      logo: null,
-      grupo: "Matemáticas Discretas | Grupo B | 2025-1",
-      estudiantes: ["Henry Alexander Blanco Rolon"],
-    },
-    {
-      id: 3,
-      title: "Software para optimizar la toma de decisiones",
-      description:
-        "Herramienta de apoyo para la toma de decisiones empresariales basada en datos.",
-      tags: ["Python", "Django", "PostgreSQL"],
-      status: "en revisión",
-      logo: null,
-      grupo: "Algoritmos y Estructuras | Grupo C | 2025-1",
-      estudiantes: ["Estudiante 1", "Estudiante 2", "Estudiante 3"],
-    },
-  ]);
+  const [projects, setProjects] = useState([]);
+  const { userData } = useAuth();
+
+  useEffect(() => {
+    const load = async () => {
+      if (!userData?.codigo) return;
+      try {
+        const data = await listarProyectosParaDocente(userData.codigo);
+        const mapped = Array.isArray(data)
+          ? data.map((p) => ({
+              id: p.id_proyecto,
+              title: p.Idea?.titulo || `Proyecto ${p.id_proyecto}`,
+              description: p.Idea?.objetivo_general || "",
+              secondaryText: Array.isArray(p.materias)
+                ? p.materias.map((m) => m?.nombre).filter(Boolean).join(" • ")
+                : "",
+              tags: (p.tecnologias || "")
+                .split(",")
+                .map((s) => s.trim())
+                .filter(Boolean),
+              status: undefined,
+              logo: null,
+              tipoAlcance: p.Tipo_alcance?.nombre,
+              progress: 0,
+            }))
+          : [];
+        setProjects(mapped);
+      } catch (e) {
+        console.error(e);
+        setProjects([]);
+      }
+    };
+    load();
+  }, [userData]);
 
   const handleProjectClick = (project) => {
     console.log("Proyecto seleccionado para evaluar:", project);
@@ -62,9 +62,7 @@ const MyProjects = () => {
       <div className="w-full max-w-6xl mx-auto py-8 px-6">
         {projects.length === 0 ? (
           <div className="text-center py-12 bg-gray-50 rounded-2xl">
-            <p className="text-gray-500 text-lg">
-              No hay proyectos pendientes de evaluación.
-            </p>
+            <p className="text-gray-500 text-lg">No hay proyectos pendientes de evaluación.</p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -73,9 +71,12 @@ const MyProjects = () => {
                 <ApprovedProjectCard
                   title={project.title}
                   description={project.description}
+                  secondaryText={project.secondaryText}
                   tags={project.tags}
                   logo={project.logo}
                   status={project.status}
+                  progress={project.progress}
+                  tipoAlcance={project.tipoAlcance}
                   onClick={() => handleProjectClick(project)}
                   onDocumentsClick={(e) => handleDocumentsClick(project.id, e)}
                   onCodeClick={(e) => handleCodeClick(project.id, e)}
