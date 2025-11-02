@@ -22,6 +22,8 @@ const IdeaForm = ({
   showAdoptButton = false,
   onAdopt = null,
 }) => {
+
+  console.log("Initial Data:", initialData);
   const [form, setForm] = useState({
     titulo: initialData.titulo || "",
     problematica: initialData.problematica || "",
@@ -132,7 +134,8 @@ const IdeaForm = ({
       form.problematica.trim() &&
       form.justificacion.trim() &&
       form.objetivo_general.trim() &&
-      hasObjetivosEspecificos 
+      hasObjetivosEspecificos &&
+      selectedMembers.length > 0
     );
   }, [form, selectedMembers, readOnly]);
 

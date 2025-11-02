@@ -31,7 +31,7 @@ import {
   adoptarPropuesta,
   continuarProyecto,
   crearProyectoDesdeIdea,
-} from "../../services/ProyectoServices";
+} from "../../services/proyectoServices";
 import Swal from "sweetalert2";
 import { toast } from "react-toastify";
 

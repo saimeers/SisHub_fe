@@ -2,41 +2,66 @@ import React, { useState, useEffect } from 'react';
 import { MessageSquare, Send, Edit3, Calendar, User } from 'lucide-react';
 import Swal from 'sweetalert2';
 import { toast } from 'react-toastify';
-import { obtenerUltimoHistorial, moverIdeaAlBanco, actualizarIdea } from '../../../services/ideaServices';
+import { obtenerIdea, obtenerUltimoHistorial, moverIdeaAlBanco, actualizarIdea } from '../../../services/ideaServices';
 import IdeaForm from '../../../components/ui/IdeaForm';
 
-const SuggestionReview = ({ idIdea, ideaData, groupParams, currentUserCode, onBack }) => {
+const SuggestionReview = ({ idIdea, groupParams, currentUserCode, onBack }) => {
+  const [ideaData, setIdeaData] = useState(null);
   const [observationData, setObservationData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showCorrectForm, setShowCorrectForm] = useState(false);
 
-  useEffect(() => {
-    const loadHistorial = async () => {
-      try {
-        setLoading(true);
-        const historial = await obtenerUltimoHistorial(idIdea);
-        
-        setObservationData({
-          text: historial.observaciones || "Sin observaciones",
-          date: new Date(historial.fecha_cambio).toLocaleDateString('es-ES', {
-            day: 'numeric',
-            month: 'long',
-            year: 'numeric'
-          }),
-          professor: historial.Usuario?.nombre || "Docente"
-        });
-      } catch (error) {
-        console.error("Error al cargar historial:", error);
-        toast.error("Error al cargar las observaciones");
-      } finally {
-        setLoading(false);
-      }
-    };
+  // Cargar idea completa y su historial
+useEffect(() => {
+  const loadIdea = async () => {
+    if (!idIdea) return;
+    try {
+      setLoading(true);
 
-    if (idIdea) {
-      loadHistorial();
+      // ✅ Obtener idea y acceder al objeto interno
+      const response = await obtenerIdea(idIdea);
+      const fetchedIdea = response.data || response; // soporte doble por si cambia estructura
+      console.log("Idea obtenida para revisión de sugerencias:", fetchedIdea);
+
+      // ✅ Normalizar datos para el formulario
+      const normalizedIdea = {
+        titulo: fetchedIdea.titulo || "",
+        problematica: fetchedIdea.problema || "",
+        justificacion: fetchedIdea.justificacion || "",
+        objetivo_general: fetchedIdea.objetivo_general || "",
+        objetivos_especificos: fetchedIdea.objetivos_especificos
+          ? fetchedIdea.objetivos_especificos.split("\n")
+          : [""],
+        integrantes:
+          fetchedIdea.equipo?.Integrantes?.map((i) => i.codigo) || [],
+      };
+
+      setIdeaData(normalizedIdea);
+
+      const historial = await obtenerUltimoHistorial(idIdea);
+      console.log("Historial obtenido para revisión de sugerencias:", historial);
+
+      setObservationData({
+        text: historial?.observaciones || "Sin observaciones",
+        date: historial?.fecha,
+        professor: historial?.Usuario?.nombre || "Docente",
+      });
+    } catch (error) {
+      console.error("Error al cargar datos de la idea o historial:", error);
+      toast.error("Error al cargar la información de la idea");
+    } finally {
+      setLoading(false);
     }
-  }, [idIdea]);
+  };
+
+  loadIdea();
+}, [idIdea]);
+
+  useEffect(() => {
+    if (ideaData) {
+      console.log("Idea data actualizada:", ideaData);
+    }
+  }, [ideaData]);
 
   const handleCorrectObservations = async () => {
     const result = await Swal.fire({
@@ -99,16 +124,15 @@ const SuggestionReview = ({ idIdea, ideaData, groupParams, currentUserCode, onBa
 
   const handleSubmitCorrection = async (payload) => {
     try {
-      const objetivo_general = payload.objetivo_general || "";
-      const objetivos_especificos = payload.objetivos_especificos?.join("\n") || "";
-
       const datosActualizacion = {
         codigo_usuario: currentUserCode,
         titulo: payload.titulo,
-        problema: payload.problematica,
+        problema: payload.problema,
         justificacion: payload.justificacion,
-        objetivo_general,
-        objetivos_especificos,
+        objetivo_general: payload.objetivo_general || "",
+        objetivos_especificos: Array.isArray(payload.objetivos_especificos)
+          ? payload.objetivos_especificos.join("\n")
+          : payload.objetivos_especificos || "",
       };
 
       await actualizarIdea(idIdea, datosActualizacion);
@@ -119,10 +143,10 @@ const SuggestionReview = ({ idIdea, ideaData, groupParams, currentUserCode, onBa
     }
   };
 
-  if (loading) {
+  if (loading || !ideaData) {
     return (
       <div className="flex items-center justify-center py-12">
-        <p className="text-gray-500">Cargando observaciones...</p>
+        <p className="text-gray-500">Cargando información...</p>
       </div>
     );
   }
@@ -140,32 +164,19 @@ const SuggestionReview = ({ idIdea, ideaData, groupParams, currentUserCode, onBa
           </button>
         </div>
 
-        {/* Mostrar observaciones arriba del formulario */}
         {observationData && (
           <div className="mb-6 bg-amber-50 border-l-4 border-amber-400 rounded-r-lg p-4">
             <h3 className="font-semibold text-amber-900 mb-2">Observaciones del Docente</h3>
             <p className="text-sm text-gray-700 mb-2">
               <strong>{observationData.professor}</strong> - {observationData.date}
             </p>
-            <p className="text-gray-800 text-sm whitespace-pre-wrap">
-              {observationData.text}
-            </p>
+            <p className="text-gray-800 text-sm whitespace-pre-wrap">{observationData.text}</p>
           </div>
         )}
 
         <IdeaForm
           groupParams={groupParams}
-          initialData={{
-            titulo: ideaData.titulo || "",
-            problematica: ideaData.problema || "",
-            justificacion: ideaData.justificacion || "",
-            objetivo_general: ideaData.objetivo_general || "",
-            objetivos_especificos: Array.isArray(ideaData.objetivos_especificos)
-              ? ideaData.objetivos_especificos
-              : typeof ideaData.objetivos_especificos === "string"
-                ? ideaData.objetivos_especificos.split(/\r?\n/).filter(line => line.trim())
-                : [""],
-          }}
+          initialData={ideaData}
           readOnly={false}
           defaultSelectedMembers={[]}
           onSubmit={handleSubmitCorrection}
@@ -183,9 +194,7 @@ const SuggestionReview = ({ idIdea, ideaData, groupParams, currentUserCode, onBa
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
               <MessageSquare className="w-6 h-6 text-blue-600" />
-              <h2 className="text-xl font-bold text-gray-900">
-                Observación
-              </h2>
+              <h2 className="text-xl font-bold text-gray-900">Observación</h2>
             </div>
             {onBack && (
               <button
@@ -212,9 +221,7 @@ const SuggestionReview = ({ idIdea, ideaData, groupParams, currentUserCode, onBa
 
         <div className="flex-1 overflow-y-auto p-6">
           <div className="bg-amber-50 border-l-4 border-amber-400 rounded-r-lg p-6">
-            <p className="text-gray-800 leading-relaxed whitespace-pre-wrap">
-              {observationData?.text}
-            </p>
+            <p className="text-gray-800 leading-relaxed whitespace-pre-wrap">{observationData?.text}</p>
           </div>
           <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
             <p className="text-sm text-blue-800">
