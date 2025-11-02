@@ -142,91 +142,103 @@ const GroupDetail = () => {
         anio
       );
 
-    console.log("📦 Respuesta verificar actividad:", tiene);
+      console.log("📦 Respuesta verificar actividad:", tiene);
 
-    if (tiene.tieneActividad) {
-      const response = await obtenerActividadById(tiene.id_actividad);
-      console.log("✅ Actividad obtenida:", response);
+      if (tiene.tieneActividad) {
+        const response = await obtenerActividadById(tiene.id_actividad);
+        console.log("✅ Actividad obtenida:", response);
 
-      setActividad(response.actividad);
-      console.log("Actividad de la actividad:", response.actividad);
-      setEsquemaInfo(response.esquema);
-      console.log("Esquema de la actividad:", response.esquema);
-      setTieneActividad(true);
-      setCurrentView("activityDetail");
-    } else {
+        setActividad(response.actividad);
+        console.log("Actividad de la actividad:", response.actividad);
+        setEsquemaInfo(response.esquema);
+        console.log("Esquema de la actividad:", response.esquema);
+        setTieneActividad(true);
+        setCurrentView("activityDetail");
+      } else {
+        setTieneActividad(false);
+        setActividad(null);
+        setEsquemaInfo(null);
+        setCurrentView("createActivity");
+      }
+    } catch (err) {
+      console.error("Error al verificar actividad:", err);
+      toast.error("Error al verificar la actividad del grupo");
       setTieneActividad(false);
       setActividad(null);
       setEsquemaInfo(null);
-      setCurrentView("createActivity");
+    } finally {
+      setLoadingActivity(false);
     }
-  } catch (err) {
-    console.error("Error al verificar actividad:", err);
-    toast.error("Error al verificar la actividad del grupo");
-    setTieneActividad(false);
-    setActividad(null);
-    setEsquemaInfo(null);
-  } finally {
-    setLoadingActivity(false);
-  }
-};
+  };
 
-const handleActivityCreated = async (newActivity) => {
-  console.log("🎉 Actividad creada:", newActivity);
-  
-  // Recargar la actividad completa desde el servidor
-  try {
-    setLoadingActivity(true);
-    
-    // Si newActivity tiene id_actividad, usarlo directamente
-    const activityId = newActivity.id_actividad || newActivity.data?.id_actividad;
-    
-    if (activityId) {
-      const response = await obtenerActividadById(activityId);
-      console.log("✅ Actividad recargada:", response);
-      
-      setActividad(response.actividad);
-      setEsquemaInfo(response.esquema);
-      setTieneActividad(true);
-      setCurrentView("activityDetail");
-      toast.success("Actividad creada exitosamente");
-    } else {
-      // Si no hay id, hacer checkActivity para obtener la actividad
-      await checkActivity();
-    }
-  } catch (err) {
-    console.error("❌ Error al cargar actividad creada:", err);
-    // Como fallback, verificar la actividad del grupo
-    await checkActivity();
-    toast.success("Actividad creada exitosamente");
-  } finally {
-    setLoadingActivity(false);
-  }
-};
+  const handleActivityCreated = async (newActivity) => {
+    console.log("🎉 Actividad creada:", newActivity);
 
-const handleActivityUpdated = async (updatedActivity) => {
-  console.log("🔄 Actividad actualizada:", updatedActivity);
-  
-  // Recargar la actividad completa desde el servidor
-  try {
-    setLoadingActivity(true);
-    
-    const activityId = updatedActivity.id_actividad || initialData?.id_actividad;
-    
-    if (activityId) {
-      const response = await obtenerActividadById(activityId);
-      console.log("✅ Actividad recargada:", response);
-      
-      setActividad(response.actividad);
-      setEsquemaInfo(response.esquema);
-      setCurrentView("activityDetail");
-      toast.success("Actividad actualizada exitosamente");
+    // Recargar la actividad completa desde el servidor
+    try {
+      setLoadingActivity(true);
+
+      // Si newActivity tiene id_actividad, usarlo directamente
+      const activityId =
+        newActivity.id_actividad || newActivity.data?.id_actividad;
+
+      if (activityId) {
+        const response = await obtenerActividadById(activityId);
+        console.log("✅ Actividad recargada:", response);
+
+        setActividad(response.actividad);
+        setEsquemaInfo(response.esquema);
+        setTieneActividad(true);
+        setCurrentView("activityDetail");
+        toast.success("Actividad creada exitosamente");
+      } else {
+        // Si no hay id, hacer checkActivity para obtener la actividad
+        await checkActivity();
+      }
     } catch (err) {
-      console.error("Error al cargar actividad actualizada:", err);
-      setActividad(updatedActivity);
-      setCurrentView("activityDetail");
-      toast.success("Actividad actualizada exitosamente");
+      console.error("❌ Error al cargar actividad creada:", err);
+      // Como fallback, verificar la actividad del grupo
+      await checkActivity();
+      toast.success("Actividad creada exitosamente");
+    } finally {
+      setLoadingActivity(false);
     }
+  };
+
+  const handleActivityUpdated = async (updatedActivity) => {
+    console.log("🔄 Actividad actualizada:", updatedActivity);
+
+    // Recargar la actividad completa desde el servidor
+    try {
+      setLoadingActivity(true);
+
+      const activityId =
+        updatedActivity.id_actividad || initialData?.id_actividad;
+
+      if (activityId) {
+        const response = await obtenerActividadById(activityId);
+        console.log("✅ Actividad recargada:", response);
+
+        setActividad(response.actividad);
+        setEsquemaInfo(response.esquema);
+        setCurrentView("activityDetail");
+        toast.success("Actividad actualizada exitosamente");
+      } else {
+        // Si no hay id, hacer checkActivity
+        await checkActivity();
+      }
+    } catch (err) {
+      console.error("❌ Error al cargar actividad actualizada:", err);
+      // Como fallback, verificar la actividad del grupo
+      await checkActivity();
+      toast.success("Actividad actualizada exitosamente");
+    } finally {
+      setLoadingActivity(false);
+    }
+  };
+
+  const handleEditActivity = () => {
+    setCurrentView("editActivity");
   };
 
   // Cambiar a vista de ideas y proyectos al hacer click en el card de la actividad
