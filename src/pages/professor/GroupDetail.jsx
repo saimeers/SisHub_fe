@@ -9,14 +9,17 @@ import {
   verificarActividadGrupo,
   obtenerActividadById,
   crearActividad,
-  editarActividad
+  editarActividad,
 } from "../../services/actividadService";
 import {
   listarEsquemasPorTipo,
-  listarItemsPorEsquema
+  listarItemsPorEsquema,
 } from "../../services/esquemaService";
 import { useToast } from "../../hooks/useToast";
 import { useAuth } from "../../contexts/AuthContext";
+import { listarIdeasGrupo } from "../../services/ideaServices";
+import ProjectCard from "../../components/ui/ProjectCard";
+import { listarProyectosPorGrupo } from "../../services/projectServices";
 import { toast } from "react-toastify";
 
 const GroupDetail = () => {
@@ -33,21 +36,32 @@ const GroupDetail = () => {
   const [validationError, setValidationError] = useState(null);
   const hasLoaded = useRef(false);
 
-  const [currentView, setCurrentView] = useState("checkActivity");
+  const [currentView, setCurrentView] = useState("checkActivity"); // checkActivity | activityDetail | createActivity | editActivity | ideasList
   const [tieneActividad, setTieneActividad] = useState(null);
   const [actividad, setActividad] = useState(null);
   const [esquemaInfo, setEsquemaInfo] = useState(null);
   const [loadingActivity, setLoadingActivity] = useState(false);
 
-  const groupParams = { codigo_materia, nombre, periodo, anio };
+  // Estado para ideas  y proyectos en la vista dedicada (no modal)
+  const [groupIdeas, setGroupIdeas] = useState([]);
+  const [loadingIdeas, setLoadingIdeas] = useState(false);
+  const [groupProjects, setGroupProjects] = useState([]);
+  const [loadingProjects, setLoadingProjects] = useState(false);
 
+  const groupParams = { codigo_materia, nombre, periodo, anio };
   // Cargar datos del grupo
   useEffect(() => {
     const loadGroupData = async () => {
       if (hasLoaded.current) return;
       hasLoaded.current = true;
 
-      if (!codigo_materia || !nombre || !periodo || !anio || !userData?.codigo) {
+      if (
+        !codigo_materia ||
+        !nombre ||
+        !periodo ||
+        !anio ||
+        !userData?.codigo
+      ) {
         return;
       }
 
@@ -81,7 +95,9 @@ const GroupDetail = () => {
           anio
         );
 
-        setParticipants(Array.isArray(participantsData) ? participantsData : []);
+        setParticipants(
+          Array.isArray(participantsData) ? participantsData : []
+        );
         setGroupInfo({
           nombre: codigo_materia,
           grupo: nombre,
@@ -119,7 +135,12 @@ const GroupDetail = () => {
   const checkActivity = async () => {
     setLoadingActivity(true);
     try {
-      const tiene = await verificarActividadGrupo(codigo_materia, nombre, periodo, anio);
+      const tiene = await verificarActividadGrupo(
+        codigo_materia,
+        nombre,
+        periodo,
+        anio
+      );
 
       console.log("📦 Respuesta verificar actividad:", tiene);
 
@@ -182,6 +203,37 @@ const GroupDetail = () => {
     }
   };
 
+  // Cambiar a vista de ideas y proyectos al hacer click en el card de la actividad
+  const handleViewIdeas = async () => {
+    setLoadingIdeas(true);
+    setLoadingProjects(true);
+    try {
+      const [ideasResp, projectsResp] = await Promise.all([
+        listarIdeasGrupo(groupParams),
+        listarProyectosPorGrupo(groupParams),
+      ]);
+
+      // Ideas retorna: { total, grupo, data: [...] }
+      const ideas = ideasResp?.data ?? [];
+      setGroupIdeas(Array.isArray(ideas) ? ideas : []);
+
+      // Proyectos retorna: [...] (array directo)
+      setGroupProjects(Array.isArray(projectsResp) ? projectsResp : []);
+
+      setCurrentView("ideasList");
+    } catch (err) {
+      console.error("Error al listar ideas/proyectos del grupo:", err);
+      toast.error("No se pudieron cargar las ideas/proyectos del grupo");
+    } finally {
+      setLoadingIdeas(false);
+      setLoadingProjects(false);
+    }
+  };
+
+  const handleBackToActivity = () => {
+    setCurrentView("activityDetail");
+  };
+
   const tabs = [
     { id: "proyecto", label: "Proyecto" },
     { id: "equipo", label: "Equipo" },
@@ -219,10 +271,11 @@ const GroupDetail = () => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`px-6 py-2 rounded-full text-sm font-medium transition-all duration-200 ${activeTab === tab.id
-                  ? "bg-white shadow text-gray-900"
-                  : "text-gray-600 hover:text-gray-800"
-                  }`}
+                className={`px-6 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
+                  activeTab === tab.id
+                    ? "bg-white shadow text-gray-900"
+                    : "text-gray-600 hover:text-gray-800"
+                }`}
               >
                 {tab.label}
               </button>
@@ -280,6 +333,15 @@ const GroupDetail = () => {
                     actividad={actividad}
                     esquemaInfo={esquemaInfo}
                     onEdit={handleEditActivity}
+                    onViewIdeas={handleViewIdeas}
+                  />
+                ) : currentView === "ideasList" ? (
+                  <IdeasListView
+                    loadingIdeas={loadingIdeas}
+                    loadingProjects={loadingProjects}
+                    ideas={groupIdeas}
+                    projects={groupProjects}
+                    onBack={handleBackToActivity}
                   />
                 ) : null}
               </div>
@@ -296,25 +358,126 @@ const GroupDetail = () => {
     </ProfessorLayout>
   );
 };
+const IdeasListView = ({
+  loadingIdeas,
+  loadingProjects,
+  ideas,
+  projects,
+  onBack,
+}) => {
+  return (
+    <div className="bg-white rounded-2xl border border-gray-200 p-6">
+      <div className="flex items-center justify-between mb-6">
+        <button
+          onClick={onBack}
+          className="px-4 py-2 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors text-sm font-medium"
+        >
+          Volver a la actividad
+        </button>
+      </div>
 
-const ActivityDetail = ({ actividad, esquemaInfo, onEdit }) => {
-  // Construir estructura jerárquica de items
+      <div className="space-y-8">
+        <section>
+          {loadingIdeas ? (
+            <p className="text-gray-500">Cargando ideas...</p>
+          ) : ideas && ideas.length > 0 ? (
+            <div className="space-y-4">
+              {ideas.map((idea, idx) => (
+                <ProjectCard
+                  key={idea?.id_idea || idea?.id || idx}
+                  title={idea?.titulo || "Idea"}
+                  description={idea?.problema || ""}
+                  status={idea?.Estado?.descripcion || "en revisión"}
+                  progress={0}
+                  hideTags
+                  hideActions
+                  hideProgress
+                  hideAlcance
+                  onClick={() => {}}
+                />
+              ))}
+            </div>
+          ) : (
+            <p className="text-gray-500">
+              No hay ideas registradas para este grupo.
+            </p>
+          )}
+        </section>
+
+        <section>
+          {loadingProjects ? (
+            <p className="text-gray-500">Cargando proyectos...</p>
+          ) : projects && projects.length > 0 ? (
+            <div className="space-y-4">
+              {projects.map((proy, idx) => {
+                const tags = Array.isArray(proy?.tecnologias)
+                  ? proy.tecnologias
+                  : typeof proy?.tecnologias === "string"
+                  ? proy.tecnologias
+                      .split(",")
+                      .map((t) => t.trim())
+                      .filter(Boolean)
+                  : proy?.tags || [];
+
+                const progress =
+                  typeof proy?.porcentaje_ejecucion === "number"
+                    ? proy.porcentaje_ejecucion
+                    : proy?.progress ?? 0;
+
+                const alcanceTexto = proy?.Tipo_alcance?.nombre || undefined;
+                const statusTexto =
+                  proy?.estado || proy?.status || "en revisión";
+
+                return (
+                  <ProjectCard
+                    key={proy?.id_proyecto || proy?.id || idx}
+                    title={proy?.Idea?.titulo || "Proyecto"}
+                    description={
+                      proy?.Idea?.objetivo_general ||
+                      proy?.linea_investigacion ||
+                      ""
+                    }
+                    status={statusTexto}
+                    progress={progress}
+                    tags={tags}
+                    tipoAlcance={alcanceTexto}
+                    onDocumentsClick={() => {}}
+                    onCodeClick={() => {}}
+                    onVersionsClick={() => {}}
+                    onClick={() => {}}
+                  />
+                );
+              })}
+            </div>
+          ) : (
+            <p className="text-gray-500">
+              No hay proyectos registrados para este grupo.
+            </p>
+          )}
+        </section>
+      </div>
+    </div>
+  );
+};
+const ActivityDetail = ({ actividad, esquemaInfo, onEdit, onViewIdeas }) => {
   const buildItemsHierarchy = () => {
     if (!actividad.Actividad_items || !esquemaInfo?.Items) return [];
 
-    const selectedItemIds = actividad.Actividad_items.map(ai => ai.Item.id_item);
+    const selectedItemIds = actividad.Actividad_items.map(
+      (ai) => ai.Item.id_item
+    );
     const allItems = esquemaInfo.Items;
 
     // Filtrar solo los items seleccionados y construir jerarquía
     const itemsMap = {};
-    allItems.forEach(item => {
+    allItems.forEach((item) => {
       if (selectedItemIds.includes(item.id_item)) {
         itemsMap[item.id_item] = { ...item, subitems: [] };
       }
     });
 
     const rootItems = [];
-    Object.values(itemsMap).forEach(item => {
+    Object.values(itemsMap).forEach((item) => {
       if (item.super_item === null) {
         rootItems.push(item);
       } else if (itemsMap[item.super_item]) {
@@ -328,22 +491,34 @@ const ActivityDetail = ({ actividad, esquemaInfo, onEdit }) => {
   const selectedItemsHierarchy = buildItemsHierarchy();
 
   return (
-    <div className="rounded-2xl shadow-[0_10px_25px_rgba(0,0,0,0.08)] overflow-hidden bg-white">
+    <div
+      className="rounded-2xl shadow-[0_10px_25px_rgba(0,0,0,0.08)] overflow-hidden bg-white"
+      onClick={onViewIdeas}
+    >
       <div
         className="relative px-6 py-10 text-center text-white"
         style={{
-          background: "linear-gradient(90deg, #ed3a3aff 0%, #d94228ff 50%, #b62121ff 100%)",
+          background:
+            "linear-gradient(90deg, #ed3a3aff 0%, #d94228ff 50%, #b62121ff 100%)",
         }}
       >
         <h2 className="text-2xl md:text-3xl font-extrabold tracking-wide">
           {actividad.titulo}
         </h2>
         <button
-          onClick={onEdit}
+          onClick={(e) => {
+            e.stopPropagation();
+            onEdit();
+          }}
           className="absolute right-6 top-6 p-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors"
           title="Editar actividad"
         >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg
+            className="w-6 h-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -361,13 +536,19 @@ const ActivityDetail = ({ actividad, esquemaInfo, onEdit }) => {
       </div>
       <div className="px-8 py-6 space-y-6">
         <div>
-          <h3 className="text-sm font-semibold text-gray-500 mb-2">DESCRIPCIÓN</h3>
-          <p className="text-gray-700 leading-relaxed">{actividad.descripcion}</p>
+          <h3 className="text-sm font-semibold text-gray-500 mb-2">
+            DESCRIPCIÓN
+          </h3>
+          <p className="text-gray-700 leading-relaxed">
+            {actividad.descripcion}
+          </p>
         </div>
 
         <div className="grid grid-cols-2 gap-6">
           <div>
-            <h3 className="text-sm font-semibold text-gray-500 mb-2">FECHA INICIO</h3>
+            <h3 className="text-sm font-semibold text-gray-500 mb-2">
+              FECHA INICIO
+            </h3>
             <p className="text-gray-900 font-medium">
               {new Date(actividad.fecha_inicio).toLocaleDateString("es-ES", {
                 year: "numeric",
@@ -377,7 +558,9 @@ const ActivityDetail = ({ actividad, esquemaInfo, onEdit }) => {
             </p>
           </div>
           <div>
-            <h3 className="text-sm font-semibold text-gray-500 mb-2">FECHA CIERRE</h3>
+            <h3 className="text-sm font-semibold text-gray-500 mb-2">
+              FECHA CIERRE
+            </h3>
             <p className="text-gray-900 font-medium">
               {new Date(actividad.fecha_cierre).toLocaleDateString("es-ES", {
                 year: "numeric",
@@ -398,7 +581,10 @@ const ActivityDetail = ({ actividad, esquemaInfo, onEdit }) => {
         </div>
 
         <div>
-          <h3 className="text-sm font-semibold text-gray-500 mb-2">TIPO DE ALCANCE</h3>
+          <h3 className="text-sm font-semibold text-gray-500 mb-2">
+            TIPO DE ALCANCE
+          </h3>
+
           <p className="text-gray-900 font-medium">
             {actividad.id_tipo_alcance === 1 ? "Investigativo" : "Desarrollo"}
           </p>
@@ -406,8 +592,12 @@ const ActivityDetail = ({ actividad, esquemaInfo, onEdit }) => {
 
         {esquemaInfo && (
           <div>
-            <h3 className="text-sm font-semibold text-gray-500 mb-2">ESQUEMA</h3>
-            <p className="text-gray-900 font-medium">{esquemaInfo.id_esquema}</p>
+            <h3 className="text-sm font-semibold text-gray-500 mb-2">
+              ESQUEMA
+            </h3>
+            <p className="text-gray-900 font-medium">
+              {esquemaInfo.id_esquema}
+            </p>
           </div>
         )}
 
@@ -416,9 +606,7 @@ const ActivityDetail = ({ actividad, esquemaInfo, onEdit }) => {
             <h3 className="text-sm font-semibold text-gray-500 mb-3">
               ÍTEMS SELECCIONADOS ({actividad.Actividad_items?.length || 0})
             </h3>
-            <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
-              <ItemsDisplayTree items={selectedItemsHierarchy} />
-            </div>
+            <ItemsDisplayTree items={selectedItemsHierarchy} />
           </div>
         )}
       </div>
@@ -435,7 +623,11 @@ const ItemsDisplayTree = ({ items, level = 0 }) => {
         <div key={item.id_item}>
           <div className="flex items-center gap-2 py-1">
             <span className="w-2 h-2 bg-red-600 rounded-full"></span>
-            <span className={`${level === 0 ? "font-semibold text-gray-900" : "text-gray-700"}`}>
+            <span
+              className={`${
+                level === 0 ? "font-semibold text-gray-900" : "text-gray-700"
+              }`}
+            >
               {item.nombre}
             </span>
           </div>
@@ -483,7 +675,9 @@ const ActivityForm = ({
       const loadInitialData = async () => {
         try {
           // Cargar esquemas del tipo de alcance
-          const esquemasData = await listarEsquemasPorTipo(initialData.id_tipo_alcance);
+          const esquemasData = await listarEsquemasPorTipo(
+            initialData.id_tipo_alcance
+          );
           setEsquemas(Array.isArray(esquemasData) ? esquemasData : []);
 
           // Establecer el esquema seleccionado
@@ -494,13 +688,14 @@ const ActivityForm = ({
           setItems(Array.isArray(itemsData) ? itemsData : []);
 
           // Establecer items seleccionados
-          const idsSeleccionados = initialData.Actividad_items.map(ai => ai.Item.id_item);
+          const idsSeleccionados = initialData.Actividad_items.map(
+            (ai) => ai.Item.id_item
+          );
           setSelectedItems(idsSeleccionados);
-
           console.log("✅ Datos cargados en edición:", {
             esquema: esquemaInfo.id_esquema,
             itemsCount: itemsData.length,
-            selectedCount: idsSeleccionados.length
+            selectedCount: idsSeleccionados.length,
           });
         } catch (error) {
           console.error("❌ Error al cargar datos iniciales:", error);
@@ -543,7 +738,6 @@ const ActivityForm = ({
   };
 
   const loadItems = async (esquemaId) => {
-    console.log("🔍 Cargando items para esquema:", esquemaId);
     setLoadingItems(true);
     setSelectedItems([]);
 
@@ -572,7 +766,7 @@ const ActivityForm = ({
   const getAllDescendants = (itemId, allItems) => {
     const descendants = [];
     const findChildren = (parentId) => {
-      allItems.forEach(item => {
+      allItems.forEach((item) => {
         if (item.super_item === parentId) {
           descendants.push(item.id_item);
           findChildren(item.id_item);
@@ -586,10 +780,11 @@ const ActivityForm = ({
   // Función para obtener todos los ancestros de un item
   const getAllAncestors = (itemId, allItems) => {
     const ancestors = [];
-    const item = allItems.find(i => i.id_item === itemId);
+    const item = allItems.find((i) => i.id_item === itemId);
     if (item && item.super_item) {
       ancestors.push(item.super_item);
-      ancestors.push(...getAllAncestors(item.super_item, allItems));
+      const parentAncestors = getAllAncestors(item.super_item, allItems);
+      ancestors.push(...parentAncestors);
     }
     return ancestors;
   };
@@ -598,7 +793,7 @@ const ActivityForm = ({
   const flattenItems = (itemsList) => {
     const flat = [];
     const flatten = (items) => {
-      items.forEach(item => {
+      items.forEach((item) => {
         flat.push(item);
         if (item.subitems && item.subitems.length > 0) {
           flatten(item.subitems);
@@ -611,7 +806,7 @@ const ActivityForm = ({
 
   const toggleItem = (itemId) => {
     const allItemsFlat = flattenItems(items);
-    
+
     setSelectedItems((prev) => {
       const isCurrentlySelected = prev.includes(itemId);
       let newSelection = [...prev];
@@ -619,19 +814,21 @@ const ActivityForm = ({
       if (isCurrentlySelected) {
         // Deseleccionar: quitar el item y todos sus descendientes
         const descendants = getAllDescendants(itemId, allItemsFlat);
-        newSelection = newSelection.filter(id => id !== itemId && !descendants.includes(id));
+        newSelection = newSelection.filter(
+          (id) => id !== itemId && !descendants.includes(id)
+        );
       } else {
         // Seleccionar: agregar el item, sus ancestros y todos sus descendientes
         const ancestors = getAllAncestors(itemId, allItemsFlat);
         const descendants = getAllDescendants(itemId, allItemsFlat);
-        
+
         newSelection.push(itemId);
-        ancestors.forEach(ancestorId => {
+        ancestors.forEach((ancestorId) => {
           if (!newSelection.includes(ancestorId)) {
             newSelection.push(ancestorId);
           }
         });
-        descendants.forEach(descendantId => {
+        descendants.forEach((descendantId) => {
           if (!newSelection.includes(descendantId)) {
             newSelection.push(descendantId);
           }
@@ -654,7 +851,11 @@ const ActivityForm = ({
     try {
       if (isEditing) {
         const result = await editarActividad(initialData.id_actividad, payload);
-        onSubmit({ ...initialData, ...result, id_actividad: initialData.id_actividad });
+        onSubmit({
+          ...initialData,
+          ...result,
+          id_actividad: initialData.id_actividad,
+        });
       } else {
         const result = await crearActividad(payload);
         onSubmit(result);
@@ -665,17 +866,20 @@ const ActivityForm = ({
     }
   };
 
-  const hasChanges = isEditing ? (
-    form.titulo !== initialData?.titulo ||
-    form.descripcion !== initialData?.descripcion ||
-    form.fecha_inicio !== initialData?.fecha_inicio ||
-    form.fecha_cierre !== initialData?.fecha_cierre ||
-    form.maximo_integrantes !== initialData?.maximo_integrantes ||
-    form.id_tipo_alcance !== initialData?.id_tipo_alcance ||
-    JSON.stringify(selectedItems.sort()) !== JSON.stringify(
-      (initialData?.Actividad_items || []).map(ai => ai.Item.id_item).sort()
-    )
-  ) : true;
+  const hasChanges = isEditing
+    ? form.titulo !== initialData?.titulo ||
+      form.descripcion !== initialData?.descripcion ||
+      form.fecha_inicio !== initialData?.fecha_inicio ||
+      form.fecha_cierre !== initialData?.fecha_cierre ||
+      form.maximo_integrantes !== initialData?.maximo_integrantes ||
+      form.id_tipo_alcance !== initialData?.id_tipo_alcance ||
+      JSON.stringify(selectedItems.sort()) !==
+        JSON.stringify(
+          (initialData?.Actividad_items || [])
+            .map((ai) => ai.Item.id_item)
+            .sort()
+        )
+    : true;
 
   const canSubmit =
     form.titulo &&
@@ -693,7 +897,9 @@ const ActivityForm = ({
         {/* Columna izquierda */}
         <div className="space-y-6">
           <div>
-            <label className="block text-gray-800 font-semibold mb-2">Título</label>
+            <label className="block text-gray-800 font-semibold mb-2">
+              Título
+            </label>
             <input
               type="text"
               className="w-full rounded-xl border border-gray-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-red-600"
@@ -704,7 +910,9 @@ const ActivityForm = ({
           </div>
 
           <div>
-            <label className="block text-gray-800 font-semibold mb-2">Descripción</label>
+            <label className="block text-gray-800 font-semibold mb-2">
+              Descripción
+            </label>
             <textarea
               className="w-full rounded-xl border border-gray-300 px-4 py-3 min-h-[120px] resize-none focus:outline-none focus:ring-2 focus:ring-red-600"
               placeholder="Describe la actividad"
@@ -764,7 +972,9 @@ const ActivityForm = ({
             <select
               className="w-full rounded-xl border border-gray-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-red-600"
               value={form.id_tipo_alcance}
-              onChange={(e) => handleChange("id_tipo_alcance", parseInt(e.target.value))}
+              onChange={(e) =>
+                handleChange("id_tipo_alcance", parseInt(e.target.value))
+              }
             >
               <option value="">Seleccionar tipo</option>
               {tiposAlcance.map((tipo) => (
@@ -777,7 +987,9 @@ const ActivityForm = ({
 
           {form.id_tipo_alcance && (
             <div>
-              <label className="block text-gray-800 font-semibold mb-2">Esquema</label>
+              <label className="block text-gray-800 font-semibold mb-2">
+                Esquema
+              </label>
               {loadingEsquemas ? (
                 <p className="text-gray-500 text-sm">Cargando esquemas...</p>
               ) : (
@@ -823,7 +1035,6 @@ const ActivityForm = ({
           )}
         </div>
       </div>
-
       {/* Botones */}
       <div className="flex justify-end gap-3">
         <button
@@ -857,10 +1068,9 @@ const ItemsTree = ({ items, selectedItems, onToggle, level = 0 }) => {
     <div className={`space-y-2 ${level > 0 ? "ml-6" : ""}`}>
       {items.map((item) => {
         const isSelected = selectedItems.includes(item.id_item);
-        const hasSelectedChildren = item.subitems && item.subitems.some(
-          sub => selectedItems.includes(sub.id_item)
-        );
-        
+        const hasSelectedChildren =
+          item.subitems &&
+          item.subitems.some((sub) => selectedItems.includes(sub.id_item));
         return (
           <div key={item.id_item}>
             <label className="flex items-start gap-3 p-2 hover:bg-white rounded-lg cursor-pointer transition-colors">
@@ -872,9 +1082,7 @@ const ItemsTree = ({ items, selectedItems, onToggle, level = 0 }) => {
               />
               <span
                 className={`flex-1 ${
-                  level === 0 
-                    ? "font-semibold text-gray-900" 
-                    : "text-gray-700"
+                  level === 0 ? "font-semibold text-gray-900" : "text-gray-700"
                 } ${hasSelectedChildren && !isSelected ? "text-red-600" : ""}`}
               >
                 {item.nombre}

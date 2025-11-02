@@ -3,7 +3,7 @@ import AdminLayout from "../../modules/admin/layouts/AdminLayout";
 import ApprovedProjectCard from "../../components/ui/ProjectCard";
 import { listarProyectosParaDirector } from "../../services/projectServices";
 
-const MyProjects = () => {
+const Projects = () => {
   // Estado para proyectos - cargados desde el backend
   const [projects, setProjects] = useState([]);
 
@@ -113,5 +113,4 @@ const MyProjects = () => {
   );
 };
 
-
-export default MyProjects;
+export default Projects;
