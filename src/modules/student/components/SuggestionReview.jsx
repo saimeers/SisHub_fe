@@ -2,7 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { MessageSquare, Send, Edit3, Calendar, User } from 'lucide-react';
 import Swal from 'sweetalert2';
 import { toast } from 'react-toastify';
-import { obtenerIdea, obtenerUltimoHistorial, moverIdeaAlBanco, actualizarIdea } from '../../../services/ideaServices';
+import {
+  obtenerIdea,
+  obtenerUltimoHistorial,
+  moverIdeaAlBanco,
+  actualizarIdea,
+} from '../../../services/ideaServices';
 import IdeaForm from '../../../components/ui/IdeaForm';
 
 const SuggestionReview = ({ idIdea, groupParams, currentUserCode, onBack }) => {
@@ -11,61 +16,68 @@ const SuggestionReview = ({ idIdea, groupParams, currentUserCode, onBack }) => {
   const [loading, setLoading] = useState(true);
   const [showCorrectForm, setShowCorrectForm] = useState(false);
 
-  // Cargar idea completa y su historial
-useEffect(() => {
-  const loadIdea = async () => {
-    if (!idIdea) return;
-    try {
-      setLoading(true);
-
-      // ✅ Obtener idea y acceder al objeto interno
-      const response = await obtenerIdea(idIdea);
-      const fetchedIdea = response.data || response; // soporte doble por si cambia estructura
-      console.log("Idea obtenida para revisión de sugerencias:", fetchedIdea);
-
-      // ✅ Normalizar datos para el formulario
-      const normalizedIdea = {
-        titulo: fetchedIdea.titulo || "",
-        problematica: fetchedIdea.problema || "",
-        justificacion: fetchedIdea.justificacion || "",
-        objetivo_general: fetchedIdea.objetivo_general || "",
-        objetivos_especificos: fetchedIdea.objetivos_especificos
-          ? fetchedIdea.objetivos_especificos.split("\n")
-          : [""],
-        integrantes:
-          fetchedIdea.equipo?.Integrantes?.map((i) => i.codigo) || [],
-      };
-
-      setIdeaData(normalizedIdea);
-
-      const historial = await obtenerUltimoHistorial(idIdea);
-      console.log("Historial obtenido para revisión de sugerencias:", historial);
-
-      setObservationData({
-        text: historial?.observaciones || "Sin observaciones",
-        date: historial?.fecha,
-        professor: historial?.Usuario?.nombre || "Docente",
-      });
-    } catch (error) {
-      console.error("Error al cargar datos de la idea o historial:", error);
-      toast.error("Error al cargar la información de la idea");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  loadIdea();
-}, [idIdea]);
-
+  // ✅ Cargar idea completa y su historial
   useEffect(() => {
-    if (ideaData) {
-      console.log("Idea data actualizada:", ideaData);
-    }
-  }, [ideaData]);
+    const loadIdea = async () => {
+      if (!idIdea) return;
+      try {
+        setLoading(true);
+
+        const response = await obtenerIdea(idIdea);
+        const fetchedIdea = response.data || response;
+        console.log('Idea obtenida para revisión de sugerencias:', fetchedIdea);
+
+        const normalizedIdea = {
+          titulo: fetchedIdea.titulo || '',
+          problematica: fetchedIdea.problema || '',
+          justificacion: fetchedIdea.justificacion || '',
+          objetivo_general: fetchedIdea.objetivo_general || '',
+          objetivos_especificos: fetchedIdea.objetivos_especificos
+            ? fetchedIdea.objetivos_especificos.split('\n')
+            : [''],
+          integrantes:
+            fetchedIdea.equipo?.Integrantes?.map((i) => i.codigo) || [],
+        };
+
+        setIdeaData(normalizedIdea);
+
+        const historial = await obtenerUltimoHistorial(idIdea);
+        console.log(
+          'Historial obtenido para revisión de sugerencias:',
+          historial
+        );
+
+        // ✅ Mejor UX: extraer solo la parte útil del texto después de los dos puntos
+        let textoLimpio = historial?.observacion || 'Sin observaciones';
+        const partes = textoLimpio.split('Observaciones:');
+        if (partes.length > 1) {
+          textoLimpio = partes[1].trim();
+        } else {
+          textoLimpio = textoLimpio.replace(
+            'Idea aprobada con observaciones. En espera de corrección del estudiante.',
+            ''
+          ).trim();
+        }
+
+        setObservationData({
+          text: textoLimpio || 'Sin observaciones adicionales',
+          date: historial?.fecha || 'Fecha no disponible',
+          professor: historial?.Usuario?.nombre || 'Docente',
+        });
+      } catch (error) {
+        console.error('Error al cargar datos de la idea o historial:', error);
+        toast.error('Error al cargar la información de la idea');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadIdea();
+  }, [idIdea]);
 
   const handleCorrectObservations = async () => {
     const result = await Swal.fire({
-      title: "¿Corregir proyecto?",
+      title: '¿Corregir proyecto?',
       html: `
         <div style="text-align: center;">
           <p style="margin-bottom: 15px;">Podrás realizar las correcciones solicitadas por el docente y volver a enviar tu proyecto.</p>
@@ -74,12 +86,12 @@ useEffect(() => {
           </p>
         </div>
       `,
-      icon: "question",
+      icon: 'question',
       showCancelButton: true,
-      confirmButtonColor: "#16a34a",
-      cancelButtonColor: "#6b7280",
-      confirmButtonText: "Sí, iniciar correcciones",
-      cancelButtonText: "Cancelar",
+      confirmButtonColor: '#16a34a',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Sí, iniciar correcciones',
+      cancelButtonText: 'Cancelar',
     });
 
     if (result.isConfirmed) {
@@ -89,7 +101,7 @@ useEffect(() => {
 
   const handleSendToIdeaBank = async () => {
     const result = await Swal.fire({
-      title: "¿Liberar proyecto al Banco de Ideas?",
+      title: '¿Liberar proyecto al Banco de Ideas?',
       html: `
         <div style="text-align: center;">
           <p style="margin-bottom: 15px;">
@@ -102,21 +114,24 @@ useEffect(() => {
           </div>
         </div>
       `,
-      icon: "warning",
+      icon: 'warning',
       showCancelButton: true,
-      confirmButtonColor: "#eab308",
-      cancelButtonColor: "#6b7280",
-      confirmButtonText: "Sí, liberar proyecto",
-      cancelButtonText: "Cancelar",
+      confirmButtonColor: '#eab308',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Sí, liberar proyecto',
+      cancelButtonText: 'Cancelar',
     });
 
     if (result.isConfirmed) {
       try {
         await moverIdeaAlBanco(idIdea, currentUserCode);
-        toast.success("Proyecto liberado al banco de ideas correctamente");
+        toast.success('Proyecto liberado al banco de ideas correctamente');
         if (onBack) onBack();
       } catch (error) {
-        const errorMessage = error.response?.data?.error || error.message || "Error al liberar proyecto";
+        const errorMessage =
+          error.response?.data?.error ||
+          error.message ||
+          'Error al liberar proyecto';
         toast.error(errorMessage);
       }
     }
@@ -129,17 +144,17 @@ useEffect(() => {
         titulo: payload.titulo,
         problema: payload.problema,
         justificacion: payload.justificacion,
-        objetivo_general: payload.objetivo_general || "",
+        objetivo_general: payload.objetivo_general || '',
         objetivos_especificos: Array.isArray(payload.objetivos_especificos)
-          ? payload.objetivos_especificos.join("\n")
-          : payload.objetivos_especificos || "",
+          ? payload.objetivos_especificos.join('\n')
+          : payload.objetivos_especificos || '',
       };
 
       await actualizarIdea(idIdea, datosActualizacion);
-      toast.success("Correcciones enviadas exitosamente");
+      toast.success('Correcciones enviadas exitosamente');
       if (onBack) onBack();
     } catch (error) {
-      toast.error(error.message || "Error al enviar las correcciones");
+      toast.error(error.message || 'Error al enviar las correcciones');
     }
   };
 
@@ -166,11 +181,16 @@ useEffect(() => {
 
         {observationData && (
           <div className="mb-6 bg-amber-50 border-l-4 border-amber-400 rounded-r-lg p-4">
-            <h3 className="font-semibold text-amber-900 mb-2">Observaciones del Docente</h3>
+            <h3 className="font-semibold text-amber-900 mb-2">
+              Observaciones del Docente
+            </h3>
             <p className="text-sm text-gray-700 mb-2">
-              <strong>{observationData.professor}</strong> - {observationData.date}
+              <strong>{observationData.professor}</strong> -{' '}
+              {observationData.date}
             </p>
-            <p className="text-gray-800 text-sm whitespace-pre-wrap">{observationData.text}</p>
+            <p className="text-gray-800 text-sm whitespace-pre-wrap">
+              {observationData.text}
+            </p>
           </div>
         )}
 
@@ -210,7 +230,9 @@ useEffect(() => {
           <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
             <div className="flex items-center gap-2">
               <User className="w-4 h-4" />
-              <span><strong>Docente:</strong> {observationData?.professor}</span>
+              <span>
+                <strong>Docente:</strong> {observationData?.professor}
+              </span>
             </div>
             <div className="flex items-center gap-2">
               <Calendar className="w-4 h-4" />
@@ -221,11 +243,18 @@ useEffect(() => {
 
         <div className="flex-1 overflow-y-auto p-6">
           <div className="bg-amber-50 border-l-4 border-amber-400 rounded-r-lg p-6">
-            <p className="text-gray-800 leading-relaxed whitespace-pre-wrap">{observationData?.text}</p>
+            <h3 className="font-semibold text-amber-900 mb-2">
+              Idea aprobada con observaciones:
+            </h3>
+            <p className="text-gray-800 leading-relaxed whitespace-pre-wrap">
+              {observationData?.text}
+            </p>
           </div>
           <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
             <p className="text-sm text-blue-800">
-              <strong>Nota:</strong> Al enviarla al banco de ideas, tu idea será visible para otros estudiantes y podrá ser utilizada como referencia en futuros proyectos.
+              <strong>Nota:</strong> Al enviarla al banco de ideas, tu idea será
+              visible para otros estudiantes y podrá ser utilizada como
+              referencia en futuros proyectos.
             </p>
           </div>
         </div>

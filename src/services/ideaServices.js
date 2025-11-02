@@ -36,11 +36,6 @@ export const actualizarIdea = async (idIdea, datosActualizacion) => {
   }
 };
 
-/**
- * Obtener una idea por su ID
- * @param {Number} idIdea - ID de la idea
- * @returns {Promise} Datos de la idea
- */
 export const obtenerIdea = async (idIdea) => {
   try {
     const response = await axiosInstance.get(`${IDEAS_BASE}/${idIdea}`);
@@ -51,10 +46,6 @@ export const obtenerIdea = async (idIdea) => {
   }
 };
 
-/**
- * Listar ideas libres (banco de ideas)
- * @returns {Promise} Lista de ideas libres
- */
 export const listarIdeasLibres = async () => {
   try {
     const response = await axiosInstance.get(`${IDEAS_BASE}/libres`);
@@ -65,11 +56,6 @@ export const listarIdeasLibres = async () => {
   }
 };
 
-/**
- * Listar ideas de un grupo específico
- * @param {Object} grupo - Datos del grupo (codigo_materia, nombre, periodo, anio)
- * @returns {Promise} Lista de ideas del grupo
- */
 export const listarIdeasGrupo = async (grupo) => {
   try {
     const { codigo_materia, nombre, periodo, anio } = grupo;
@@ -88,13 +74,6 @@ export const listarIdeasGrupo = async (grupo) => {
   }
 };
 
-/**
- * Adoptar una idea libre del banco
- * @param {Number} idIdea - ID de la idea a adoptar
- * @param {String} codigo_usuario - Código del usuario que adopta
- * @param {Object} grupo - Datos del grupo
- * @returns {Promise} Respuesta del servidor
- */
 export const adoptarIdea = async (idIdea, codigo_usuario, grupo) => {
   try {
     const response = await axiosInstance.patch(
@@ -111,14 +90,6 @@ export const adoptarIdea = async (idIdea, codigo_usuario, grupo) => {
   }
 };
 
-/**
- * Revisar una idea (solo para docentes/admin)
- * @param {Number} idIdea - ID de la idea a revisar
- * @param {String} accion - Acción: "Aprobar", "Aprobar_Con_Observacion", "Rechazar"
- * @param {String} observacion - Observaciones opcionales
- * @param {String} codigo_usuario - Código del docente que revisa
- * @returns {Promise} Respuesta del servidor
- */
 export const revisarIdea = async (idIdea, accion, observacion, codigo_usuario) => {
   try {
     const response = await axiosInstance.put(
@@ -136,12 +107,6 @@ export const revisarIdea = async (idIdea, accion, observacion, codigo_usuario) =
   }
 };
 
-/**
- * Mover una idea al banco por decisión del estudiante
- * @param {Number} idIdea - ID de la idea
- * @param {String} codigo_usuario - Código del usuario líder
- * @returns {Promise} Respuesta del servidor
- */
 export const moverIdeaAlBanco = async (idIdea, codigo_usuario) => {
   try {
     const response = await axiosInstance.put(
