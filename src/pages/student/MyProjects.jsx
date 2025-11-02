@@ -1,39 +1,42 @@
-import React, { useState, useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import StudentLayout from "../../modules/student/layouts/StudentLayout";
 import ApprovedProjectCard from "../../components/ui/ProjectCard";
 import SearchBar from "../../components/ui/SearchBar";
+import { useAuth } from "../../contexts/AuthContext";
+import { listarProyectosParaEstudiante } from "../../services/projectServices";
 
 const MyProjects = () => {
-  // Estado para proyectos - luego se cargará desde el backend
-  const [projects] = useState([
-    {
-      id: 1,
-      title: "Software gimnasio klisman",
-      description:
-        "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco.",
-      tags: ["Node.js", "React.jsx"],
-      status: "aprobado",
-      logo: null,
-    },
-    {
-      id: 2,
-      title: "Aplicativo web para rendimiento estudiantil",
-      description:
-        "Sistema web para gestionar y analizar el rendimiento académico de los estudiantes.",
-      tags: ["React", "Express", "MongoDB"],
-      status: "en revisión",
-      logo: null,
-    },
-    {
-      id: 3,
-      title: "Software para optimizar la toma de decisiones",
-      description:
-        "Herramienta de apoyo para la toma de decisiones empresariales basada en datos.",
-      tags: ["Python", "Django", "PostgreSQL"],
-      status: "corregido",
-      logo: null,
-    },
-  ]);
+  const [projects, setProjects] = useState([]);
+  const { userData } = useAuth();
+
+  useEffect(() => {
+    const load = async () => {
+      if (!userData?.codigo) return;
+      try {
+        const data = await listarProyectosParaEstudiante(userData.codigo);
+        const mapped = Array.isArray(data)
+          ? data.map((p) => ({
+              id: p.id_proyecto,
+              title: `Proyecto ${p.id_proyecto}`,
+              description: p.Idea?.objetivo_general || "",
+              tags: (p.tecnologias || "")
+                .split(",")
+                .map((s) => s.trim())
+                .filter(Boolean),
+              status: undefined,
+              logo: null,
+              tipoAlcance: p.Tipo_alcance?.nombre,
+              progress: 0,
+            }))
+          : [];
+        setProjects(mapped);
+      } catch (e) {
+        console.error(e);
+        setProjects([]);
+      }
+    };
+    load();
+  }, [userData]);
 
   const [query, setQuery] = useState("");
   const filteredProjects = useMemo(() => {
@@ -83,6 +86,8 @@ const MyProjects = () => {
                 tags={project.tags}
                 logo={project.logo}
                 status={project.status}
+                progress={project.progress}
+                tipoAlcance={project.tipoAlcance}
                 onClick={() => handleProjectClick(project)}
                 onDocumentsClick={(e) => handleDocumentsClick(project.id, e)}
                 onCodeClick={(e) => handleCodeClick(project.id, e)}

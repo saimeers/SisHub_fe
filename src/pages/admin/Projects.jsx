@@ -1,35 +1,46 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import AdminLayout from "../../modules/admin/layouts/AdminLayout";
 import ApprovedProjectCard from "../../components/ui/ProjectCard";
+import { listarProyectosParaDirector } from "../../services/projectServices";
 
 const MyProjects = () => {
-  // Estado para proyectos - luego se cargará desde el backend
-  const [projects] = useState([
-    {
-      id: 1,
-      title: "Software gimnasio klisman",
-      description:
-        "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco.",
-      tags: ["Node.js", "React.jsx"],
-      status: "aprobado",
-      progress: 82,
-      logo: null,
-      grupo: "Fisica Mecanica | Grupo A | 2025-1",
-      docente: "Profesor Ejemplo",
-    },
-    {
-      id: 2,
-      title: "Aplicativo web para rendimiento estudiantil",
-      description:
-        "Sistema web para gestionar y analizar el rendimiento académico de los estudiantes.",
-      tags: ["React", "Express", "MongoDB"],
-      status: "en revisión",
-      progress: 45,
-      logo: null,
-      grupo: "Matemáticas Discretas | Grupo B | 2025-1",
-      docente: "Profesor Ejemplo 2",
-    },
-  ]);
+  // Estado para proyectos - cargados desde el backend
+  const [projects, setProjects] = useState([]);
+
+  useEffect(() => {
+    let mounted = true;
+
+    const fetchProjects = async () => {
+      try {
+        const data = await listarProyectosParaDirector();
+        if (!mounted) return;
+        const mapped = Array.isArray(data)
+          ? data.map((p) => ({
+              id: p.id_proyecto,
+              title: p.Idea?.titulo || `Proyecto ${p.id_proyecto}`,
+              description: p.Idea?.objetivo_general || "",
+              tags: (p.tecnologias || "")
+                .split(",")
+                .map((s) => s.trim())
+                .filter(Boolean),
+              status: undefined,
+              progress: 0,
+              logo: null,
+              tipoAlcance: p.Tipo_alcance?.nombre,
+            }))
+          : [];
+        setProjects(mapped);
+      } catch (e) {
+        console.error(e);
+        setProjects([]);
+      }
+    };
+
+    fetchProjects();
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const handleProjectClick = (project) => {
     console.log("Proyecto seleccionado:", project);
@@ -46,6 +57,12 @@ const MyProjects = () => {
     e?.stopPropagation();
     console.log("Ver código del proyecto:", projectId);
     // Aquí se abrirá el repositorio o código
+  };
+
+  const handleVersionsClick = (projectId, e) => {
+    e?.stopPropagation();
+    console.log("Ver versiones del proyecto:", projectId);
+    // Aquí se abrirá la gestión de versiones
   };
 
   return (
@@ -68,9 +85,11 @@ const MyProjects = () => {
                   logo={project.logo}
                   status={project.status}
                   progress={project.progress}
+                  tipoAlcance={project.tipoAlcance}
                   onClick={() => handleProjectClick(project)}
                   onDocumentsClick={(e) => handleDocumentsClick(project.id, e)}
                   onCodeClick={(e) => handleCodeClick(project.id, e)}
+                  onVersionsClick={(e) => handleVersionsClick(project.id, e)}
                 />
                 {/* Información adicional para el admin
                 {project.grupo && (
@@ -93,5 +112,6 @@ const MyProjects = () => {
     </AdminLayout>
   );
 };
+
 
 export default MyProjects;

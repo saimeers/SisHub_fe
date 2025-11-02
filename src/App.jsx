@@ -22,7 +22,7 @@ import UploadUsers from "./pages/admin/UploadUsers";
 import UploadGroups from "./modules/admin/components/uploadGroups/UploadGroups";
 import UploadSubjects from "./pages/admin/UploadSubjects";
 import UploadStudents from "./pages/admin/UploadStudents";
-import MyProjectsAdmin from "./pages/admin/Projects";
+import ProjectsAdmin from "./pages/admin/Projects";
 
 // docente
 import GroupsProfessor from "./pages/professor/Groups";
@@ -43,9 +43,6 @@ import MyProjectsStudent from "./pages/student/MyProjects";
 // stand by
 import CuentaPendiente from "./pages/standby/CuentaPendiente";
 import JoinGroup from "./modules/student/components/JoinGroup";
-
-//visibilidad interfaces sin conexion
-import IdeaForm from "./components/ui/IdeaForm";
 
 function App() {
   return (
@@ -118,7 +115,7 @@ function App() {
             <Route path="upload-students" element={<UploadStudents />} />
             <Route path="upload-groups" element={<UploadGroups />} />
             <Route path="upload-subjects" element={<UploadSubjects />} />
-            <Route path="my-projects" element={<MyProjectsAdmin />} />
+            <Route path="projects" element={<ProjectsAdmin />} />
           </Route>
 
           {/* ==================== RUTAS DOCENTE ==================== */}
@@ -159,8 +156,6 @@ function App() {
           {/* ==================== RUTAS ESPECIALES ==================== */}
           <Route path="/account-pending" element={<CuentaPendiente />} />
           <Route path="/join-group" element={<JoinGroup />} />
-
-          <Route path="/form" element={<IdeaForm />} />
 
           {/* ==================== REDIRECTS ==================== */}
           <Route path="/" element={<Navigate to="/login" replace />} />
