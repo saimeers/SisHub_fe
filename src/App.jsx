@@ -20,9 +20,10 @@ import FormCreateSubject from "./modules/admin/components/FormCreateSubject";
 import FormEditSubject from "./modules/admin/components/FormEditSubject";
 import GroupDetail from "./pages/admin/GroupDetail";
 import UploadUsers from "./pages/admin/UploadUsers";
-import UploadGroups from "./modules/admin/components/UploadGroups";
+import UploadGroups from "./modules/admin/components/uploadGroups/UploadGroups";
 import UploadSubjects from "./pages/admin/UploadSubjects";
 import UploadStudents from "./pages/admin/UploadStudents";
+import MyProjectsAdmin from "./pages/admin/Projects";
 
 // docente
 import GroupsProfessor from "./pages/professor/Groups";
@@ -30,6 +31,7 @@ import DashboardProfessor from "./pages/professor/Dashboard";
 import SubjectsProfessor from "./pages/professor/Subjects";
 import MyGroupsProfessor from "./pages/professor/MyGroups";
 import GroupDetailProfessor from "./pages/professor/GroupDetail";
+import MyProjectsProfessor from "./pages/professor/MyProjects";
 
 // estudiante
 import DashboardStudent from "./pages/student/Dashboard";
@@ -37,6 +39,7 @@ import GroupsStudent from "./pages/student/Groups";
 import StudentMyGroups from "./pages/student/MyGroups";
 import SubjectsStudent from "./pages/student/Subjects";
 import GroupDetailStudent from "./pages/student/GroupDetail";
+import MyProjectsStudent from "./pages/student/MyProjects";
 import ProjectReview from "./pages/student/ProjectReview";
 import RejectedIdea from "./pages/student/RejectedIdea";
 /* import CompleteData from "./pages/student/CompleteData"; */
@@ -44,6 +47,9 @@ import RejectedIdea from "./pages/student/RejectedIdea";
 // stand by
 import CuentaPendiente from "./pages/standby/CuentaPendiente";
 import JoinGroup from "./modules/student/components/JoinGroup";
+
+//visibilidad interfaces sin conexion
+import IdeaForm from "./components/ui/IdeaForm";
 
 function App() {
   return (
@@ -59,7 +65,7 @@ function App() {
               </PublicRoute>
             }
           />
-{/*           <Route
+          {/*           <Route
             path="/signup"
             element={
               <PublicRoute>
@@ -116,6 +122,7 @@ function App() {
             <Route path="upload-students" element={<UploadStudents />} />
             <Route path="upload-groups" element={<UploadGroups />} />
             <Route path="upload-subjects" element={<UploadSubjects />} />
+            <Route path="my-projects" element={<MyProjectsAdmin />} />
           </Route>
 
           {/* ==================== RUTAS DOCENTE ==================== */}
@@ -134,8 +141,8 @@ function App() {
               path="my-group/:codigo_materia/:nombre/:periodo/:anio"
               element={<GroupDetailProfessor />}
             />
+            <Route path="my-projects" element={<MyProjectsProfessor />} />
           </Route>
-
 
           {/* ==================== RUTAS ESTUDIANTE ==================== */}
           <Route
@@ -153,11 +160,14 @@ function App() {
               path="my-group/:codigo_materia/:nombre/:periodo/:anio"
               element={<GroupDetailStudent />}
             />
+            <Route path="my-projects" element={<MyProjectsStudent />} />
           </Route>
 
           {/* ==================== RUTAS ESPECIALES ==================== */}
           <Route path="/account-pending" element={<CuentaPendiente />} />
           <Route path="/join-group" element={<JoinGroup />} />
+
+          <Route path="/form" element={<IdeaForm />} />
 
           {/* ==================== REDIRECTS ==================== */}
           <Route path="/" element={<Navigate to="/login" replace />} />

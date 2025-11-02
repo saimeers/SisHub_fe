@@ -1,12 +1,12 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import AdminLayout from "../layouts/AdminLayout";
+import AdminLayout from "../../layouts/AdminLayout";
 import UploadGroupsTable from "./UploadGroupsTable";
 import UploadGroupsMobile from "./UploadGroupsMobile";
-import { useToast } from "../../../hooks/useToast";
+import { useToast } from "../../../../hooks/useToast";
 import Swal from "sweetalert2";
-import { cargarGruposDesdeCSV } from "../../../services/groupServices";
-import { parseGroupsCSV, formatGroupCSVErrors } from "../utils/groupCsvParser";
+import { cargarGruposDesdeCSV } from "../../../../services/groupServices";
+import { parseGroupsCSV, formatGroupCSVErrors } from "../../utils/groupCsvParser";
 
 const UploadGroups = () => {
   const navigate = useNavigate();
