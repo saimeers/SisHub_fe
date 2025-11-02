@@ -16,64 +16,107 @@ const SuggestionReview = ({ idIdea, groupParams, currentUserCode, onBack }) => {
   const [loading, setLoading] = useState(true);
   const [showCorrectForm, setShowCorrectForm] = useState(false);
 
-  // ✅ Cargar idea completa y su historial
-  useEffect(() => {
-    const loadIdea = async () => {
-      if (!idIdea) return;
-      try {
-        setLoading(true);
+useEffect(() => {
+  const loadIdea = async () => {
+    if (!idIdea) {
+      console.error("❌ SuggestionReview: idIdea es null o undefined");
+      toast.error("Error: No se proporcionó un ID de idea válido");
+      if (onBack) onBack();
+      return;
+    }
 
-        const response = await obtenerIdea(idIdea);
-        const fetchedIdea = response.data || response;
-        console.log('Idea obtenida para revisión de sugerencias:', fetchedIdea);
+    try {
+      setLoading(true);
 
-        const normalizedIdea = {
-          titulo: fetchedIdea.titulo || '',
-          problematica: fetchedIdea.problema || '',
-          justificacion: fetchedIdea.justificacion || '',
-          objetivo_general: fetchedIdea.objetivo_general || '',
-          objetivos_especificos: fetchedIdea.objetivos_especificos
-            ? fetchedIdea.objetivos_especificos.split('\n')
-            : [''],
-          integrantes:
-            fetchedIdea.equipo?.Integrantes?.map((i) => i.codigo) || [],
-        };
+      // Cargar idea
+      const response = await obtenerIdea(idIdea);
+      const fetchedIdea = response.data || response;
+      console.log('✅ Idea obtenida para revisión de sugerencias:', fetchedIdea);
 
-        setIdeaData(normalizedIdea);
-
-        const historial = await obtenerUltimoHistorial(idIdea);
-        console.log(
-          'Historial obtenido para revisión de sugerencias:',
-          historial
-        );
-
-        // ✅ Mejor UX: extraer solo la parte útil del texto después de los dos puntos
-        let textoLimpio = historial?.observacion || 'Sin observaciones';
-        const partes = textoLimpio.split('Observaciones:');
-        if (partes.length > 1) {
-          textoLimpio = partes[1].trim();
-        } else {
-          textoLimpio = textoLimpio.replace(
-            'Idea aprobada con observaciones. En espera de corrección del estudiante.',
-            ''
-          ).trim();
-        }
-
-        setObservationData({
-          text: textoLimpio || 'Sin observaciones adicionales',
-          date: historial?.fecha || 'Fecha no disponible',
-          professor: historial?.Usuario?.nombre || 'Docente',
-        });
-      } catch (error) {
-        console.error('Error al cargar datos de la idea o historial:', error);
-        toast.error('Error al cargar la información de la idea');
-      } finally {
-        setLoading(false);
+      // Extraer códigos de integrantes
+      let integrantesCodigos = [];
+      
+      if (fetchedIdea.equipo?.Integrante_Equipos) {
+        integrantesCodigos = fetchedIdea.equipo.Integrante_Equipos
+          .filter(i => !i.es_lider)
+          .map(i => i.Usuario?.codigo || i.codigo)
+          .filter(Boolean);
+      } else if (fetchedIdea.integrantes) {
+        integrantesCodigos = Array.isArray(fetchedIdea.integrantes) 
+          ? fetchedIdea.integrantes 
+          : [];
       }
-    };
 
-    loadIdea();
-  }, [idIdea]);
+      console.log('👥 Códigos de integrantes extraídos:', integrantesCodigos);
+
+      const normalizedIdea = {
+        titulo: fetchedIdea.titulo || '',
+        problematica: fetchedIdea.problema || '',
+        justificacion: fetchedIdea.justificacion || '',
+        objetivo_general: fetchedIdea.objetivo_general || '',
+        objetivos_especificos: fetchedIdea.objetivos_especificos
+          ? (typeof fetchedIdea.objetivos_especificos === 'string'
+              ? fetchedIdea.objetivos_especificos.split('\n').filter(obj => obj.trim())
+              : fetchedIdea.objetivos_especificos)
+          : [''],
+        integrantes: integrantesCodigos,
+      };
+
+      console.log('📋 Idea normalizada:', normalizedIdea);
+      setIdeaData(normalizedIdea);
+
+      // ✅ Cargar historial de forma segura
+      try {
+        const historial = await obtenerUltimoHistorial(idIdea);
+        console.log('📝 Historial obtenido:', historial);
+
+        // Si no hay historial (null), usar valores por defecto
+        if (!historial) {
+          console.log('ℹ️ No hay historial, usando valores por defecto');
+          setObservationData({
+            text: 'Sin observaciones registradas',
+            date: new Date().toLocaleDateString('es-ES'),
+            professor: 'Docente',
+          });
+        } else {
+          // Procesar historial existente
+          let textoLimpio = historial.observacion || 'Sin observaciones';
+          const partes = textoLimpio.split('Observaciones:');
+          if (partes.length > 1) {
+            textoLimpio = partes[1].trim();
+          } else {
+            textoLimpio = textoLimpio.replace(
+              'Idea aprobada con observaciones. En espera de corrección del estudiante.',
+              ''
+            ).trim();
+          }
+
+          setObservationData({
+            text: textoLimpio || 'Sin observaciones adicionales',
+            date: historial.fecha,
+            professor: historial.Usuario?.nombre || 'Docente',
+          });
+        }
+      } catch (historialError) {
+        console.warn('⚠️ Error al cargar historial (no crítico):', historialError);
+        setObservationData({
+          text: 'Error al cargar observaciones',
+          date: new Date().toLocaleDateString('es-ES'),
+          professor: 'Docente',
+        });
+      }
+
+    } catch (error) {
+      console.error('❌ Error al cargar datos de la idea:', error);
+      toast.error('Error al cargar la información de la idea');
+      if (onBack) onBack();
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  loadIdea();
+}, [idIdea, onBack]);
 
   const handleCorrectObservations = async () => {
     const result = await Swal.fire({

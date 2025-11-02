@@ -261,75 +261,116 @@ const GroupDetail = () => {
   };
 
   const handleActivityClick = async (activity) => {
-    // Si no hay actividad asignada, mostrar mensaje
-    if (!tieneActividad) {
-      toast.info("Aún no hay una actividad asignada a este grupo. Por favor espera.");
+  // Si no hay actividad asignada, mostrar mensaje
+  if (!tieneActividad) {
+    toast.info("Aún no hay una actividad asignada a este grupo. Por favor espera.");
+    return;
+  }
+
+  try {
+    if (!userData?.codigo) {
+      error("No se pudo obtener tu información de usuario");
       return;
     }
 
-    try {
-      if (!userData?.codigo) {
-        error("No se pudo obtener tu información de usuario");
-        return;
-      }
+    const response = await verificarIdeaYProyecto(userData.codigo, groupParams);
+    const { proyecto, idea } = response.data || response;
+    
+    console.log("📋 Estado del estudiante:", { proyecto, idea });
 
-      const response = await verificarIdeaYProyecto(userData.codigo, groupParams);
-      const { proyecto, idea } = response.data || response;
-      console.log(idea);
-      // Si no tiene idea ni proyecto, mostrar banco de ideas
-      if (!proyecto && !idea) {
-        setSelectedActivity(activity);
-        setCurrentView("ideas");
-        return;
-      }
-
-      // Si tiene idea, verificar estado
-      if (idea) {
-        const estadoIdea = idea.estado;
-
-        if (estadoIdea === "REVISION") {
-          toast.info("Tu idea está en revisión. Por favor espera la respuesta del docente.");
-          return;
-        }
-
-        if (estadoIdea === "RECHAZADO") {
-          setCurrentIdeaId(idea.id_idea);
-          setCurrentView("rejected");
-          return;
-        }
-
-        if (estadoIdea === "STAND_BY") {
-          setCurrentIdeaId(idea.id_idea);
-          setCurrentIdeaData(idea);
-          setCurrentView("suggestion");
-          return;
-        }
-
-        if (estadoIdea === "APROBADO") {
-          // Si está aprobada pero no tiene proyecto, mostrar completar datos
-          if (!proyecto || !proyecto.estado) {
-            setCurrentIdeaId(idea.id_idea);
-            setCurrentIdeaData(idea);
-            setCurrentView("completarDatos");
-            return;
-          }
-
-          // Si tiene proyecto EN_CURSO
-          if (proyecto.estado === "EN_CURSO") {
-            toast.info("Proyecto en curso. Vista próximamente...");
-            return;
-          }
-        }
-      }
-
-      // Si no cae en ninguno de los casos anteriores, mostrar banco de ideas
+    // ✅ CASO 1: No tiene ni idea ni proyecto → Mostrar banco de ideas
+    if (!proyecto && !idea) {
+      console.log("✅ Sin idea ni proyecto → Banco de ideas");
       setSelectedActivity(activity);
       setCurrentView("ideas");
-    } catch (err) {
-      console.error("Error al verificar estado del estudiante:", err);
-      error("No fue posible verificar tu estado actual");
+      return;
     }
-  };
+
+    // ✅ CASO 2: Tiene idea, verificar su estado
+    if (idea && idea.id_idea) {
+      const estadoIdea = idea.estado;
+      console.log("📌 Estado de la idea:", estadoIdea);
+
+      // Sub-caso 2.1: Idea en revisión
+      if (estadoIdea === "REVISION") {
+        toast.info("Tu idea está en revisión. Por favor espera la respuesta del docente.");
+        return;
+      }
+
+      // Sub-caso 2.2: Idea rechazada
+      if (estadoIdea === "RECHAZADO") {
+        setCurrentIdeaId(idea.id_idea);
+        setCurrentView("rejected");
+        return;
+      }
+
+      // Sub-caso 2.3: Idea con observaciones (Stand by)
+      if (estadoIdea === "STAND_BY") {
+        // ✅ Validar que la idea tenga ID antes de pasar a SuggestionReview
+        if (!idea.id_idea) {
+          console.error("❌ Idea en STAND_BY sin ID");
+          toast.error("Error: Idea sin identificador válido");
+          return;
+        }
+        setCurrentIdeaId(idea.id_idea);
+        setCurrentIdeaData(idea);
+        setCurrentView("suggestion");
+        return;
+      }
+
+      // Sub-caso 2.4: Idea aprobada
+      if (estadoIdea === "APROBADO") {
+        // Si está aprobada pero no tiene proyecto, completar datos
+        if (!proyecto || !proyecto.id_proyecto) {
+          setCurrentIdeaId(idea.id_idea);
+          setCurrentIdeaData(idea);
+          setCurrentView("completarDatos");
+          return;
+        }
+
+        // Si tiene proyecto EN_CURSO
+        if (proyecto.estado === "EN_CURSO") {
+          toast.info("Proyecto en curso. Vista próximamente...");
+          return;
+        }
+      }
+
+      // Si la idea tiene un estado no manejado, log y mostrar banco
+      console.warn("⚠️ Estado de idea no manejado:", estadoIdea);
+      setSelectedActivity(activity);
+      setCurrentView("ideas");
+      return;
+    }
+
+    // ✅ CASO 3: Tiene proyecto pero no idea (caso raro, pero posible)
+    if (proyecto && !idea) {
+      console.log("📦 Tiene proyecto sin idea");
+      if (proyecto.estado === "EN_CURSO") {
+        toast.info("Proyecto en curso. Vista próximamente...");
+        return;
+      }
+    }
+
+    // ✅ CASO DEFAULT: Si no cae en ningún caso, mostrar banco de ideas
+    console.log("🔄 Caso por defecto → Banco de ideas");
+    setSelectedActivity(activity);
+    setCurrentView("ideas");
+    
+  } catch (err) {
+    console.error("❌ Error al verificar estado del estudiante:", err);
+    
+    // Si el error es 404 (no encontrado), significa que no tiene idea/proyecto
+    if (err.response?.status === 404) {
+      console.log("✅ 404 → Sin idea/proyecto, mostrar banco");
+      setSelectedActivity(activity);
+      setCurrentView("ideas");
+      return;
+    }
+    
+    // Para otros errores, mostrar mensaje
+    error("No fue posible verificar tu estado actual");
+  }
+};
 
   const backToActivities = () => {
     setCurrentView("activities");

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import ProfessorLayout from "../../modules/professor/layouts/ProfessorLayout";
+import ReviewIdea from "../../modules/professor/components/ReviewIdea";
 import GroupParticipants from "../../components/ui/GroupParticipants";
 import AccessDenied from "../../components/ui/AccessDenied";
 import { listarParticipantesGrupo } from "../../services/groupUserServices";
@@ -41,8 +42,8 @@ const GroupDetail = () => {
   const [actividad, setActividad] = useState(null);
   const [esquemaInfo, setEsquemaInfo] = useState(null);
   const [loadingActivity, setLoadingActivity] = useState(false);
+  const [selectedIdeaForReview, setSelectedIdeaForReview] = useState(null); 
 
-  // Estado para ideas  y proyectos en la vista dedicada (no modal)
   const [groupIdeas, setGroupIdeas] = useState([]);
   const [loadingIdeas, setLoadingIdeas] = useState(false);
   const [groupProjects, setGroupProjects] = useState([]);
@@ -272,6 +273,36 @@ const GroupDetail = () => {
     setCurrentView("activityDetail");
   };
 
+
+
+const handleReviewIdea = (ideaId) => {
+  setSelectedIdeaForReview(ideaId);
+  setCurrentView("reviewIdea");
+};
+
+const handleBackFromReview = () => {
+  setSelectedIdeaForReview(null);
+  setCurrentView("ideasList");
+};
+
+const handleReviewComplete = async () => {
+  setLoadingIdeas(true);
+  try {
+    const ideasResp = await listarIdeasGrupo(groupParams);
+    const ideas = ideasResp?.data ?? [];
+    setGroupIdeas(Array.isArray(ideas) ? ideas : []);
+    toast.success("Las ideas han sido actualizadas");
+  } catch (err) {
+    console.error("Error al recargar ideas:", err);
+    toast.error("Error al actualizar las ideas");
+  } finally {
+    setLoadingIdeas(false);
+  }
+  
+  setSelectedIdeaForReview(null);
+  setCurrentView("ideasList");
+};
+
   const tabs = [
     { id: "proyecto", label: "Proyecto" },
     { id: "equipo", label: "Equipo" },
@@ -309,11 +340,10 @@ const GroupDetail = () => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`px-6 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
-                  activeTab === tab.id
+                className={`px-6 py-2 rounded-full text-sm font-medium transition-all duration-200 ${activeTab === tab.id
                     ? "bg-white shadow text-gray-900"
                     : "text-gray-600 hover:text-gray-800"
-                }`}
+                  }`}
               >
                 {tab.label}
               </button>
@@ -373,6 +403,13 @@ const GroupDetail = () => {
                     onEdit={handleEditActivity}
                     onViewIdeas={handleViewIdeas}
                   />
+                ) : currentView === "reviewIdea" ? (
+                  <ReviewIdea
+                    idIdea={selectedIdeaForReview}
+                    currentUserCode={userData?.codigo}
+                    onBack={handleBackFromReview}
+                    onReviewComplete={handleReviewComplete}
+                  />
                 ) : currentView === "ideasList" ? (
                   <IdeasListView
                     loadingIdeas={loadingIdeas}
@@ -380,6 +417,7 @@ const GroupDetail = () => {
                     ideas={groupIdeas}
                     projects={groupProjects}
                     onBack={handleBackToActivity}
+                    onReviewIdea={handleReviewIdea} 
                   />
                 ) : null}
               </div>
@@ -402,6 +440,7 @@ const IdeasListView = ({
   ideas,
   projects,
   onBack,
+  onReviewIdea,
 }) => {
   return (
     <div className="bg-white rounded-2xl border border-gray-200 p-6">
@@ -410,7 +449,7 @@ const IdeasListView = ({
           onClick={onBack}
           className="px-4 py-2 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors text-sm font-medium"
         >
-          Volver a la actividad
+          ← Volver a la actividad
         </button>
       </div>
 
@@ -420,29 +459,50 @@ const IdeasListView = ({
             <p className="text-gray-500">Cargando ideas...</p>
           ) : ideas && ideas.length > 0 ? (
             <div className="space-y-4">
-              {ideas.map((idea, idx) => (
-                <ProjectCard
-                  key={idea?.id_idea || idea?.id || idx}
-                  title={idea?.titulo || "Idea"}
-                  description={idea?.problema || ""}
-                  status={idea?.Estado?.descripcion || "en revisión"}
-                  progress={0}
-                  hideTags
-                  hideActions
-                  hideProgress
-                  hideAlcance
-                  onClick={() => {}}
-                />
-              ))}
+              {ideas.map((idea, idx) => {
+                const isEnRevision = idea?.Estado?.descripcion?.toUpperCase() === "REVISION";
+                
+                return (
+                  <div
+                    key={idea?.id_idea || idea?.id || idx}
+                    onClick={() => {
+                      console.log("🖱️ Click en idea:", idea.id_idea, "Estado:", idea?.Estado?.descripcion);
+                      if (isEnRevision && onReviewIdea) {
+                        onReviewIdea(idea.id_idea);
+                      } else if (!isEnRevision) {
+                        console.log("⚠️ Idea no está en revisión");
+                      }
+                    }}
+                    className={`${
+                      isEnRevision 
+                        ? "cursor-pointer hover:shadow-lg hover:border-red-300" 
+                        : "cursor-default opacity-60"
+                    } transition-all`}
+                  >
+                    <ProjectCard
+                      title={idea?.titulo || "Idea"}
+                      description={idea?.problema || ""}
+                      status={idea?.Estado?.descripcion || "REVISION"}
+                      progress={0}
+                      hideTags
+                      hideActions
+                      hideProgress
+                      hideAlcance
+                    />
+                  </div>
+                );
+              })}
             </div>
           ) : (
-            <p className="text-gray-500">
-              No hay ideas registradas para este grupo.
-            </p>
+            <div className="bg-gray-50 rounded-xl border-2 border-dashed border-gray-300 p-8 text-center">
+              <p className="text-gray-500">
+                No hay ideas registradas para este grupo.
+              </p>
+            </div>
           )}
         </section>
 
-        <section>
+        <section>   
           {loadingProjects ? (
             <p className="text-gray-500">Cargando proyectos...</p>
           ) : projects && projects.length > 0 ? (
@@ -464,7 +524,7 @@ const IdeasListView = ({
 
                 const alcanceTexto = proy?.Tipo_alcance?.nombre || undefined;
                 const statusTexto =
-                  proy?.estado || proy?.status || "en revisión";
+                  proy?.estado || proy?.status || "REVISION";
 
                 return (
                   <ProjectCard
@@ -488,15 +548,26 @@ const IdeasListView = ({
               })}
             </div>
           ) : (
-            <p className="text-gray-500">
-              No hay proyectos registrados para este grupo.
-            </p>
+            <div className="bg-gray-50 rounded-xl border-2 border-dashed border-gray-300 p-8 text-center">
+              <p className="text-gray-500">
+                No hay proyectos registrados para este grupo.
+              </p>
+            </div>
           )}
         </section>
       </div>
     </div>
   );
 };
+
+
+console.log("🔧 Handlers definidos:", {
+  handleReviewIdea: typeof handleReviewIdea,
+  handleBackFromReview: typeof handleBackFromReview,
+  handleReviewComplete: typeof handleReviewComplete
+});
+
+
 const ActivityDetail = ({ actividad, esquemaInfo, onEdit, onViewIdeas }) => {
   const buildItemsHierarchy = () => {
     if (!actividad.Actividad_items || !esquemaInfo?.Items) return [];
@@ -662,9 +733,8 @@ const ItemsDisplayTree = ({ items, level = 0 }) => {
           <div className="flex items-center gap-2 py-1">
             <span className="w-2 h-2 bg-red-600 rounded-full"></span>
             <span
-              className={`${
-                level === 0 ? "font-semibold text-gray-900" : "text-gray-700"
-              }`}
+              className={`${level === 0 ? "font-semibold text-gray-900" : "text-gray-700"
+                }`}
             >
               {item.nombre}
             </span>
@@ -906,17 +976,17 @@ const ActivityForm = ({
 
   const hasChanges = isEditing
     ? form.titulo !== initialData?.titulo ||
-      form.descripcion !== initialData?.descripcion ||
-      form.fecha_inicio !== initialData?.fecha_inicio ||
-      form.fecha_cierre !== initialData?.fecha_cierre ||
-      form.maximo_integrantes !== initialData?.maximo_integrantes ||
-      form.id_tipo_alcance !== initialData?.id_tipo_alcance ||
-      JSON.stringify(selectedItems.sort()) !==
-        JSON.stringify(
-          (initialData?.Actividad_items || [])
-            .map((ai) => ai.Item.id_item)
-            .sort()
-        )
+    form.descripcion !== initialData?.descripcion ||
+    form.fecha_inicio !== initialData?.fecha_inicio ||
+    form.fecha_cierre !== initialData?.fecha_cierre ||
+    form.maximo_integrantes !== initialData?.maximo_integrantes ||
+    form.id_tipo_alcance !== initialData?.id_tipo_alcance ||
+    JSON.stringify(selectedItems.sort()) !==
+    JSON.stringify(
+      (initialData?.Actividad_items || [])
+        .map((ai) => ai.Item.id_item)
+        .sort()
+    )
     : true;
 
   const canSubmit =
@@ -1119,9 +1189,8 @@ const ItemsTree = ({ items, selectedItems, onToggle, level = 0 }) => {
                 className="mt-1 w-4 h-4 text-red-600 rounded focus:ring-2 focus:ring-red-500"
               />
               <span
-                className={`flex-1 ${
-                  level === 0 ? "font-semibold text-gray-900" : "text-gray-700"
-                } ${hasSelectedChildren && !isSelected ? "text-red-600" : ""}`}
+                className={`flex-1 ${level === 0 ? "font-semibold text-gray-900" : "text-gray-700"
+                  } ${hasSelectedChildren && !isSelected ? "text-red-600" : ""}`}
               >
                 {item.nombre}
               </span>

@@ -37,11 +37,21 @@ export const actualizarIdea = async (idIdea, datosActualizacion) => {
 };
 
 export const obtenerIdea = async (idIdea) => {
+  if (!idIdea) {
+    console.warn("⚠️ obtenerIdea llamado sin idIdea");
+    throw new Error("ID de idea es requerido");
+  }
+
   try {
     const response = await axiosInstance.get(`${IDEAS_BASE}/${idIdea}`);
     return response.data;
   } catch (error) {
     console.error("Error al obtener idea:", error);
+    
+    if (error.response?.status === 404) {
+      throw new Error("Idea no encontrada");
+    }
+    
     throw error;
   }
 };
@@ -131,16 +141,36 @@ export const verificarIdeaYProyecto = async (codigo_usuario, grupo) => {
     return response.data;
   } catch (error) {
     console.error("Error al verificar idea y proyecto:", error);
+    
+    // Si es 404, el usuario no tiene idea/proyecto (esto es normal)
+    if (error.response?.status === 404) {
+      return { data: { proyecto: null, idea: null } };
+    }
+    
     throw error;
   }
 };
 
 export const obtenerUltimoHistorial = async (id_idea) => {
+  // ✅ Validar que id_idea exista
+  if (!id_idea) {
+    console.warn("⚠️ obtenerUltimoHistorial llamado sin id_idea");
+    return null;
+  }
+
   try {
     const response = await axiosInstance.get(`${IDEAS_BASE}/${id_idea}/ultimo-historial`);
     return response.data;
   } catch (error) {
     console.error("Error al obtener historial:", error);
+    
+    // ✅ Si no hay historial (404), retornar null en lugar de lanzar error
+    if (error.response?.status === 404) {
+      console.log("ℹ️ No hay historial registrado para esta idea");
+      return null;
+    }
+    
+    // Para otros errores, lanzar
     throw error;
   }
 };
