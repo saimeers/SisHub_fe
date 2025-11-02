@@ -1,0 +1,57 @@
+import axiosInstance from "../config/axios";
+
+export const listarPropuestasLibres = async () => {
+  try {
+    const response = await axiosInstance.get("/proyectos/libres");
+    return response.data;
+  } catch (error) {
+    console.error("Error al listar el banco de propuestas:", error);
+    throw error;
+  }
+};
+
+export const obtenerProyectosContinuables = async (codigo_usuario) => {
+  try {
+    const response = await axiosInstance.get(`/proyectos/continuables/${codigo_usuario}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error al obtener proyectos continuables:", error);
+    throw error;
+  }
+};
+
+export const adoptarPropuesta = async (id_proyecto, codigo_usuario, grupo) => {
+  try {
+    const response = await axiosInstance.patch(`/proyectos/adoptar/${id_proyecto}`, {
+      codigo_usuario,
+      grupo
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error al adoptar propuesta:", error);
+    throw error;
+  }
+};
+
+export const continuarProyecto = async (id_proyecto, codigo_usuario) => {
+  try {
+    const response = await axiosInstance.post(`/proyectos/${id_proyecto}/continuar`, {
+      codigo_usuario
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error al continuar proyecto:", error);
+    throw error;
+  }
+};
+
+export const crearProyectoDesdeIdea = async (id_idea, datos) => {
+  try {
+    console.log(id_idea, datos);
+    const response = await axiosInstance.post(`/proyectos/crear/${id_idea}`, datos);
+    return response.data;
+  } catch (error) {
+    console.error("Error al crear proyecto:", error);
+    throw error;
+  }
+};

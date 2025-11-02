@@ -157,7 +157,32 @@ export const moverIdeaAlBanco = async (idIdea, codigo_usuario) => {
   }
 };
 
+export const verificarIdeaYProyecto = async (codigo_usuario, grupo) => {
+  try {
+    const response = await axiosInstance.post(
+      `${IDEAS_BASE}/verificar/${codigo_usuario}`,
+      grupo
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error al verificar idea y proyecto:", error);
+    throw error;
+  }
+};
+
+export const obtenerUltimoHistorial = async (id_idea) => {
+  try {
+    const response = await axiosInstance.get(`${IDEAS_BASE}/${id_idea}/ultimo-historial`);
+    return response.data;
+  } catch (error) {
+    console.error("Error al obtener historial:", error);
+    throw error;
+  }
+};
+
 export default {
+  obtenerUltimoHistorial,
+  verificarIdeaYProyecto,
   crearIdea,
   actualizarIdea,
   obtenerIdea,
