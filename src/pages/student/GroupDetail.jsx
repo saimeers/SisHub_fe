@@ -5,12 +5,15 @@ import GroupParticipants from "../../components/ui/GroupParticipants";
 import AccessDenied from "../../components/ui/AccessDenied";
 import { listarParticipantesGrupo } from "../../services/groupUserServices";
 import { listarGruposPorUsuario } from "../../services/groupServices";
+import {
+  verificarActividadGrupo,
+  obtenerActividadById,
+} from "../../services/actividadService";
 import { useToast } from "../../hooks/useToast";
 import { useAuth } from "../../contexts/AuthContext";
 import IdeasBank from "../../components/ui/IdeasBank";
 import Button from "../../components/ui/Button";
 import IdeaForm from "../../components/ui/IdeaForm";
-import ActivityCard from "../../components/ui/ActivityCard";
 import CompletarDatos from "../../modules/student/components/ProjectForm";
 import SuggestionReview from "../../modules/student/components/SuggestionReview";
 import RejectedIdea from "../../modules/student/components/RejectedIdea";
@@ -49,6 +52,12 @@ const GroupDetail = () => {
   const [currentView, setCurrentView] = useState("activities");
   const [selectedActivity, setSelectedActivity] = useState(null);
 
+  // Estado para actividad del grupo
+  const [actividad, setActividad] = useState(null);
+  const [esquemaInfo, setEsquemaInfo] = useState(null);
+  const [tieneActividad, setTieneActividad] = useState(null);
+  const [loadingActivity, setLoadingActivity] = useState(false);
+
   // Estado para formulario de ideas
   const [ideaInitialData, setIdeaInitialData] = useState({
     titulo: "",
@@ -71,6 +80,30 @@ const GroupDetail = () => {
   const [ideaReadOnly, setIdeaReadOnly] = useState(false);
 
   const groupParams = { codigo_materia, nombre, periodo, anio };
+
+  // Verificar actividad del grupo
+  const checkActivity = async () => {
+    setLoadingActivity(true);
+    try {
+      const tiene = await verificarActividadGrupo(codigo_materia, nombre, periodo, anio);
+
+      if (tiene.tieneActividad) {
+        const response = await obtenerActividadById(tiene.id_actividad);
+        setActividad(response.actividad);
+        setEsquemaInfo(response.esquema);
+        setTieneActividad(true);
+      } else {
+        setTieneActividad(false);
+        setActividad(null);
+        setEsquemaInfo(null);
+      }
+    } catch (err) {
+      console.error("Error al verificar actividad:", err);
+      setTieneActividad(false);
+    } finally {
+      setLoadingActivity(false);
+    }
+  };
 
   const loadIdeas = async () => {
     setLoadingIdeas(true);
@@ -159,17 +192,16 @@ const GroupDetail = () => {
       try {
         await adoptarIdea(selectedItem.id_idea, userData.codigo, groupParams);
         toast.success("Idea adoptada exitosamente. Ahora puedes actualizarla.");
-        
+
         // Cargar datos completos de la idea adoptada
         const ideaCompleta = await obtenerIdea(selectedItem.id_idea);
         const ideaData = ideaCompleta.data || ideaCompleta;
-        
+
         setCurrentIdeaId(ideaData.id_idea);
         setCurrentIdeaData(ideaData);
         setViewMode(null);
         setSelectedItem(null);
         setIdeaReadOnly(false);
-        // Ya está en ideaForm, solo cambiar a modo edición
       } catch (err) {
         toast.error(err.message || "Error al adoptar la idea");
       }
@@ -229,6 +261,12 @@ const GroupDetail = () => {
   };
 
   const handleActivityClick = async (activity) => {
+    // Si no hay actividad asignada, mostrar mensaje
+    if (!tieneActividad) {
+      toast.info("Aún no hay una actividad asignada a este grupo. Por favor espera.");
+      return;
+    }
+
     try {
       if (!userData?.codigo) {
         error("No se pudo obtener tu información de usuario");
@@ -237,7 +275,7 @@ const GroupDetail = () => {
 
       const response = await verificarIdeaYProyecto(userData.codigo, groupParams);
       const { proyecto, idea } = response.data || response;
-
+      console.log(idea);
       // Si no tiene idea ni proyecto, mostrar banco de ideas
       if (!proyecto && !idea) {
         setSelectedActivity(activity);
@@ -278,7 +316,6 @@ const GroupDetail = () => {
 
           // Si tiene proyecto EN_CURSO
           if (proyecto.estado === "EN_CURSO") {
-            // Por ahora dejamos vacío como indicaste
             toast.info("Proyecto en curso. Vista próximamente...");
             return;
           }
@@ -315,7 +352,7 @@ const GroupDetail = () => {
     });
     setIdeaReadOnly(false);
     setCurrentIdeaId(null);
-    setViewMode(null); 
+    setViewMode(null);
     setSelectedItem(null);
     setCurrentView("ideaForm");
   };
@@ -335,7 +372,7 @@ const GroupDetail = () => {
         : [];
 
       if (currentIdeaId) {
-        // Actualizar idea existente (adoptada o con correcciones)
+        // Actualizar idea existente
         const datosActualizacion = {
           codigo_usuario: userData.codigo,
           titulo: payload.titulo,
@@ -446,12 +483,15 @@ const GroupDetail = () => {
     loadGroupData();
   }, [codigo_materia, nombre, periodo, anio, userData, error]);
 
+  // Verificar actividad cuando se selecciona la pestaña proyecto
   useEffect(() => {
-    if (activeTab !== "proyecto") {
+    if (activeTab === "proyecto" && isAuthorized) {
+      checkActivity();
+    } else if (activeTab !== "proyecto") {
       setCurrentView("activities");
       setSelectedActivity(null);
     }
-  }, [activeTab]);
+  }, [activeTab, isAuthorized]);
 
   useEffect(() => {
     if (currentView === "ideas" && isAuthorized && groupParams.codigo_materia) {
@@ -496,11 +536,10 @@ const GroupDetail = () => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`px-6 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
-                  activeTab === tab.id
+                className={`px-6 py-2 rounded-full text-sm font-medium transition-all duration-200 ${activeTab === tab.id
                     ? "bg-white shadow text-gray-900"
                     : "text-gray-600 hover:text-gray-800"
-                }`}
+                  }`}
               >
                 {tab.label}
               </button>
@@ -532,22 +571,48 @@ const GroupDetail = () => {
 
             {activeTab === "proyecto" && (
               <div>
-                {currentView === "activities" && (
-                  <div className="max-w-4xl mx-auto space-y-6">
-                    <ActivityCard
-                      title="Actividad 1"
-                      description="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
-                      onClick={() =>
-                        handleActivityClick({
-                          id: 1,
-                          title: "Actividad 1",
-                        })
-                      }
-                    />
+                {loadingActivity ? (
+                  <div className="text-center py-12">
+                    <p className="text-gray-500">Verificando actividad...</p>
                   </div>
-                )}
-
-                {currentView === "ideas" && (
+                ) : currentView === "activities" ? (
+                  <div className="max-w-4xl mx-auto space-y-6">
+                    {tieneActividad && actividad ? (
+                      <ActivityDetailStudent
+                        actividad={actividad}
+                        esquemaInfo={esquemaInfo}
+                        onStartActivity={() => handleActivityClick({ id: actividad.id_actividad })}
+                      />
+                    ) : (
+                      <div className="text-center py-12">
+                        <div className="max-w-md mx-auto">
+                          <div className="mb-6">
+                            <svg
+                              className="mx-auto h-16 w-16 text-gray-400"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={1.5}
+                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                              />
+                            </svg>
+                          </div>
+                          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                            En espera de actividad
+                          </h3>
+                          <p className="text-gray-500">
+                            Aún no hay una actividad asignada a este grupo. Por favor espera a que tu
+                            profesor cree una actividad.
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : currentView === "ideas" ? (
                   <>
                     <div className="flex justify-between items-center mb-6">
                       <button
@@ -555,7 +620,7 @@ const GroupDetail = () => {
                         onClick={backToActivities}
                         className="px-4 py-2 rounded-full text-sm font-medium border border-gray-300 bg-white hover:bg-gray-50"
                       >
-                        ← Volver a Actividades
+                        ← Volver a Actividad
                       </button>
                       <Button text="+ Proponer Idea" onClick={openCreateIdea} />
                     </div>
@@ -595,9 +660,7 @@ const GroupDetail = () => {
                       </>
                     )}
                   </>
-                )}
-
-                {currentView === "ideaForm" && (
+                ) : currentView === "ideaForm" ? (
                   <div>
                     <div className="flex justify-between items-center mb-6">
                       <button
@@ -627,17 +690,13 @@ const GroupDetail = () => {
                       }
                     />
                   </div>
-                )}
-
-                {currentView === "rejected" && (
+                ) : currentView === "rejected" ? (
                   <RejectedIdea
                     idIdea={currentIdeaId}
                     currentUserCode={userData?.codigo}
                     onBack={backToActivities}
                   />
-                )}
-
-                {currentView === "suggestion" && (
+                ) : currentView === "suggestion" ? (
                   <SuggestionReview
                     idIdea={currentIdeaId}
                     ideaData={currentIdeaData}
@@ -645,9 +704,7 @@ const GroupDetail = () => {
                     currentUserCode={userData?.codigo}
                     onBack={backToActivities}
                   />
-                )}
-
-                {currentView === "completarDatos" && (
+                ) : currentView === "completarDatos" ? (
                   <CompletarDatos
                     idIdea={currentIdeaId}
                     ideaData={currentIdeaData}
@@ -655,7 +712,7 @@ const GroupDetail = () => {
                     onBack={backToActivities}
                     userData={userData}
                   />
-                )}
+                ) : null}
               </div>
             )}
 
@@ -668,6 +725,141 @@ const GroupDetail = () => {
         )}
       </div>
     </StudentLayout>
+  );
+};
+
+// Componente para mostrar la actividad al estudiante (solo lectura, sin botón de editar)
+const ActivityDetailStudent = ({ actividad, esquemaInfo, onStartActivity }) => {
+  // Construir estructura jerárquica de items
+  const buildItemsHierarchy = () => {
+    if (!actividad.Actividad_items || !esquemaInfo?.Items) return [];
+
+    const selectedItemIds = actividad.Actividad_items.map(ai => ai.Item.id_item);
+    const allItems = esquemaInfo.Items;
+
+    const itemsMap = {};
+    allItems.forEach(item => {
+      if (selectedItemIds.includes(item.id_item)) {
+        itemsMap[item.id_item] = { ...item, subitems: [] };
+      }
+    });
+
+    const rootItems = [];
+    Object.values(itemsMap).forEach(item => {
+      if (item.super_item === null) {
+        rootItems.push(item);
+      } else if (itemsMap[item.super_item]) {
+        itemsMap[item.super_item].subitems.push(item);
+      }
+    });
+
+    return rootItems;
+  };
+
+  const selectedItemsHierarchy = buildItemsHierarchy();
+
+  return (
+    <div
+      onClick={onStartActivity}
+      className="rounded-2xl shadow-[0_10px_25px_rgba(0,0,0,0.08)] overflow-hidden bg-white cursor-pointer hover:shadow-xl transition-shadow"
+    >
+      <div
+        className="relative px-6 py-10 text-center text-white"
+        style={{
+          background: "linear-gradient(90deg, #ed3a3aff 0%, #d94228ff 50%, #b62121ff 100%)",
+        }}
+      >
+        <h2 className="text-2xl md:text-3xl font-extrabold tracking-wide mb-4">
+          {actividad.titulo}
+        </h2>
+      </div>
+      <div className="px-8 py-6 space-y-6">
+        <div>
+          <h3 className="text-sm font-semibold text-gray-500 mb-2">DESCRIPCIÓN</h3>
+          <p className="text-gray-700 leading-relaxed">{actividad.descripcion}</p>
+        </div>
+
+        <div className="grid grid-cols-2 gap-6">
+          <div>
+            <h3 className="text-sm font-semibold text-gray-500 mb-2">FECHA INICIO</h3>
+            <p className="text-gray-900 font-medium">
+              {new Date(actividad.fecha_inicio).toLocaleDateString("es-ES", {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              })}
+            </p>
+          </div>
+          <div>
+            <h3 className="text-sm font-semibold text-gray-500 mb-2">FECHA CIERRE</h3>
+            <p className="text-gray-900 font-medium">
+              {new Date(actividad.fecha_cierre).toLocaleDateString("es-ES", {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              })}
+            </p>
+          </div>
+        </div>
+
+        <div>
+          <h3 className="text-sm font-semibold text-gray-500 mb-2">
+            MAX. INTEGRANTE POR EQUIPO
+          </h3>
+          <p className="text-gray-900 font-medium">
+            {actividad.maximo_integrantes} estudiantes
+          </p>
+        </div>
+
+        <div>
+          <h3 className="text-sm font-semibold text-gray-500 mb-2">TIPO DE ALCANCE</h3>
+          <p className="text-gray-900 font-medium">
+            {actividad.id_tipo_alcance === 1 ? "Investigativo" : "Desarrollo"}
+          </p>
+        </div>
+
+        {esquemaInfo && (
+          <div>
+            <h3 className="text-sm font-semibold text-gray-500 mb-2">ESQUEMA</h3>
+            <p className="text-gray-900 font-medium">{esquemaInfo.id_esquema}</p>
+          </div>
+        )}
+
+        {selectedItemsHierarchy.length > 0 && (
+          <div>
+            <h3 className="text-sm font-semibold text-gray-500 mb-3">
+              ÍTEMS SELECCIONADOS ({actividad.Actividad_items?.length || 0})
+            </h3>
+            <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+              <ItemsDisplayTree items={selectedItemsHierarchy} />
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// Componente para mostrar el árbol de items (solo lectura)
+const ItemsDisplayTree = ({ items, level = 0 }) => {
+  if (!items || items.length === 0) return null;
+
+  return (
+    <div className={`space-y-2 ${level > 0 ? "ml-6" : ""}`}>
+      {items.map((item) => (
+        <div key={item.id_item}>
+          <div className="flex items-center gap-2 py-1">
+            <span className="w-2 h-2 bg-red-600 rounded-full"></span>
+            <span className={`${level === 0 ? "font-semibold text-gray-900" : "text-gray-700"}`}>
+              {item.nombre}
+            </span>
+          </div>
+          {item.subitems && item.subitems.length > 0 && (
+            <ItemsDisplayTree items={item.subitems} level={level + 1} />
+          )}
+        </div>
+      ))}
+    </div>
   );
 };
 

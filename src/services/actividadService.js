@@ -13,7 +13,7 @@ export const crearActividad = async (actividadData) => {
 export const editarActividad = async (id_actividad, actividadData) => {
   try {
     const response = await axios.put(`/actividades/${id_actividad}`, actividadData);
-    return response.data; 
+    return response; 
   } catch (error) {
     console.error("Error al editar actividad:", error);
     throw error;

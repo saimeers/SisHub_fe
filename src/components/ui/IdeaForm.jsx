@@ -132,8 +132,7 @@ const IdeaForm = ({
       form.problematica.trim() &&
       form.justificacion.trim() &&
       form.objetivo_general.trim() &&
-      hasObjetivosEspecificos &&
-      selectedMembers.length > 0
+      hasObjetivosEspecificos 
     );
   }, [form, selectedMembers, readOnly]);
 

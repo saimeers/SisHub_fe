@@ -12,6 +12,7 @@ export const listarEsquemasPorTipo = async (id_tipo_alcance) => {
 
 export const listarItemsPorEsquema = async (id_esquema) => {
   try {
+    console.log("ID del esquema recibido:", id_esquema);
     const response = await axios.get(`/esquemas/${id_esquema}/items`);
     return response.data;
   } catch (error) {
