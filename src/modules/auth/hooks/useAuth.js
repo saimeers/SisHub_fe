@@ -87,68 +87,83 @@ export const useAuthForm = () => {
     return { valido: true, rol };
   };
 
-  const validarYRedirigirUsuario = async (user, token) => {
+const validarYRedirigirUsuario = async (user, token) => {
+  try {
+    // 🚨 Verificar si el usuario autenticado en Firebase existe realmente
+    if (!user || !user.uid) {
+      toast.error("Tu cuenta no está registrada en el sistema. Acceso denegado.", {
+        autoClose: 6000,
+      });
+      await deleteCurrentUser();
+      localStorage.clear();
+      navigate("/login");
+      return;
+    }
+
+    // Guardar datos del usuario autenticado (Firebase)
     saveUserData(user, token);
 
-    try {
-      const res = await obtenerUsuario();
-      const usuario = res?.data?.usuario || res?.data || res?.usuario || res;
+    // Consultar datos del usuario en la BD
+    const res = await obtenerUsuario();
+    const usuario = res?.data?.usuario || res?.data || res?.usuario || res;
 
-      // ✅ Verificar si el usuario existe realmente en la BD
-      if (usuario && (usuario.id || usuario.IdUsuario || usuario.Rol)) {
-        const { valido, rol } = verificarEstadoUsuario(usuario, user.displayName);
-        if (!valido) return;
+    // ✅ Verificar si el usuario existe en la BD
+    if (usuario && (usuario.id || usuario.IdUsuario || usuario.Rol)) {
+      const { valido, rol } = verificarEstadoUsuario(usuario, user.displayName);
+      if (!valido) return;
 
-        const pendingJoin = localStorage.getItem("pendingJoinGroup");
-        localStorage.setItem("userData", JSON.stringify(usuario));
+      const pendingJoin = localStorage.getItem("pendingJoinGroup");
+      localStorage.setItem("userData", JSON.stringify(usuario));
 
-        toast.success(`¡Bienvenido ${formatShortName(user.displayName) || ""}!`);
+      toast.success(`¡Bienvenido ${formatShortName(user.displayName) || ""}!`);
 
-        if (pendingJoin) {
-          if (rol?.toUpperCase() === "ESTUDIANTE") {
-            localStorage.removeItem("intentionalLogoutForJoin");
-            navigate(`/join-group${pendingJoin}`);
-          } else {
-            localStorage.removeItem("pendingJoinGroup");
-            localStorage.removeItem("intentionalLogoutForJoin");
-            toast.warning(
-              "Solo los estudiantes pueden unirse a grupos mediante código de acceso."
-            );
-            navigate(`/${rol?.toLowerCase()}/dashboard`);
-          }
+      if (pendingJoin) {
+        if (rol?.toUpperCase() === "ESTUDIANTE") {
+          localStorage.removeItem("intentionalLogoutForJoin");
+          navigate(`/join-group${pendingJoin}`);
         } else {
+          localStorage.removeItem("pendingJoinGroup");
+          localStorage.removeItem("intentionalLogoutForJoin");
+          toast.warning(
+            "Solo los estudiantes pueden unirse a grupos mediante código de acceso."
+          );
           navigate(`/${rol?.toLowerCase()}/dashboard`);
         }
       } else {
-        // 🚫 Usuario autenticado en Firebase pero NO registrado en BD
-        await deleteCurrentUser();
-        toast.error(
-          "Tu cuenta no está registrada en el sistema. Acceso denegado.",
-          { autoClose: 6000 }
-        );
-        localStorage.clear();
-        navigate("/login");
-        return;
+        navigate(`/${rol?.toLowerCase()}/dashboard`);
       }
-    } catch (error) {
-      console.error("Error al obtener usuario:", error);
-
-      if (error.response?.status === 404) {
-        await deleteCurrentUser();
-        toast.error(
-          "Tu cuenta no está registrada en el sistema. Acceso denegado.",
-          { autoClose: 6000 }
-        );
-        localStorage.clear();
-        navigate("/login");
-      } else {
-        toast.error("Error al validar tu cuenta. Intenta de nuevo.");
-        await signOutAccount();
-        localStorage.clear();
-        navigate("/login");
-      }
+    } else {
+      // 🚫 Usuario autenticado en Firebase pero no registrado en BD
+      await deleteCurrentUser();
+      toast.error("Tu cuenta no está registrada en el sistema. Acceso denegado.", {
+        autoClose: 6000,
+      });
+      localStorage.clear();
+      navigate("/login");
     }
-  };
+  } catch (error) {
+    const isNotFound =
+      error.response?.status === 404 ||
+      error.message?.includes("Usuario no encontrado") ||
+      error.response?.data?.message?.includes("Usuario no encontrado");
+
+    const isFirebaseNotFound = error.code === "auth/user-not-found";
+
+    if (isNotFound || isFirebaseNotFound) {
+      await deleteCurrentUser();
+      toast.error("Tu cuenta no está registrada en el sistema. Acceso denegado.", {
+        autoClose: 6000,
+      });
+      localStorage.clear();
+      navigate("/login");
+    } else {
+      toast.error("Error al validar tu cuenta. Intenta de nuevo.");
+      localStorage.clear();
+      navigate("/login");
+    }
+  }
+};
+
 
 
   const handleEmailLogin = async (e) => {

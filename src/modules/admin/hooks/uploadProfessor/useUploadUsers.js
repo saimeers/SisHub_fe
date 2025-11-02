@@ -24,6 +24,8 @@ export const useUploadUsers = () => {
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showProgressModal, setShowProgressModal] = useState(false);
+  const [progressData, setProgressData] = useState(null);
 
   const { handleFileUpload } = useFileUpload({
     users,
@@ -57,16 +59,18 @@ export const useUploadUsers = () => {
     setIsSubmitting,
     validateUser,
     toast,
-    navigate
+    navigate,
+    setShowProgressModal,
+    setProgressData
   });
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setNewUser(prev => ({ ...prev, [name]: value }));
+    setNewUser(prev => ({ ...prev,  [name]: name === "nombre" ? value.toUpperCase() : value }));
   };
 
   const handleEditInputChange = (e, field) => {
-    setEditingUser(prev => ({ ...prev, [field]: e.target.value }));
+    setEditingUser(prev => ({ ...prev, [field]: field === "nombre" ? e.target.value.toUpperCase() : e.target.value }));
   };
 
   const handleCancel = async () => {
@@ -89,6 +93,11 @@ export const useUploadUsers = () => {
     } else {
       navigate("/admin/dashboard");
     }
+  };
+
+  const handleCloseProgress = () => {
+    setShowProgressModal(false);
+    navigate("/admin/dashboard");
   };
 
   const totalPages = Math.ceil(users.length / itemsPerPage);
@@ -133,5 +142,8 @@ export const useUploadUsers = () => {
     setItemsPerPage,
     setCurrentPage,
     goToPage,
+    showProgressModal,
+    progressData,
+    handleCloseProgress,
   };
 };

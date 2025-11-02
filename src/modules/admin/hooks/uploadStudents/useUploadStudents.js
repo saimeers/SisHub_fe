@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "../../../../hooks/useToast";
 import Swal from "sweetalert2";
 import Papa from "papaparse";
+import { useStudentValidation } from './useStudentValidation';
 import { pollProgress } from "../../../../services/progressService";
 import { matricularEstudiantesMasivamente, buscarEstudiantePorCodigo } from "../../../../services/userServices";
 import { obtenerGrupos } from "../../../../services/groupServices";
@@ -120,44 +121,19 @@ export const useUploadStudents = () => {
     }
   };
 
-  const validateStudent = (student) => {
-    const errors = [];
-
-    if (!student.codigo?.trim()) errors.push("código");
-    if (!student.nombre?.trim()) errors.push("nombre");
-    if (!student.documento?.trim()) errors.push("documento");
-    if (!student.correo?.trim()) errors.push("correo");
-    if (!student.codigo_materia?.trim()) errors.push("código de materia");
-    if (!student.nombre_grupo?.trim()) errors.push("nombre de grupo");
-    if (!student.periodo?.trim()) errors.push("período");
-    if (!student.anio?.trim()) errors.push("año");
-
-    if (!student.correo?.includes("@ufps.edu.co")) {
-      errors.push("correo debe ser @ufps.edu.co");
-    }
-
-    return errors;
-  };
+  const { validateStudent, checkDuplicates } = useStudentValidation();
 
   const addStudent = () => {
     const errors = validateStudent(newStudent);
 
     if (errors.length > 0) {
-      toast.error(`Faltan campos obligatorios: ${errors.join(", ")}`);
+      toast.error(`Errores de validación: ${errors.join(", ")}`);
       return;
     }
 
-    // Verificar duplicados en el mismo grupo
-    const isDuplicate = students.some((s) =>
-      s.codigo === newStudent.codigo &&
-      s.codigo_materia === newStudent.codigo_materia &&
-      s.nombre_grupo === newStudent.nombre_grupo &&
-      s.periodo === newStudent.periodo &&
-      s.anio === newStudent.anio
-    );
-
-    if (isDuplicate) {
-      toast.error("Ya existe un estudiante con ese código en el mismo grupo");
+    const duplicateErrors = checkDuplicates(newStudent, students);
+    if (duplicateErrors.length > 0) {
+      toast.error(`Duplicados encontrados: ${duplicateErrors.join(", ")}`);
       return;
     }
 
@@ -349,20 +325,20 @@ export const useUploadStudents = () => {
     const result = await Swal.fire({
       title: "¿Matricular estudiantes?",
       html: `
-      <div style="text-align: center;">
-        <p>Se matricularán <strong>${students.length} estudiante(s)</strong> en <strong>${matriculas.length} grupo(s)</strong>.</p>
-        <ul style="margin-top: 10px; font-size: 0.9em; color: #374151; text-align: left; list-style: none; padding-left: 20px;">
-          <li>✓ Los estudiantes serán agregados a sus respectivos grupos</li>
-          <li>✓ Recibirán acceso inmediato al sistema</li>
-        </ul>
-        <div style="margin-top: 15px; padding: 10px; background: #f3f4f6; border-radius: 8px; text-align: left; font-size: 0.85em;">
-          <p style="margin: 0; font-weight: 600; color: #374151;">Grupos:</p>
-          ${matriculas.map(m =>
+  <div style="text-align: center;">
+    <p>Se matricularán <strong>${students.length} estudiante(s)</strong> en <strong>${matriculas.length} grupo(s)</strong>.</p>
+    <ul style="margin-top: 10px; font-size: 0.9em; color: #374151; text-align: left; list-style: none; padding-left: 20px;">
+      <li>✓ Los estudiantes serán agregados a sus respectivos grupos</li>
+      <li>✓ Recibirán acceso inmediato al sistema</li>
+    </ul>
+    <div style="margin-top: 15px; padding: 10px; background: #f3f4f6; border-radius: 8px; text-align: left; font-size: 0.85em; max-height: 250px; overflow-y: auto;">
+      <p style="margin: 0; font-weight: 600; color: #374151;">Grupos:</p>
+      ${matriculas.map(m =>
         `<p style="margin: 5px 0; color: #6b7280;">• ${m.codigo_materia} - ${m.nombre_grupo} (${m.periodo}/${m.anio}) - ${m.estudiantes.length} estudiante(s)</p>`
       ).join('')}
-        </div>
-      </div>
-    `,
+    </div>
+  </div>
+  `,
       icon: "question",
       showCancelButton: true,
       confirmButtonColor: "#16a34a",
@@ -371,6 +347,7 @@ export const useUploadStudents = () => {
       cancelButtonText: "Cancelar",
       width: '600px'
     });
+
 
     if (!result.isConfirmed) return;
 

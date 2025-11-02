@@ -24,20 +24,42 @@ export const obtenerTodosLosEstudiantes = async () => {
 export const obtenerUsuario = async () => {
   try {
     const response = await axiosInstance.get("/usuarios/me");
-    const { usuario } = response.data;
+    const data = response.data;
 
-    localStorage.setItem("usuario", JSON.stringify({
-      documento: usuario.documento,
-      correo: usuario.correo,
-      telefono: usuario.telefono,
-      rol: usuario.Rol?.descripcion,
-      estado: usuario.Estado?.descripcion
-    }));
+    if (!data || !data.usuario) {
+      console.info("⚠️ Usuario no encontrado o sin datos válidos.");
+      return null;
+    }
+
+    const usuario = data.usuario;
+
+    localStorage.setItem(
+      "usuario",
+      JSON.stringify({
+        documento: usuario.documento || "",
+        correo: usuario.correo || "",
+        telefono: usuario.telefono || "",
+        rol: usuario.Rol?.descripcion || "",
+        estado: usuario.Estado?.descripcion || "",
+      })
+    );
 
     return usuario;
   } catch (error) {
-    console.error("Error al obtener usuario:", error);
-    throw error;
+    if (error.response) {
+      const status = error.response.status;
+      const msg = error.response.data?.error || error.response.data?.message;
+
+      if (status === 404) {
+        return null;
+      }
+
+      console.warn(`❌ Error ${status}: ${msg}`);
+    } else {
+      console.error("🚨 Error desconocido:", error.message);
+    }
+
+    return null;
   }
 };
 
@@ -117,19 +139,26 @@ export const rechazarPostulacion = async (codigo) => {
 
 export const cargarDocentesMasivamente = async (docentes) => {
   try {
-    console.log("🚀 Enviando petición a:", axiosInstance.defaults.baseURL);
-    console.log("📦 Docentes a cargar:", docentes.length);
-    
+    console.log("🚀 Servicio - Enviando petición con:", { docentes });
+    console.log("📦 URL:", axiosInstance.defaults.baseURL + "/usuarios/cargar-docentes");
+
     const response = await axiosInstance.post(
       "/usuarios/cargar-docentes",
       { docentes },
-      { timeout: 60000 }
+      {
+        timeout: 60000,
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      }
     );
-    
-    console.log("✅ Respuesta recibida:", response.status);
+
+    console.log("✅ Servicio - Respuesta recibida:", response.status, response.data);
+
+    // El backend retorna { progressId, totalDocentes, ... }
     return response.data;
   } catch (error) {
-    console.error("❌ Error completo:", {
+    console.error("❌ Servicio - Error completo:", {
       message: error.message,
       code: error.code,
       hasResponse: !!error.response,
@@ -144,20 +173,20 @@ export const matricularEstudiantesMasivamente = async (matriculas) => {
   try {
     console.log("🚀 Servicio - Enviando petición con:", { matriculas });
     console.log("📦 URL:", axiosInstance.defaults.baseURL + "/grupos-usuarios/matricular-masivamente");
-    
+
     const response = await axiosInstance.post(
       "/grupos-usuarios/matricular-masivamente",
       { matriculas }, // Enviar con la clave "matriculas"
-      { 
+      {
         timeout: 60000,
         headers: {
           'Content-Type': 'application/json'
         }
       }
     );
-    
+
     console.log("✅ Servicio - Respuesta recibida:", response.status, response.data);
-    
+
     // El backend retorna { progressId, totalEstudiantes, totalGrupos, ... }
     return response.data;
   } catch (error) {

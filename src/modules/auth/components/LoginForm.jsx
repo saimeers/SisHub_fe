@@ -8,14 +8,9 @@ function LoginForm({ formData, loading, error, onSubmit, onChange }) {
     const [showForgotPasswordModal, setShowForgotPasswordModal] = useState(false);
     return (
         <>
-            <form
-                className="w-full max-w-sm flex flex-col"
-                onSubmit={onSubmit}
-            >
-                <label className="text-sm font-medium mb-1" htmlFor="email">
-                    Correo electrónico
-                </label>
+            <form className="w-full max-w-sm flex flex-col" onSubmit={onSubmit}>
                 <FieldText
+                    label="Correo electrónico"
                     type="email"
                     id="email"
                     name="email"
@@ -25,16 +20,15 @@ function LoginForm({ formData, loading, error, onSubmit, onChange }) {
                     required
                 />
 
-                <label className="text-sm font-medium mt-4 mb-1" htmlFor="password">
-                    Contraseña
-                </label>
                 <FieldPassword
+                    label="Contraseña"
                     id="password"
                     name="password"
                     placeholder="••••••"
                     value={formData.password}
                     onChange={onChange}
                     required
+                    className="mt-4"
                 />
 
                 <div className="flex justify-end">
@@ -67,7 +61,7 @@ function LoginForm({ formData, loading, error, onSubmit, onChange }) {
                 </a>
             </p> 
             */}
-            
+
             <ForgotPasswordModal
                 isOpen={showForgotPasswordModal}
                 onClose={() => setShowForgotPasswordModal(false)}

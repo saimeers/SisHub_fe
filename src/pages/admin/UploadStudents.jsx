@@ -8,7 +8,7 @@ import UploadStudentsMobile from "../../modules/admin/components/uploadStudents/
 import UploadStudentsControls from "../../modules/admin/components/uploadStudents/UploadStudentsControls";
 import UploadStudentsPagination from "../../modules/admin/components/uploadStudents/UploadStudentsPagination";
 import UploadStudentsActions from "../../modules/admin/components/uploadStudents/UploadStudentsActions";
-import ProgressModal from "../../modules/admin/components/uploadStudents/ProgressModal";
+import ProgressModal from "../../modules/admin/components/ProgressModal";
 import { useUploadStudents } from "../../modules/admin/hooks/uploadStudents/useUploadStudents";
 
 const UploadStudents = () => {
