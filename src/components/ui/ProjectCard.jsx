@@ -66,6 +66,10 @@ const ProjectCard = ({
   onCodeClick,
   onVersionsClick,
   onClick,
+  hideTags = false,
+  hideActions = false,
+  hideProgress = false,
+  hideAlcance = false,
 }) => {
   return (
     <div
@@ -73,7 +77,6 @@ const ProjectCard = ({
       onClick={onClick}
     >
       <div className="flex flex-col md:flex-row p-6 gap-6">
-        {/* Logo/Icono a la izquierda */}
         <div className="flex-shrink-0">
           {logo ? (
             <img
@@ -91,7 +94,6 @@ const ProjectCard = ({
           
         </div>
 
-        {/* Contenido a la derecha */}
         <div className="flex-1 flex flex-col justify-between min-w-0">
           <div>
             <div className="flex items-start justify-between mb-2">
@@ -99,14 +101,13 @@ const ProjectCard = ({
                 {title}
               </h3>
               <div className="flex items-center gap-2">
-                <AlcanceBadge text={tipoAlcance} />
+                {!hideAlcance && <AlcanceBadge text={tipoAlcance} />}
                 <StatusBadge status={status} />
-                <ProgressBadge value={progress} />
+                {!hideProgress && <ProgressBadge value={progress} />}
               </div>
             </div>
 
-            {/* Tags */}
-            {tags && tags.length > 0 && (
+            {!hideTags && tags && tags.length > 0 && (
               <div className="flex flex-wrap gap-2 mb-3">
                 {tags.map((tag, index) => (
                   <span
@@ -119,86 +120,86 @@ const ProjectCard = ({
               </div>
             )}
 
-            {/* Descripción */}
             <p className="text-gray-600 text-[15px] leading-relaxed line-clamp-2 mb-4">
               {description || "Sin descripción disponible."}
             </p>
           </div>
 
-          {/* Botones de acción */}
-          <div className="flex gap-3">
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                onDocumentsClick?.();
-              }}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 active:translate-y-px transition-all text-sm font-medium shadow-sm"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
+          {!hideActions && (
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDocumentsClick?.();
+                }}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 active:translate-y-px transition-all text-sm font-medium shadow-sm"
               >
-                <path
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
+                </svg>
+                Documentacion
+              </button>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onCodeClick?.();
+                }}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 active:translate-y-px transition-all text-sm font-medium shadow-sm"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                />
-              </svg>
-              Documentacion
-            </button>
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                onCodeClick?.();
-              }}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 active:translate-y-px transition-all text-sm font-medium shadow-sm"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
+                >
+                  <polyline points="16 18 22 12 16 6" />
+                  <polyline points="8 6 2 12 8 18" />
+                </svg>
+                Desarrollo
+              </button>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onVersionsClick?.();
+                }}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 active:translate-y-px transition-all text-sm font-medium shadow-sm"
               >
-                <polyline points="16 18 22 12 16 6" />
-                <polyline points="8 6 2 12 8 18" />
-              </svg>
-              Desarrollo
-            </button>
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                onVersionsClick?.();
-              }}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 active:translate-y-px transition-all text-sm font-medium shadow-sm"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M3 12a9 9 0 1 0 9-9" />
-                <polyline points="3 3 3 8 8 8" />
-                <polyline points="12 7 12 12 15 15" />
-              </svg>
-              Versiones
-            </button>
-          </div>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M3 12a9 9 0 1 0 9-9" />
+                  <polyline points="3 3 3 8 8 8" />
+                  <polyline points="12 7 12 12 15 15" />
+                </svg>
+                Versiones
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

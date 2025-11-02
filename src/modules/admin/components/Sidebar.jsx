@@ -51,7 +51,7 @@ const Sidebar = () => {
     {
       icon: <FaFolder size={20} />,
       label: "Proyectos",
-      path: "/admin/my-projects",
+      path: "/admin/projects",
     },
 
     { icon: <ImStatsDots size={20} />, label: "Estadísticas" },

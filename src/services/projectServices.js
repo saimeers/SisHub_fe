@@ -38,8 +38,23 @@ export const listarProyectosParaDocente = async (codigo_docente) => {
   }
 };
 
+export const listarProyectosPorGrupo = async (grupo) => {
+  try {
+    const { codigo_materia, nombre, periodo, anio } = grupo;
+    const response = await axiosInstance.get(`${PROJECTS_BASE}/listar/porGrupo`, {
+      params: { codigo_materia, nombre, periodo, anio },
+    });
+    
+    return Array.isArray(response.data) ? response.data : [];
+  } catch (error) {
+    console.error("Error al listar proyectos por grupo:", error);
+    throw error;
+  }
+};
+
 export default {
   listarProyectosParaDirector,
   listarProyectosParaEstudiante,
   listarProyectosParaDocente,
+  listarProyectosPorGrupo,
 };
