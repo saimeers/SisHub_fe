@@ -14,6 +14,20 @@ export const listarProyectosParaDirector = async () => {
   }
 };
 
+
+export async function rechazarObservacion(id_idea, accion, observacion, codigo_usuario) {
+  try {
+    const response = await axios.put(`${API_URL}/${id_idea}/rechazar`, {
+      accion,
+      codigo_usuario,
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error al revisar idea:", error);
+    throw error.response?.data || { message: "Error en el servidor" };
+  }
+}
+
 export const listarProyectosParaEstudiante = async (codigo_estudiante) => {
   try {
     const response = await axiosInstance.get(

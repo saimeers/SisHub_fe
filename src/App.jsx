@@ -43,6 +43,7 @@ import MyProjectsStudent from "./pages/student/MyProjects";
 // stand by
 import CuentaPendiente from "./pages/standby/CuentaPendiente";
 import JoinGroup from "./modules/student/components/JoinGroup";
+import Calificado from "./pages/professor/Calificado";
 
 function App() {
   return (
@@ -135,6 +136,7 @@ function App() {
               element={<GroupDetailProfessor />}
             />
             <Route path="my-projects" element={<MyProjectsProfessor />} />
+            <Route path="calificado" element={<Calificado />} />
           </Route>
 
           {/* ==================== RUTAS ESTUDIANTE ==================== */}

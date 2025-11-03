@@ -55,3 +55,43 @@ export const crearProyectoDesdeIdea = async (id_idea, datos) => {
     throw error;
   }
 };
+
+export const revisarProyecto = async (id_proyecto, accion, observacion, codigo_usuario) => {
+  try {
+    const response = await axiosInstance.put(`/proyectos/revisar`, {
+      id_proyecto,
+      accion,
+      observacion,
+      codigo_usuario
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error al revisar proyecto:", error);
+    throw error.response?.data || { message: "Error en el servidor" };
+  }
+};
+
+export const calificarProyecto = async (id_proyecto, observacion, codigo_usuario) => {
+  try {
+    const response = await axiosInstance.post(`/proyectos/${id_proyecto}/calificar`, {
+      observacion,
+      codigo_usuario
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error al calificar proyecto:", error);
+    throw error.response?.data || { message: "Error en el servidor" };
+  }
+};
+
+export async function getHistorialProyecto(id_proyecto) {
+  try {
+    const { data } = await api.get(`/proyectos/historial/${id_proyecto}`);
+    return data.historial;
+  } catch (error) {
+    console.error("Error al obtener historial del entregable:", error);
+    throw error.response?.data || { message: "Error al obtener historial del entregable" };
+  }
+}
+
+

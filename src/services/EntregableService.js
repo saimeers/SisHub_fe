@@ -1,3 +1,4 @@
+import axiosInstance from "../config/axios";
 import axios from "../config/axios";
 
 const ENTREGABLES_BASE = "/entregables";
@@ -112,11 +113,11 @@ export const analizarDocumentoConIA = async (texto, items) => {
 /**
  * Envía el proyecto a revisión
  */
-export const enviarProyectoARevision = async (id_proyecto, id_actividad, codigo_usuario) => {
+export const enviarProyectoARevision = async (id_proyecto, codigo_usuario) => {
   try {
     const response = await axios.post(
       `${ENTREGABLES_BASE}/proyecto/${id_proyecto}/enviar-revision`,
-      { id_actividad, codigo_usuario }
+      { codigo_usuario }
     );
     return response.data;
   } catch (error) {
@@ -146,3 +147,27 @@ export const extraerTextoDocumento = async (file) => {
     throw new Error("Error al procesar el documento");
   }
 };
+
+export async function retroalimentarEntregable(id_entregable, comentarios, calificacion, codigo_usuario) {
+  try {
+    const response = await axiosInstance.put(`${ENTREGABLES_BASE}/retroalimentar/${id_entregable}`, {
+      comentarios,
+      calificacion,
+      codigo_usuario
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error al retroalimentar entregable:", error);
+    throw error.response?.data || { message: "Error en el servidor" };
+  }
+}
+
+export async function getHistorialEntregable(id_entregable) {
+  try {
+    const { data } = await axios.get(`/entregables/${id_entregable}/historial`);
+    return data.historial;
+  } catch (error) {
+    console.error("Error al obtener historial del entregable:", error);
+    throw error.response?.data || { message: "Error al obtener historial del entregable" };
+  }
+}

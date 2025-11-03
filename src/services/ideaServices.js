@@ -175,7 +175,21 @@ export const obtenerUltimoHistorial = async (id_idea) => {
   }
 };
 
+
+export const rechazarObservacion = async (id_proyecto, codigo_usuario) => {
+  try {
+    const response = await axiosInstance.put(`/proyectos/${id_proyecto}/rechazar`, {
+      codigo_usuario
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error al rechazar observación:", error);
+    throw error.response?.data || { message: "Error en el servidor" };
+  }
+}
+
 export default {
+  rechazarObservacion,
   obtenerUltimoHistorial,
   verificarIdeaYProyecto,
   crearIdea,

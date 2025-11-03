@@ -69,7 +69,6 @@ const ProyectoEnCurso = ({
       setEnviandoRevision(true);
       await enviarProyectoARevision(
         proyecto.id_proyecto,
-        actividad.id_actividad,
         currentUserCode
       );
       toast.success("Proyecto enviado a revisión exitosamente");

@@ -2,6 +2,8 @@ import React, { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import StudentLayout from "../../modules/student/layouts/StudentLayout";
 import GroupParticipants from "../../components/ui/GroupParticipants";
+import CorregirProyecto from "../../modules/student/components/CorregirProyecto";
+import ProyectoCalificado from "../../modules/student/components/ProyectoCalificado";
 import AccessDenied from "../../components/ui/AccessDenied";
 import { listarParticipantesGrupo } from "../../services/groupUserServices";
 import { listarGruposPorUsuario } from "../../services/groupServices";
@@ -162,10 +164,10 @@ const GroupDetail = () => {
       const objetivosArray = Array.isArray(itemData.objetivos_especificos)
         ? itemData.objetivos_especificos
         : typeof itemData.objetivos_especificos === "string"
-        ? itemData.objetivos_especificos
+          ? itemData.objetivos_especificos
             .split(/\r?\n/)
             .filter((line) => line.trim())
-        : [""];
+          : [""];
 
       setIdeaInitialData({
         titulo: itemData.titulo || itemData.Idea?.titulo || "",
@@ -277,115 +279,163 @@ const GroupDetail = () => {
     }
   };
 
-const handleActivityClick = async (activity) => {
-  // Si no hay actividad asignada, mostrar mensaje
-  if (!tieneActividad) {
-    toast.info("Aún no hay una actividad asignada a este grupo. Por favor espera.");
-    return;
-  }
-
-  try {
-    if (!userData?.codigo) {
-      error("No se pudo obtener tu información de usuario");
+  const handleActivityClick = async (activity) => {
+    // Si no hay actividad asignada, mostrar mensaje
+    if (!tieneActividad) {
+      toast.info("Aún no hay una actividad asignada a este grupo. Por favor espera.");
       return;
     }
 
-    const response = await verificarIdeaYProyecto(userData.codigo, groupParams);
-    const { proyecto, idea, equipo } = response.data || response;
-
-    console.log("📋 Estado del estudiante:", { proyecto, idea, equipo });
-
-    // ✅ CASO 1: No tiene ni idea ni proyecto → Mostrar banco de ideas
-    if (!proyecto && !idea) {
-      console.log("✅ Sin idea ni proyecto → Banco de ideas");
-      setSelectedActivity(activity);
-      setCurrentView("ideas");
-      return;
-    }
-
-    // ✅ CASO 2: Tiene idea, verificar su estado
-    if (idea && idea.id_idea) {
-      const estadoIdea = idea.estado;
-      console.log("📌 Estado de la idea:", estadoIdea);
-
-      // Sub-caso 2.1: Idea en revisión
-      if (estadoIdea === "REVISION") {
-        toast.info("Tu idea está en revisión. Por favor espera la respuesta del docente.");
+    try {
+      if (!userData?.codigo) {
+        error("No se pudo obtener tu información de usuario");
         return;
       }
 
-      // Sub-caso 2.2: Idea rechazada
-      if (estadoIdea === "RECHAZADO") {
-        setCurrentIdeaId(idea.id_idea);
-        setCurrentView("rejected");
+      const response = await verificarIdeaYProyecto(userData.codigo, groupParams);
+      const { proyecto, idea, equipo } = response.data || response;
+
+      console.log("📋 Estado del estudiante:", { proyecto, idea, equipo });
+
+      // ✅ CASO 1: No tiene ni idea ni proyecto → Mostrar banco de ideas
+      if (!proyecto && !idea) {
+        console.log("✅ Sin idea ni proyecto → Banco de ideas");
+        setSelectedActivity(activity);
+        setCurrentView("ideas");
         return;
       }
 
-      // Sub-caso 2.3: Idea con observaciones (Stand by)
-      if (estadoIdea === "STAND_BY") {
-        if (!idea.id_idea) {
-          console.error("❌ Idea en STAND_BY sin ID");
-          toast.error("Error: Idea sin identificador válido");
+      // ✅ CASO 2: Tiene idea, verificar su estado
+      if (idea && idea.id_idea) {
+        const estadoIdea = idea.estado;
+        const estadoProyecto = proyecto?.estado || null;
+
+        console.log("📌 Estado de la idea:", estadoIdea);
+        console.log("📦 Estado del proyecto:", estadoProyecto);
+
+        // ========== NUEVOS CASOS ==========
+
+        // REVISION - null: En espera de revisión inicial
+        if (estadoIdea === "REVISION" && !estadoProyecto) {
+          toast.info("Tu idea está en revisión. Por favor espera la respuesta del docente.");
           return;
         }
-        setCurrentIdeaId(idea.id_idea);
-        setCurrentIdeaData(idea);
-        setCurrentView("suggestion");
-        return;
-      }
 
-      // Sub-caso 2.4: Idea aprobada
-      if (estadoIdea === "APROBADO") {
-        if (!proyecto || !proyecto.id_proyecto) {
+        // STAND_BY - null: Corregir la idea
+        if (estadoIdea === "STAND_BY" && !estadoProyecto) {
+          if (!idea.id_idea) {
+            console.error("❌ Idea en STAND_BY sin ID");
+            toast.error("Error: Idea sin identificador válido");
+            return;
+          }
+          setCurrentIdeaId(idea.id_idea);
+          setCurrentIdeaData(idea);
+          setCurrentView("suggestion");
+          return;
+        }
+
+        // APROBADO - null: Completar datos del proyecto
+        if (estadoIdea === "APROBADO" && !estadoProyecto) {
           setCurrentIdeaId(idea.id_idea);
           setCurrentIdeaData(idea);
           setCurrentView("completarDatos");
           return;
         }
 
-        if (proyecto.estado === "EN_CURSO") {
+        // REVISION - SELECCIONADO: Proyecto adoptado en revisión
+        if (estadoIdea === "REVISION" && estadoProyecto === "SELECCIONADO") {
+          toast.info("Tu proyecto adoptado está en revisión. Por favor espera la respuesta del docente.");
+          return;
+        }
+
+        // REVISION - CALIFICADO: Proyecto propio en revisión
+        if (estadoIdea === "REVISION" && estadoProyecto === "CALIFICADO") {
+          toast.info("Tu proyecto está en revisión. Por favor espera la respuesta del docente.");
+          return;
+        }
+
+        // STAND_BY - SELECCIONADO: Corregir proyecto adoptado
+        if (estadoIdea === "STAND_BY" && estadoProyecto === "SELECCIONADO") {
+          setCurrentIdeaId(idea.id_idea);
+          setCurrentProyecto(proyecto);
+          setCurrentIdeaData(idea);
+          setCurrentView("corregirProyecto");
+          return;
+        }
+
+        // STAND_BY - CALIFICADO: Corregir proyecto propio
+        if (estadoIdea === "STAND_BY" && estadoProyecto === "CALIFICADO") {
+          setCurrentIdeaId(idea.id_idea);
+          setCurrentProyecto(proyecto);
+          setCurrentIdeaData(idea);
+          setCurrentView("corregirProyecto");
+          return;
+        }
+
+        // APROBADO - EN_CURSO: Subir entregables
+        if (estadoIdea === "APROBADO" && estadoProyecto === "EN_CURSO") {
           setCurrentProyecto(proyecto);
           setCurrentEquipo(equipo);
           setCurrentIdeaData(idea);
           setCurrentView("proyectoEnCurso");
           return;
         }
-      }
 
-      // Estado no manejado → volver al banco
-      console.warn("⚠️ Estado de idea no manejado:", estadoIdea);
-      setSelectedActivity(activity);
-      setCurrentView("ideas");
-      return;
-    }
+        // REVISION - EN_CURSO: Proyecto enviado para calificar
+        if (estadoIdea === "REVISION" && estadoProyecto === "EN_CURSO") {
+          toast.info("Tu proyecto ha sido enviado para calificación. Por favor espera.");
+          return;
+        }
 
-    // ✅ CASO 3: Tiene proyecto pero no idea (caso raro)
-    if (proyecto && !idea) {
-      console.log("📦 Tiene proyecto sin idea");
-      if (proyecto.estado === "EN_CURSO") {
-        toast.info("Imposible que pase esto, proyecto sin idea...");
+        // APROBADO - CALIFICADO: Ver calificaciones
+        if (estadoIdea === "APROBADO" && estadoProyecto === "CALIFICADO") {
+          setCurrentProyecto(proyecto);
+          setCurrentIdeaData(idea);
+          setCurrentView("proyectoCalificado");
+          return;
+        }
+
+        // ========== FIN NUEVOS CASOS ==========
+
+        // RECHAZADO (sin proyecto): Idea rechazada
+        if (estadoIdea === "RECHAZADO" && !estadoProyecto) {
+          setCurrentIdeaId(idea.id_idea);
+          setCurrentView("rejected");
+          return;
+        }
+
+        // Estado no manejado → volver al banco
+        console.warn("⚠️ Estado no manejado:", { estadoIdea, estadoProyecto });
+        setSelectedActivity(activity);
+        setCurrentView("ideas");
         return;
       }
-    }
 
-    // ✅ CASO DEFAULT
-    console.log("🔄 Caso por defecto → Banco de ideas");
-    setSelectedActivity(activity);
-    setCurrentView("ideas");
+      // ✅ CASO 3: Tiene proyecto pero no idea (caso raro)
+      if (proyecto && !idea) {
+        console.log("📦 Tiene proyecto sin idea");
+        toast.info("Situación inesperada detectada. Contacta al docente.");
+        return;
+      }
 
-  } catch (err) {
-    console.error("❌ Error al verificar estado del estudiante:", err);
-
-    if (err.response?.status === 404) {
-      console.log("✅ 404 → Sin idea/proyecto, mostrar banco");
+      // ✅ CASO DEFAULT
+      console.log("🔄 Caso por defecto → Banco de ideas");
       setSelectedActivity(activity);
       setCurrentView("ideas");
-      return;
-    }
 
-    error("No fue posible verificar tu estado actual");
-  }
-};
+    } catch (err) {
+      console.error("❌ Error al verificar estado del estudiante:", err);
+
+      if (err.response?.status === 404) {
+        console.log("✅ 404 → Sin idea/proyecto, mostrar banco");
+        setSelectedActivity(activity);
+        setCurrentView("ideas");
+        return;
+      }
+
+      error("No fue posible verificar tu estado actual");
+    }
+  };
 
 
   const backToActivities = () => {
@@ -428,8 +478,8 @@ const handleActivityClick = async (activity) => {
 
       const integrantes = payload.integrantes
         ? payload.integrantes.map((m) =>
-            typeof m === "string" ? m : m.codigo || m.value
-          )
+          typeof m === "string" ? m : m.codigo || m.value
+        )
         : [];
 
       if (currentIdeaId) {
@@ -606,11 +656,10 @@ const handleActivityClick = async (activity) => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`px-6 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
-                  activeTab === tab.id
-                  ? "bg-white shadow text-gray-900"
-                  : "text-gray-600 hover:text-gray-800"
-                }`}
+                className={`px-6 py-2 rounded-full text-sm font-medium transition-all duration-200 ${activeTab === tab.id
+                    ? "bg-white shadow text-gray-900"
+                    : "text-gray-600 hover:text-gray-800"
+                  }`}
               >
                 {tab.label}
               </button>
@@ -762,10 +811,10 @@ const handleActivityClick = async (activity) => {
                         viewMode === "idea"
                           ? handleAdoptIdea
                           : viewMode === "propuesta"
-                          ? handleAdoptPropuesta
-                          : viewMode === "proyecto"
-                          ? handleContinuarProyecto
-                          : null
+                            ? handleAdoptPropuesta
+                            : viewMode === "proyecto"
+                              ? handleContinuarProyecto
+                              : null
                       }
                     />
                   </div>
@@ -789,6 +838,22 @@ const handleActivityClick = async (activity) => {
                     equipo={currentEquipo}
                     actividad={actividad}
                     esquemaInfo={esquemaInfo}
+                    currentUserCode={userData?.codigo}
+                    onBack={backToActivities}
+                  />
+                ) : currentView === "corregirProyecto" ? (
+                  <CorregirProyecto
+                    idIdea={currentIdeaId}
+                    idProyecto={currentProyecto?.id_proyecto}
+                    groupParams={groupParams}
+                    currentUserCode={userData?.codigo}
+                    onBack={backToActivities}
+                    esProyectoSeleccionado={currentProyecto?.estado === "SELECCIONADO"}
+                  />
+                ) : currentView === "proyectoCalificado" ? (
+                  <ProyectoCalificado
+                    proyecto={currentProyecto}
+                    actividad={actividad}
                     currentUserCode={userData?.codigo}
                     onBack={backToActivities}
                   />
@@ -948,9 +1013,8 @@ const ItemsDisplayTree = ({ items, level = 0 }) => {
           <div className="flex items-center gap-2 py-1">
             <span className="w-2 h-2 bg-red-600 rounded-full"></span>
             <span
-              className={`${
-                level === 0 ? "font-semibold text-gray-900" : "text-gray-700"
-              }`}
+              className={`${level === 0 ? "font-semibold text-gray-900" : "text-gray-700"
+                }`}
             >
               {item.nombre}
             </span>
