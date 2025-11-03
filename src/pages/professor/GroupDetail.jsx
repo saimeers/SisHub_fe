@@ -273,7 +273,7 @@ const GroupDetail = () => {
   };
 
   const tabs = [
-    { id: "proyecto", label: "Proyecto" },
+    { id: "proyecto", label: "Actividad" },
     { id: "equipo", label: "Equipo" },
     { id: "participantes", label: "Participantes" },
   ];
@@ -403,9 +403,14 @@ const IdeasListView = ({
   projects,
   onBack,
 }) => {
+  const hasIdeas = ideas && ideas.length > 0;
+  const hasProjects = projects && projects.length > 0;
+  const isLoading = loadingIdeas || loadingProjects;
+  const isEmpty = !hasIdeas && !hasProjects && !isLoading;
+
   return (
     <div className="bg-white rounded-2xl border border-gray-200 p-6">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-end mb-6">
         <button
           onClick={onBack}
           className="px-4 py-2 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors text-sm font-medium"
@@ -414,86 +419,86 @@ const IdeasListView = ({
         </button>
       </div>
 
-      <div className="space-y-8">
-        <section>
-          {loadingIdeas ? (
-            <p className="text-gray-500">Cargando ideas...</p>
-          ) : ideas && ideas.length > 0 ? (
-            <div className="space-y-4">
-              {ideas.map((idea, idx) => (
-                <ProjectCard
-                  key={idea?.id_idea || idea?.id || idx}
-                  title={idea?.titulo || "Idea"}
-                  description={idea?.problema || ""}
-                  status={idea?.Estado?.descripcion || "en revisión"}
-                  progress={0}
-                  hideTags
-                  hideActions
-                  hideProgress
-                  hideAlcance
-                  onClick={() => {}}
-                />
-              ))}
-            </div>
-          ) : (
-            <p className="text-gray-500">
-              No hay ideas registradas para este grupo.
-            </p>
-          )}
-        </section>
-
-        <section>
-          {loadingProjects ? (
-            <p className="text-gray-500">Cargando proyectos...</p>
-          ) : projects && projects.length > 0 ? (
-            <div className="space-y-4">
-              {projects.map((proy, idx) => {
-                const tags = Array.isArray(proy?.tecnologias)
-                  ? proy.tecnologias
-                  : typeof proy?.tecnologias === "string"
-                  ? proy.tecnologias
-                      .split(",")
-                      .map((t) => t.trim())
-                      .filter(Boolean)
-                  : proy?.tags || [];
-
-                const progress =
-                  typeof proy?.porcentaje_ejecucion === "number"
-                    ? proy.porcentaje_ejecucion
-                    : proy?.progress ?? 0;
-
-                const alcanceTexto = proy?.Tipo_alcance?.nombre || undefined;
-                const statusTexto =
-                  proy?.estado || proy?.status || "en revisión";
-
-                return (
+      {isEmpty ? (
+        <div className="text-center py-12">
+          <p className="text-gray-500">
+            No hay ideas ni proyectos registrados para este grupo.
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-8">
+          <section>
+            {loadingIdeas ? (
+              <p className="text-gray-500">Cargando ideas...</p>
+            ) : hasIdeas ? (
+              <div className="space-y-4">
+                {ideas.map((idea, idx) => (
                   <ProjectCard
-                    key={proy?.id_proyecto || proy?.id || idx}
-                    title={proy?.Idea?.titulo || "Proyecto"}
-                    description={
-                      proy?.Idea?.objetivo_general ||
-                      proy?.linea_investigacion ||
-                      ""
-                    }
-                    status={statusTexto}
-                    progress={progress}
-                    tags={tags}
-                    tipoAlcance={alcanceTexto}
-                    onDocumentsClick={() => {}}
-                    onCodeClick={() => {}}
-                    onVersionsClick={() => {}}
+                    key={idea?.id_idea || idea?.id || idx}
+                    title={idea?.titulo || "Idea"}
+                    description={idea?.objetivo_general || ""}
+                    status={idea?.Estado?.descripcion || "en revisión"}
+                    progress={0}
+                    hideTags
+                    hideActions
+                    hideProgress
+                    hideAlcance
                     onClick={() => {}}
                   />
-                );
-              })}
-            </div>
-          ) : (
-            <p className="text-gray-500">
-              No hay proyectos registrados para este grupo.
-            </p>
-          )}
-        </section>
-      </div>
+                ))}
+              </div>
+            ) : null}
+          </section>
+
+          <section>
+            {loadingProjects ? (
+              <p className="text-gray-500">Cargando proyectos...</p>
+            ) : hasProjects ? (
+              <div className="space-y-4">
+                {projects.map((proy, idx) => {
+                  const tags = Array.isArray(proy?.tecnologias)
+                    ? proy.tecnologias
+                    : typeof proy?.tecnologias === "string"
+                    ? proy.tecnologias
+                        .split(",")
+                        .map((t) => t.trim())
+                        .filter(Boolean)
+                    : proy?.tags || [];
+
+                  const progress =
+                    typeof proy?.porcentaje_ejecucion === "number"
+                      ? proy.porcentaje_ejecucion
+                      : proy?.progress ?? 0;
+
+                  const alcanceTexto = proy?.Tipo_alcance?.nombre || undefined;
+                  const statusTexto =
+                    proy?.estado || proy?.status || "en revisión";
+
+                  return (
+                    <ProjectCard
+                      key={proy?.id_proyecto || proy?.id || idx}
+                      title={proy?.Idea?.titulo || "Proyecto"}
+                      description={
+                        proy?.Idea?.objetivo_general ||
+                        proy?.linea_investigacion ||
+                        ""
+                      }
+                      status={statusTexto}
+                      progress={progress}
+                      tags={tags}
+                      tipoAlcance={alcanceTexto}
+                      onDocumentsClick={() => {}}
+                      onCodeClick={() => {}}
+                      onVersionsClick={() => {}}
+                      onClick={() => {}}
+                    />
+                  );
+                })}
+              </div>
+            ) : null}
+          </section>
+        </div>
+      )}
     </div>
   );
 };
