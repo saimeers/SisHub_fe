@@ -20,6 +20,10 @@ import { useToast } from "../../hooks/useToast";
 import { useAuth } from "../../contexts/AuthContext";
 import { listarIdeasGrupo } from "../../services/ideaServices";
 import ProjectCard from "../../components/ui/ProjectCard";
+import ProjectDetailsView from "../../components/ui/ProjectDetailsView";
+import ProjectDocumentsView from "../../components/ui/ProjectDocumentsView";
+import ProjectDevelopmentView from "../../components/ui/ProjectDevelopmentView";
+import ProjectVersionsView from "../../components/ui/ProjectVersionsView";
 import { listarProyectosPorGrupo } from "../../services/projectServices";
 import { toast } from "react-toastify";
 
@@ -435,10 +439,96 @@ const IdeasListView = ({
   onBack,
   onReviewIdea,
 }) => {
+  const [currentView, setCurrentView] = useState("list"); // list | details | documents | development | versions
+  const [selectedProjectId, setSelectedProjectId] = useState(null);
   const hasIdeas = ideas && ideas.length > 0;
   const hasProjects = projects && projects.length > 0;
   const isLoading = loadingIdeas || loadingProjects;
   const isEmpty = !hasIdeas && !hasProjects && !isLoading;
+
+  const renderProjects = () => {
+    if (currentView === "details" && selectedProjectId) {
+      return (
+        <ProjectDetailsView
+          projectId={selectedProjectId}
+          onBack={() => setCurrentView("list")}
+        />
+      );
+    }
+    if (currentView === "documents" && selectedProjectId) {
+      return (
+        <ProjectDocumentsView
+          projectId={selectedProjectId}
+          onBack={() => setCurrentView("list")}
+        />
+      );
+    }
+    if (currentView === "development" && selectedProjectId) {
+      return (
+        <ProjectDevelopmentView
+          projectId={selectedProjectId}
+          onBack={() => setCurrentView("list")}
+        />
+      );
+    }
+    if (currentView === "versions" && selectedProjectId) {
+      return (
+        <ProjectVersionsView
+          projectId={selectedProjectId}
+          onBack={() => setCurrentView("list")}
+        />
+      );
+    }
+
+    return (
+      <div className="space-y-4">
+        {projects.map((proy, idx) => {
+          const tags = Array.isArray(proy?.tecnologias)
+            ? proy.tecnologias
+            : typeof proy?.tecnologias === "string"
+            ? proy.tecnologias
+                .split(",")
+                .map((t) => t.trim())
+                .filter(Boolean)
+            : proy?.tags || [];
+
+          const progress = typeof proy?.porcentaje === "number" ? proy.porcentaje : 0;
+          const alcanceTexto = proy?.Tipo_alcance?.nombre || proy?.TipoAlcance?.nombre || undefined;
+          const statusTexto = proy?.Estado?.descripcion || "EN_CURSO";
+
+          return (
+            <ProjectCard
+              key={proy?.id_proyecto || proy?.id || idx}
+              title={proy?.Idea?.titulo || "Proyecto"}
+              description={
+                proy?.Idea?.objetivo_general || proy?.linea_investigacion || ""
+              }
+              status={statusTexto}
+              progress={progress}
+              tags={tags}
+              tipoAlcance={alcanceTexto}
+              onDocumentsClick={() => {
+                setSelectedProjectId(proy.id_proyecto);
+                setCurrentView("documents");
+              }}
+              onCodeClick={() => {
+                setSelectedProjectId(proy.id_proyecto);
+                setCurrentView("development");
+              }}
+              onVersionsClick={() => {
+                setSelectedProjectId(proy.id_proyecto);
+                setCurrentView("versions");
+              }}
+              onClick={() => {
+                setSelectedProjectId(proy.id_proyecto);
+                setCurrentView("details");
+              }}
+            />
+          );
+        })}
+      </div>
+    );
+  };
 
   return (
     <div className="bg-white rounded-2xl border border-gray-200 p-6">
@@ -579,48 +669,7 @@ const IdeasListView = ({
                   </span>
                 </div>
               ) : hasProjects ? (
-                <div className="space-y-4">
-                  {projects.map((proy, idx) => {
-                    const tags = Array.isArray(proy?.tecnologias)
-                      ? proy.tecnologias
-                      : typeof proy?.tecnologias === "string"
-                      ? proy.tecnologias
-                          .split(",")
-                          .map((t) => t.trim())
-                          .filter(Boolean)
-                      : proy?.tags || [];
-
-                    const progress =
-                      typeof proy?.porcentaje_ejecucion === "number"
-                        ? proy.porcentaje_ejecucion
-                        : proy?.progress ?? 0;
-
-                    const alcanceTexto =
-                      proy?.Tipo_alcance?.nombre || undefined;
-                    const statusTexto =
-                      proy?.estado || proy?.status || "REVISION";
-
-                    return (
-                      <ProjectCard
-                        key={proy?.id_proyecto || proy?.id || idx}
-                        title={proy?.Idea?.titulo || "Proyecto"}
-                        description={
-                          proy?.Idea?.objetivo_general ||
-                          proy?.linea_investigacion ||
-                          ""
-                        }
-                        status={statusTexto}
-                        progress={progress}
-                        tags={tags}
-                        tipoAlcance={alcanceTexto}
-                        onDocumentsClick={() => {}}
-                        onCodeClick={() => {}}
-                        onVersionsClick={() => {}}
-                        onClick={() => {}}
-                      />
-                    );
-                  })}
-                </div>
+                renderProjects()
               ) : null}
             </section>
           )}

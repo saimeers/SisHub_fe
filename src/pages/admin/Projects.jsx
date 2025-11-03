@@ -6,6 +6,7 @@ import useProjectFilters from "../../modules/admin/hooks/useProjectFilters";
 import ProjectVersionsView from "../../components/ui/ProjectVersionsView";
 import ProjectDocumentsView from "../../components/ui/ProjectDocumentsView";
 import ProjectDevelopmentView from "../../components/ui/ProjectDevelopmentView";
+import ProjectDetailsView from "../../components/ui/ProjectDetailsView";
 import {
   listarProyectosParaDirector,
   listarProyectosParaEstudiante,
@@ -16,7 +17,7 @@ const Projects = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [searchError, setSearchError] = useState(null);
 
-  // Vistas: list | versions | documents | development
+  // Vistas: list | details | versions | documents | development
   const [currentView, setCurrentView] = useState("list");
   const [selectedProjectId, setSelectedProjectId] = useState(null);
 
@@ -176,8 +177,8 @@ const Projects = () => {
   }, []);
 
   const handleProjectClick = (project) => {
-    console.log("Proyecto seleccionado:", project);
-    // Podrías agregar una vista de detalle aquí si lo deseas
+    setSelectedProjectId(project.id);
+    setCurrentView("details");
   };
 
   const handleDocumentsClick = (projectId, e) => {
@@ -208,6 +209,14 @@ const Projects = () => {
   });
 
   const renderContent = () => {
+    if (currentView === "details" && selectedProjectId) {
+      return (
+        <ProjectDetailsView
+          projectId={selectedProjectId}
+          onBack={() => setCurrentView("list")}
+        />
+      );
+    }
     if (currentView === "versions" && selectedProjectId) {
       return (
         <ProjectVersionsView
