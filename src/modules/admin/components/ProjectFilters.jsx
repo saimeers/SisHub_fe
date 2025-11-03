@@ -10,7 +10,8 @@ const ProjectFilters = ({
   searchTerm = "",
   studentCode = "",
   filters = {},
-  filterOptions = { tiposAlcance: [], tecnologias: [] },
+  filterOptions = { tiposAlcance: [], tecnologias: [], estados: [], años: [] },
+  loadingTipos = false,
 }) => {
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [localStudentCode, setLocalStudentCode] = useState(studentCode);
@@ -58,7 +59,7 @@ const ProjectFilters = ({
   };
 
   const hasActiveFilters =
-    searchTerm || filters.tipoAlcance || filters.tecnologia || studentCode;
+    searchTerm || filters.tipoAlcance || filters.tecnologia || filters.estado || filters.avance || filters.año || studentCode;
 
   const isValidStudentCode = localStudentCode.trim().length >= 7;
 
@@ -167,6 +168,7 @@ const ProjectFilters = ({
         onApplyFilters={handleApplyFilters}
         currentFilters={filters}
         filterOptions={filterOptions}
+        loadingTipos={loadingTipos}
       />
     </>
   );
