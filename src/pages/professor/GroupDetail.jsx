@@ -441,18 +441,222 @@ const IdeasListView = ({
 }) => {
   const [currentView, setCurrentView] = useState("list"); // list | details | documents | development | versions
   const [selectedProjectId, setSelectedProjectId] = useState(null);
+  const [statusInfoMessage, setStatusInfoMessage] = useState("");
+  const [documentsInfoMessage, setDocumentsInfoMessage] = useState("");
+  const [developmentInfoMessage, setDevelopmentInfoMessage] = useState("");
+  const [filterText, setFilterText] = useState("");
+  const [filterStatus, setFilterStatus] = useState("");
   const hasIdeas = ideas && ideas.length > 0;
   const hasProjects = projects && projects.length > 0;
   const isLoading = loadingIdeas || loadingProjects;
   const isEmpty = !hasIdeas && !hasProjects && !isLoading;
 
+  const getProjectDisplayStatus = (ideaStatusRaw, projectStatusRaw) => {
+    const idea = ideaStatusRaw ? ideaStatusRaw.toUpperCase().trim() : null;
+    const proj = projectStatusRaw ? projectStatusRaw.toUpperCase().trim() : null;
+
+    if (idea === "REVISION" && proj === null) {
+      return "Idea creada para revisar (Funciona igual para idea escogida del banco)";
+    }
+    if (idea === "STAND_BY" && proj === null) {
+      return "Idea en espera de correcciones del estudiante";
+    }
+    if (idea === "APROBADO" && proj === null) {
+      return "Idea aprobada en espera de completar datos del proyecto";
+    }
+    if (idea === "REVISION" && proj === "SELECCIONADO") {
+      return "Proyecto seleccionado del banco para continuar, en espera del docente para revisar";
+    }
+    if (idea === "REVISION" && proj === "CALIFICADO") {
+      return "Proyecto del estudiante para continuar, en espera del docente para revisar";
+    }
+    if (idea === "STAND_BY" && proj === "SELECCIONADO") {
+      return "Proyecto seleccionado del banco en espera de correcciones del estudiante";
+    }
+    if (idea === "STAND_BY" && proj === "CALIFICADO") {
+      return "Proyecto del estudiante en espera de correcciones";
+    }
+    if (idea === "APROBADO" && proj === "EN_CURSO") {
+      return "Proyecto en curso, en espera de subida de entregables del estudiante";
+    }
+    if (idea === "REVISION" && proj === "EN_CURSO") {
+      return "Proyecto en curso, en espera del docente para revisar";
+    }
+    if (idea === "APROBADO" && proj === "CALIFICADO") {
+      return "Proyecto calificado por el profesor";
+    }
+    if (idea === "LIBRE" && proj === "CALIFICADO") {
+      return "Propuesta libre";
+    }
+    if (idea === "LIBRE" && proj === null) {
+      return "Idea libre";
+    }
+
+    return projectStatusRaw || ideaStatusRaw || "EN_CURSO";
+  };
+
+  const getAllStatuses = () => {
+    const set = new Set();
+    (projects || []).forEach((proy) => {
+      const txt = getProjectDisplayStatus(
+        proy?.Idea?.Estado?.descripcion,
+        proy?.Estado?.descripcion
+      );
+      if (txt) set.add(txt);
+    });
+    return Array.from(set);
+  };
+
+  const filteredProjects = (projects || []).filter((proy) => {
+    const title = proy?.Idea?.titulo || "Proyecto";
+    const description = proy?.Idea?.objetivo_general || proy?.linea_investigacion || "";
+    const technologies = Array.isArray(proy?.tecnologias)
+      ? proy.tecnologias.join(", ")
+      : (proy?.tecnologias || "");
+    const statusText = getProjectDisplayStatus(
+      proy?.Idea?.Estado?.descripcion,
+      proy?.Estado?.descripcion
+    );
+
+    const textOk = filterText
+      ? [title, description, technologies]
+          .join(" ")
+          .toLowerCase()
+          .includes(filterText.toLowerCase())
+      : true;
+    const statusOk = filterStatus && filterStatus !== "__IDEAS_REVISION__"
+      ? statusText === filterStatus
+      : !filterStatus || filterStatus === "";
+    return textOk && statusOk;
+  });
+
   const renderProjects = () => {
-    if (currentView === "details" && selectedProjectId) {
+    const getSelectedProject = () =>
+      projects.find((p) => p?.id_proyecto === selectedProjectId);
+
+    if (currentView === "statusInfo" && selectedProjectId) {
       return (
-        <ProjectDetailsView
+        <div className="bg-white rounded-2xl border border-gray-200 p-6">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-lg font-semibold text-gray-800">Estado del proyecto</h3>
+            <button
+              onClick={() => setCurrentView("list")}
+              className="px-4 py-2 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors text-sm font-medium"
+            >
+              ← Volver
+            </button>
+          </div>
+          <div className="p-6 bg-gray-50 rounded-xl border border-gray-200">
+            <p className="text-gray-700 whitespace-pre-line">{statusInfoMessage}</p>
+          </div>
+        </div>
+      );
+    }
+    if (currentView === "documentsInfo" && selectedProjectId) {
+      return (
+        <div className="bg-white rounded-2xl border border-gray-200 p-6">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-lg font-semibold text-gray-800">Entregables</h3>
+            <button
+              onClick={() => setCurrentView("list")}
+              className="px-4 py-2 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors text-sm font-medium"
+            >
+              ← Volver
+            </button>
+          </div>
+          <div className="p-6 bg-gray-50 rounded-xl border border-gray-200">
+            <p className="text-gray-700">{documentsInfoMessage || "Entregables enviados a calificar"}</p>
+          </div>
+        </div>
+      );
+    }
+    if (currentView === "developmentInfo" && selectedProjectId) {
+      return (
+        <div className="bg-white rounded-2xl border border-gray-200 p-6">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-lg font-semibold text-gray-800">Desarrollo</h3>
+            <button
+              onClick={() => setCurrentView("list")}
+              className="px-4 py-2 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors text-sm font-medium"
+            >
+              ← Volver
+            </button>
+          </div>
+          <div className="p-6 bg-gray-50 rounded-xl border border-gray-200">
+            <p className="text-gray-700">{developmentInfoMessage || "Entregables enviados a calificar"}</p>
+          </div>
+        </div>
+      );
+    }
+    if (currentView === "development" && selectedProjectId) {
+      const sel = getSelectedProject();
+      const idea = sel?.Idea?.Estado?.descripcion
+        ? sel.Idea.Estado.descripcion.toUpperCase().trim()
+        : null;
+      const proj = sel?.Estado?.descripcion
+        ? sel.Estado.descripcion.toUpperCase().trim()
+        : null;
+
+      if (idea === "REVISION" && proj === "EN_CURSO") {
+        return (
+          <div className="p-6 bg-gray-50 rounded-xl border border-gray-200">
+            <p className="text-gray-700">Entregables enviados a calificar</p>
+          </div>
+        );
+      }
+      return (
+        <ProjectDevelopmentView
           projectId={selectedProjectId}
           onBack={() => setCurrentView("list")}
         />
+      );
+    }
+    if (currentView === "documents" && selectedProjectId) {
+      const sel = getSelectedProject();
+      const idea = sel?.Idea?.Estado?.descripcion
+        ? sel.Idea.Estado.descripcion.toUpperCase().trim()
+        : null;
+      const proj = sel?.Estado?.descripcion
+        ? sel.Estado.descripcion.toUpperCase().trim()
+        : null;
+
+      if (idea === "REVISION" && proj === "EN_CURSO") {
+        return (
+          <div className="p-6 bg-gray-50 rounded-xl border border-gray-200">
+            <p className="text-gray-700">Entregables enviados a calificar</p>
+          </div>
+        );
+      }
+      return (
+        <ProjectDocumentsView
+          projectId={selectedProjectId}
+          onBack={() => setCurrentView("list")}
+        />
+      );
+    }
+    if (currentView === "details" && selectedProjectId) {
+      const sel = getSelectedProject();
+      const idea = sel?.Idea?.Estado?.descripcion
+        ? sel.Idea.Estado.descripcion.toUpperCase().trim()
+        : null;
+      const proj = sel?.Estado?.descripcion
+        ? sel.Estado.descripcion.toUpperCase().trim()
+        : null;
+
+      const showSentForReviewNotice = idea === "REVISION" && proj === "EN_CURSO";
+
+      return (
+        <div className="space-y-4">
+          {showSentForReviewNotice && (
+            <div className="p-4 rounded-xl border border-yellow-200 bg-yellow-50 text-yellow-800">
+              Proyecto en curso, en espera del docente para revisar (entregado para calificación)
+            </div>
+          )}
+          <ProjectDetailsView
+            projectId={selectedProjectId}
+            onBack={() => setCurrentView("list")}
+          />
+        </div>
       );
     }
     if (currentView === "documents" && selectedProjectId) {
@@ -482,7 +686,7 @@ const IdeasListView = ({
 
     return (
       <div className="space-y-4">
-        {projects.map((proy, idx) => {
+        {(filteredProjects.length > 0 ? filteredProjects : []).map((proy, idx) => {
           const tags = Array.isArray(proy?.tecnologias)
             ? proy.tecnologias
             : typeof proy?.tecnologias === "string"
@@ -494,7 +698,29 @@ const IdeasListView = ({
 
           const progress = typeof proy?.porcentaje === "number" ? proy.porcentaje : 0;
           const alcanceTexto = proy?.Tipo_alcance?.nombre || proy?.TipoAlcance?.nombre || undefined;
-          const statusTexto = proy?.Estado?.descripcion || "EN_CURSO";
+          const statusTexto = getProjectDisplayStatus(
+            proy?.Idea?.Estado?.descripcion,
+            proy?.Estado?.descripcion
+          );
+
+          const handleProjectClick = () => {
+            const ideaState = proy?.Idea?.Estado?.descripcion || null;
+            const projectState = proy?.Estado?.descripcion || null;
+            const idea = ideaState ? ideaState.toUpperCase().trim() : null;
+            const proj = projectState ? projectState.toUpperCase().trim() : null;
+
+            const shouldShowStatusInfo =
+              proj === "SELECCIONADO" ||
+              proj === "CALIFICADO";
+
+            setSelectedProjectId(proy.id_proyecto);
+            if (shouldShowStatusInfo) {
+              setStatusInfoMessage(statusTexto);
+              setCurrentView("statusInfo");
+            } else {
+              setCurrentView("details");
+            }
+          };
 
           return (
             <ProjectCard
@@ -508,20 +734,40 @@ const IdeasListView = ({
               tags={tags}
               tipoAlcance={alcanceTexto}
               onDocumentsClick={() => {
+                // Determinar antes de cambiar de vista para evitar condiciones de carrera
+                const ideaState = proy?.Idea?.Estado?.descripcion || null;
+                const projectState = proy?.Estado?.descripcion || null;
+                const idea = ideaState ? ideaState.toUpperCase().trim() : null;
+                const proj = projectState ? projectState.toUpperCase().trim() : null;
+
                 setSelectedProjectId(proy.id_proyecto);
-                setCurrentView("documents");
+                if (idea === "REVISION" && proj === "EN_CURSO") {
+                  setDocumentsInfoMessage("Entregables enviados a calificar");
+                  setCurrentView("documentsInfo");
+                } else {
+                  setCurrentView("documents");
+                }
               }}
               onCodeClick={() => {
+                const ideaState = proy?.Idea?.Estado?.descripcion || null;
+                const projectState = proy?.Estado?.descripcion || null;
+                const idea = ideaState ? ideaState.toUpperCase().trim() : null;
+                const proj = projectState ? projectState.toUpperCase().trim() : null;
+
                 setSelectedProjectId(proy.id_proyecto);
-                setCurrentView("development");
+                if (idea === "REVISION" && proj === "EN_CURSO") {
+                  setDevelopmentInfoMessage("Entregables enviados a calificar");
+                  setCurrentView("developmentInfo");
+                } else {
+                  setCurrentView("development");
+                }
               }}
               onVersionsClick={() => {
                 setSelectedProjectId(proy.id_proyecto);
                 setCurrentView("versions");
               }}
               onClick={() => {
-                setSelectedProjectId(proy.id_proyecto);
-                setCurrentView("details");
+                handleProjectClick();
               }}
             />
           );
@@ -540,6 +786,48 @@ const IdeasListView = ({
           ← Volver a la actividad
         </button>
       </div>
+
+      {currentView === "list" && (
+        <div className="bg-white border border-gray-200 rounded-2xl p-4 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <input
+              type="text"
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-600"
+              placeholder="Buscar por título, descripción o tecnología"
+              value={filterText}
+              onChange={(e) => setFilterText(e.target.value)}
+            />
+            <select
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-600"
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+            >
+              <option value="">Todos los estados</option>
+              <option value="__IDEAS_REVISION__">Ideas en revisión</option>
+              {getAllStatuses().map((s, i) => (
+                <option key={i} value={s}>
+                  {s}
+                </option>
+              ))}
+            </select>
+            <div></div>
+          </div>
+          {(filterText || filterStatus) && (
+            <div className="flex justify-end mt-3">
+              <button
+                type="button"
+                className="text-sm text-gray-600 hover:text-gray-900 underline"
+                onClick={() => {
+                  setFilterText("");
+                  setFilterStatus("");
+                }}
+              >
+                Limpiar filtros
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Mensaje cuando no hay ni ideas ni proyectos */}
       {isEmpty && (
@@ -567,7 +855,7 @@ const IdeasListView = ({
       {!isEmpty && (
         <div className="space-y-8">
           {/* Sección de Ideas - Solo mostrar si hay ideas */}
-          {(hasIdeas || loadingIdeas) && (
+          {currentView === "list" && (hasIdeas || loadingIdeas) && (filterStatus === "" || filterStatus === "__IDEAS_REVISION__") && (
             <section>
               {loadingIdeas ? (
                 <div className="flex items-center justify-center py-8">
@@ -595,7 +883,23 @@ const IdeasListView = ({
                 </div>
               ) : hasIdeas ? (
                 <div className="space-y-4">
-                  {ideas.map((idea, idx) => {
+                  {(filterStatus === "__IDEAS_REVISION__"
+                    ? ideas.filter(
+                        (i) =>
+                          (i?.Estado?.descripcion || "").toUpperCase() === "REVISION" &&
+                          (!filterText ||
+                            ((i?.titulo || "") + " " + (i?.objetivo_general || ""))
+                              .toLowerCase()
+                              .includes(filterText.toLowerCase()))
+                      )
+                    : ideas.filter(
+                        (i) =>
+                          !filterText ||
+                          ((i?.titulo || "") + " " + (i?.objetivo_general || ""))
+                            .toLowerCase()
+                            .includes(filterText.toLowerCase())
+                      )
+                  ).map((idea, idx) => {
                     const isEnRevision =
                       idea?.Estado?.descripcion?.toUpperCase() === "REVISION";
 
@@ -640,7 +944,7 @@ const IdeasListView = ({
           )}
 
           {/* Sección de Proyectos - Solo mostrar si hay proyectos */}
-          {(hasProjects || loadingProjects) && (
+          {(hasProjects || loadingProjects) && (filterStatus !== "__IDEAS_REVISION__") && (
             <section>
               {loadingProjects ? (
                 <div className="flex items-center justify-center py-8">
