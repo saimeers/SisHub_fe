@@ -451,54 +451,32 @@ const IdeasListView = ({
   const isLoading = loadingIdeas || loadingProjects;
   const isEmpty = !hasIdeas && !hasProjects && !isLoading;
 
-  const getProjectDisplayStatus = (ideaStatusRaw, projectStatusRaw) => {
+  // Removed long descriptive status mapping; we now use concise labels via getProjectShortStatus
+
+  const getProjectShortStatus = (ideaStatusRaw, projectStatusRaw) => {
     const idea = ideaStatusRaw ? ideaStatusRaw.toUpperCase().trim() : null;
     const proj = projectStatusRaw ? projectStatusRaw.toUpperCase().trim() : null;
 
-    if (idea === "REVISION" && proj === null) {
-      return "Idea creada para revisar (Funciona igual para idea escogida del banco)";
-    }
-    if (idea === "STAND_BY" && proj === null) {
-      return "Idea en espera de correcciones del estudiante";
-    }
-    if (idea === "APROBADO" && proj === null) {
-      return "Idea aprobada en espera de completar datos del proyecto";
-    }
-    if (idea === "REVISION" && proj === "SELECCIONADO") {
-      return "Proyecto seleccionado del banco para continuar, en espera del docente para revisar";
-    }
-    if (idea === "REVISION" && proj === "CALIFICADO") {
-      return "Proyecto del estudiante para continuar, en espera del docente para revisar";
-    }
-    if (idea === "STAND_BY" && proj === "SELECCIONADO") {
-      return "Proyecto seleccionado del banco en espera de correcciones del estudiante";
-    }
-    if (idea === "STAND_BY" && proj === "CALIFICADO") {
-      return "Proyecto del estudiante en espera de correcciones";
-    }
-    if (idea === "APROBADO" && proj === "EN_CURSO") {
-      return "Proyecto en curso, en espera de subida de entregables del estudiante";
-    }
-    if (idea === "REVISION" && proj === "EN_CURSO") {
-      return "Proyecto en curso, en espera del docente para revisar";
-    }
-    if (idea === "APROBADO" && proj === "CALIFICADO") {
-      return "Proyecto calificado por el profesor";
-    }
-    if (idea === "LIBRE" && proj === "CALIFICADO") {
-      return "Propuesta libre";
-    }
-    if (idea === "LIBRE" && proj === null) {
-      return "Idea libre";
-    }
+    if (idea === "REVISION" && proj === null) return "A revisar";
+    if (idea === "STAND_BY" && proj === null) return "En espera de corrección del estudiante";
+    if (idea === "APROBADO" && proj === null) return "En espera de que el estudiante datos";
+    if (idea === "REVISION" && proj === "SELECCIONADO") return "A revisar";
+    if (idea === "REVISION" && proj === "CALIFICADO") return "A revisar";
+    if (idea === "STAND_BY" && proj === "SELECCIONADO") return "Enviado a correccion";
+    if (idea === "STAND_BY" && proj === "CALIFICADO") return "Enviado a correccion";
+    if (idea === "APROBADO" && proj === "EN_CURSO") return "Esperando entregables";
+    if (idea === "REVISION" && proj === "EN_CURSO") return "A calificar";
+    if (idea === "APROBADO" && proj === "CALIFICADO") return "Calificado";
+    if (idea === "LIBRE" && proj === "CALIFICADO") return "Propuesta libre";
+    if (idea === "LIBRE" && proj === null) return "Idea libre";
 
-    return projectStatusRaw || ideaStatusRaw || "EN_CURSO";
+    return proj || idea || "EN_CURSO";
   };
 
   const getAllStatuses = () => {
     const set = new Set();
     (projects || []).forEach((proy) => {
-      const txt = getProjectDisplayStatus(
+      const txt = getProjectShortStatus(
         proy?.Idea?.Estado?.descripcion,
         proy?.Estado?.descripcion
       );
@@ -513,7 +491,7 @@ const IdeasListView = ({
     const technologies = Array.isArray(proy?.tecnologias)
       ? proy.tecnologias.join(", ")
       : (proy?.tecnologias || "");
-    const statusText = getProjectDisplayStatus(
+    const statusText = getProjectShortStatus(
       proy?.Idea?.Estado?.descripcion,
       proy?.Estado?.descripcion
     );
@@ -649,7 +627,7 @@ const IdeasListView = ({
         <div className="space-y-4">
           {showSentForReviewNotice && (
             <div className="p-4 rounded-xl border border-yellow-200 bg-yellow-50 text-yellow-800">
-              Proyecto en curso, en espera del docente para revisar (entregado para calificación)
+              Proyectos entregados para calificación
             </div>
           )}
           <ProjectDetailsView
@@ -698,7 +676,7 @@ const IdeasListView = ({
 
           const progress = typeof proy?.porcentaje === "number" ? proy.porcentaje : 0;
           const alcanceTexto = proy?.Tipo_alcance?.nombre || proy?.TipoAlcance?.nombre || undefined;
-          const statusTexto = getProjectDisplayStatus(
+          const statusTexto = getProjectShortStatus(
             proy?.Idea?.Estado?.descripcion,
             proy?.Estado?.descripcion
           );
@@ -778,14 +756,7 @@ const IdeasListView = ({
 
   return (
     <div className="bg-white rounded-2xl border border-gray-200 p-6">
-      <div className="flex items-center justify-end mb-6">
-        <button
-          onClick={onBack}
-          className="px-4 py-2 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors text-sm font-medium"
-        >
-          ← Volver a la actividad
-        </button>
-      </div>
+      
 
       {currentView === "list" && (
         <div className="bg-white border border-gray-200 rounded-2xl p-4 mb-8">
@@ -928,7 +899,14 @@ const IdeasListView = ({
                         <ProjectCard
                           title={idea?.titulo || "Idea"}
                           description={idea?.objetivo_general || ""}
-                          status={idea?.Estado?.descripcion || "REVISION"}
+                          status={(() => {
+                            const st = (idea?.Estado?.descripcion || "").toUpperCase();
+                            if (st === "REVISION") return "A revisar";
+                            if (st === "STAND_BY") return "Corrección estudiante";
+                            if (st === "APROBADO") return "Completar datos";
+                            if (st === "LIBRE") return "Idea libre";
+                            return st || "REVISION";
+                          })()}
                           progress={0}
                           hideTags
                           hideActions
