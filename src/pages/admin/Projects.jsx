@@ -244,80 +244,78 @@ const Projects = () => {
 
     return (
       <>
-          {/* Componente de filtros */}
-          <ProjectFilters
-            onSearch={handleSearch}
-            onSearchByStudent={handleSearchByStudentCode}
-            onApplyFilters={handleApplyFilters}
-            onClearAll={handleClearAll}
-            searchTerm={searchTerm}
-            studentCode={studentCode}
-            filters={filters}
-            filterOptions={filterOptions}
-            isSearchingStudent={isSearchingStudent}
-            loadingTipos={loadingTipos}
-          />
+        {/* Componente de filtros */}
+        <ProjectFilters
+          onSearch={handleSearch}
+          onSearchByStudent={handleSearchByStudentCode}
+          onApplyFilters={handleApplyFilters}
+          onClearAll={handleClearAll}
+          searchTerm={searchTerm}
+          studentCode={studentCode}
+          filters={filters}
+          filterOptions={filterOptions}
+          isSearchingStudent={isSearchingStudent}
+          loadingTipos={loadingTipos}
+        />
 
-          {/* Error de búsqueda - diseño mejorado centrado */}
-          {searchError && (
-            <div className="text-center py-16 px-6">
-              <div className="max-w-md mx-auto">
-                <div className="mb-4">
-                  <svg
-                    className="w-16 h-16 text-gray-400 mx-auto"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={1.5}
-                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                    />
-                  </svg>
-                </div>
-                <h3 className="text-xl font-semibold text-gray-700 mb-2">
-                  No se encontraron proyectos
-                </h3>
-                <p className="text-gray-500">{searchError}</p>
+        {/* Error de búsqueda - diseño mejorado centrado */}
+        {searchError && (
+          <div className="text-center py-16 px-6">
+            <div className="max-w-md mx-auto">
+              <div className="mb-4">
+                <svg
+                  className="w-16 h-16 text-gray-400 mx-auto"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.5}
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  />
+                </svg>
               </div>
+              <h3 className="text-xl font-semibold text-gray-700 mb-2">
+                No se encontraron proyectos
+              </h3>
+              <p className="text-gray-500">{searchError}</p>
             </div>
-          )}
+          </div>
+        )}
 
-          {/* Indicador de resultados */}
-          {hasActiveFilters && !isSearchingStudent && (
-            <div className="text-sm text-gray-600">
-              Mostrando {filteredProjects.length} de {projects.length} proyectos
-            </div>
-          )}
+        {/* Indicador de resultados */}
+        {hasActiveFilters && !isSearchingStudent && (
+          <div className="text-sm text-gray-600">
+            Mostrando {filteredProjects.length} de {projects.length} proyectos
+          </div>
+        )}
 
-          {/* Loading state */}
-          {isLoading && (
-            <div className="text-center py-12">
-              <p className="text-gray-500 text-lg">Cargando proyectos...</p>
-            </div>
-          )}
+        {/* Loading state */}
+        {isLoading && (
+          <div className="text-center py-12">
+            <p className="text-gray-500 text-lg">Cargando proyectos...</p>
+          </div>
+        )}
 
-          {/* Empty state */}
-          {!isLoading && projects.length === 0 && !searchError && (
-            <div className="text-center py-12 bg-gray-50 rounded-2xl">
-              <p className="text-gray-500 text-lg">
-                No hay proyectos registrados.
-              </p>
-            </div>
-          )}
+        {/* Empty state */}
+        {!isLoading && projects.length === 0 && !searchError && (
+          <div className="text-center py-12 bg-gray-50 rounded-2xl">
+            <p className="text-gray-500 text-lg">
+              No hay proyectos registrados.
+            </p>
+          </div>
+        )}
 
-          {/* No results after filtering */}
-          {!isLoading &&
-            projects.length > 0 &&
-            filteredProjects.length === 0 && (
-              <div className="text-center py-12 bg-gray-50 rounded-2xl">
-                <p className="text-gray-500 text-lg">
-                  No se encontraron proyectos con los filtros aplicados.
-                </p>
-              </div>
-            )}
+        {/* No results after filtering */}
+        {!isLoading && projects.length > 0 && filteredProjects.length === 0 && (
+          <div className="text-center py-12 bg-gray-50 rounded-2xl">
+            <p className="text-gray-500 text-lg">
+              No se encontraron proyectos con los filtros aplicados.
+            </p>
+          </div>
+        )}
 
         {/* Projects list */}
         {!isLoading && filteredProjects.length > 0 && (
@@ -333,9 +331,7 @@ const Projects = () => {
                   progress={project.progress}
                   tipoAlcance={project.tipoAlcance}
                   onClick={() => handleProjectClick(project)}
-                  onDocumentsClick={(e) =>
-                    handleDocumentsClick(project.id, e)
-                  }
+                  onDocumentsClick={(e) => handleDocumentsClick(project.id, e)}
                   onCodeClick={(e) => handleCodeClick(project.id, e)}
                   onVersionsClick={(e) => handleVersionsClick(project.id, e)}
                 />
@@ -350,9 +346,7 @@ const Projects = () => {
   return (
     <AdminLayout title="Proyectos">
       <div className="w-full max-w-6xl mx-auto py-8 px-6">
-        <div className="flex flex-col gap-4">
-          {renderContent()}
-        </div>
+        <div className="flex flex-col gap-4">{renderContent()}</div>
       </div>
     </AdminLayout>
   );
