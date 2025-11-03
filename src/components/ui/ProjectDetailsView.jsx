@@ -54,6 +54,15 @@ const ProjectDetailsView = ({ projectId, onBack }) => {
     .map((t) => t.trim())
     .filter(Boolean);
 
+  const teamMembers = (() => {
+    const list = Array.isArray(data?.Historial_Proyectos) ? data.Historial_Proyectos : [];
+    // Tomar el último historial que tenga equipo con integrantes
+    const withTeam = [...list].reverse().find(
+      (h) => h?.equipo?.Integrante_Equipos && h.equipo.Integrante_Equipos.length > 0
+    );
+    return withTeam?.equipo?.Integrante_Equipos || [];
+  })();
+
   return (
     <div className="w-full max-w-6xl mx-auto">
       <div className="mb-6 flex items-center justify-between">
@@ -74,7 +83,7 @@ const ProjectDetailsView = ({ projectId, onBack }) => {
       {error && <div className="py-16 text-center text-red-600">{error}</div>}
 
       {!loading && !error && (
-        <div className="space-y-6">
+        <div className="space-y-8">
           <div className="flex items-center gap-3">
             {estado && <StatusBadge status={estado} />}
             {alcance && (
@@ -97,7 +106,7 @@ const ProjectDetailsView = ({ projectId, onBack }) => {
             <InfoItem label="Tipo de Alcance" value={alcance} />
             <InfoItem label="Línea de Investigación" value={data?.linea_investigacion} />
             <InfoItem label="Palabras Clave" value={data?.palabras_clave} />
-            <InfoItem label="Fecha de Creación" value={data?.fecha_creacion} />
+            <InfoItem label="Fecha de Creación" value={data?.fecha_creacion ? new Date(data.fecha_creacion).toLocaleString("es-ES") : ""} />
           </div>
 
           {tecnologias.length > 0 && (
@@ -112,6 +121,65 @@ const ProjectDetailsView = ({ projectId, onBack }) => {
               </div>
             </div>
           )}
+
+          {Array.isArray(teamMembers) && teamMembers.length > 0 && (
+            <div>
+              <p className="text-sm font-semibold text-gray-700 mb-2">Integrantes del equipo</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {teamMembers.map((m, idx) => {
+                  const nombre = m?.Usuario?.nombre || "Sin nombre";
+                  const codigo = m?.Usuario?.codigo || "-";
+                  const rol = m?.rol_equipo || "Integrante";
+                  const isLeader = String(rol).toLowerCase().includes("líder") || String(rol).toLowerCase().includes("lider");
+                  return (
+                    <div key={idx} className="border border-gray-200 rounded-lg p-3 flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">{nombre}</p>
+                        <p className="text-xs text-gray-600">Código: {codigo}</p>
+                      </div>
+                      <span className={`px-2 py-1 rounded-full text-xs font-semibold border ${
+                        isLeader ? "bg-purple-100 text-purple-800 border-purple-200" : "bg-gray-100 text-gray-800 border-gray-200"
+                      }`}>
+                        {rol}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {(data?.Idea?.problema || data?.Idea?.justificacion) && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {data?.Idea?.problema && (
+                <InfoItem label="Problema" value={data.Idea.problema} />
+              )}
+              {data?.Idea?.justificacion && (
+                <InfoItem label="Justificación" value={data.Idea.justificacion} />
+              )}
+            </div>
+          )}
+
+          {data?.Idea?.objetivos_especificos && (
+            <div>
+              <p className="text-sm font-semibold text-gray-700 mb-2">Objetivos específicos</p>
+              {(() => {
+                const items = String(data.Idea.objetivos_especificos)
+                  .split(/\r?\n|;|,/)
+                  .map((s) => s.trim())
+                  .filter(Boolean);
+                return (
+                  <ol className="list-decimal ml-5 space-y-1 text-gray-900">
+                    {items.map((it, idx) => (
+                      <li key={idx}>{it}</li>
+                    ))}
+                  </ol>
+                );
+              })()}
+            </div>
+          )}
+
+          {/* Secciones de Entregables e Historial se gestionan en sus vistas dedicadas */}
         </div>
       )}
     </div>
