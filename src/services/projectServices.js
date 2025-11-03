@@ -55,13 +55,28 @@ export const listarProyectosParaDocente = async (codigo_docente) => {
 export const listarProyectosPorGrupo = async (grupo) => {
   try {
     const { codigo_materia, nombre, periodo, anio } = grupo;
-    const response = await axiosInstance.get(`${PROJECTS_BASE}/listar/porGrupo`, {
-      params: { codigo_materia, nombre, periodo, anio },
-    });
-    
+    const response = await axiosInstance.get(
+      `${PROJECTS_BASE}/listar/porGrupo`,
+      {
+        params: { codigo_materia, nombre, periodo, anio },
+      }
+    );
+
     return Array.isArray(response.data) ? response.data : [];
   } catch (error) {
     console.error("Error al listar proyectos por grupo:", error);
+    throw error;
+  }
+};
+
+export const verDetallesProyecto = async (id_proyecto) => {
+  try {
+    const response = await axiosInstance.get(
+      `${PROJECTS_BASE}/verDetalle/${id_proyecto}`
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error al listar detalles del proyecto:", error);
     throw error;
   }
 };
@@ -71,4 +86,5 @@ export default {
   listarProyectosParaEstudiante,
   listarProyectosParaDocente,
   listarProyectosPorGrupo,
+  verDetallesProyecto,
 };

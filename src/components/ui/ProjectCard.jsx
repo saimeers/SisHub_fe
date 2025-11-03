@@ -71,13 +71,22 @@ const StatusBadge = ({ status }) => {
     },
   };
 
-  const config = statusConfig[status] || statusConfig.EN_CURSO;
+  const config = statusConfig[status];
 
+  if (config) {
+    return (
+      <span
+        className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${config.bg} ${config.text} ${config.border} border`}
+      >
+        {config.label}
+      </span>
+    );
+  }
+
+  // Fallback: mostrar el texto recibido con estilo neutro cuando es un estado descriptivo personalizado
   return (
-    <span
-      className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${config.bg} ${config.text} ${config.border} border`}
-    >
-      {config.label}
+    <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-800 border border-gray-200`}>
+      {status || ""}
     </span>
   );
 };

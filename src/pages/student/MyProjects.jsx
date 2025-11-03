@@ -1,7 +1,12 @@
 import React, { useEffect, useMemo, useState } from "react";
 import StudentLayout from "../../modules/student/layouts/StudentLayout";
 import ApprovedProjectCard from "../../components/ui/ProjectCard";
-import SearchBar from "../../components/ui/SearchBar";
+import ProjectVersionsView from "../../components/ui/ProjectVersionsView";
+import ProjectDocumentsView from "../../components/ui/ProjectDocumentsView";
+import ProjectDevelopmentView from "../../components/ui/ProjectDevelopmentView";
+import ProjectDetailsView from "../../components/ui/ProjectDetailsView";
+import ProjectFilters from "../../modules/admin/components/ProjectFilters";
+import useProjectFilters from "../../modules/admin/hooks/useProjectFilters";
 import { useAuth } from "../../contexts/AuthContext";
 import { listarProyectosParaEstudiante } from "../../services/projectServices";
 
@@ -17,16 +22,16 @@ const MyProjects = () => {
         const mapped = Array.isArray(data)
           ? data.map((p) => ({
               id: p.id_proyecto,
-              title: `Proyecto ${p.id_proyecto}`,
+              title: p.Idea?.titulo || `Proyecto ${p.id_proyecto}`,
               description: p.Idea?.objetivo_general || "",
               tags: (p.tecnologias || "")
                 .split(",")
                 .map((s) => s.trim())
                 .filter(Boolean),
-              status: undefined,
+              status: p.Estado?.descripcion || "EN_CURSO",
               logo: null,
-              tipoAlcance: p.Tipo_alcance?.nombre,
-              progress: 0,
+              tipoAlcance: p.Tipo_alcance?.nombre || p.TipoAlcance?.nombre,
+              progress: p.porcentaje || 0,
             }))
           : [];
         setProjects(mapped);
@@ -38,40 +43,106 @@ const MyProjects = () => {
     load();
   }, [userData]);
 
-  const [query, setQuery] = useState("");
-  const filteredProjects = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return projects;
-    return projects.filter((p) => {
-      const inTitle = (p.title || "").toLowerCase().includes(q);
-      const inTags = (p.tags || []).some((t) => String(t).toLowerCase().includes(q));
-      return inTitle || inTags;
-    });
-  }, [projects, query]);
+  // Filtros similares a admin
+  const {
+    searchTerm,
+    studentCode,
+    filters,
+    filteredProjects,
+    filterOptions,
+    handleSearch,
+    handleSearchByStudentCode,
+    handleApplyFilters,
+    clearAllFilters: clearFilters,
+    hasActiveFilters,
+    isSearchingStudent,
+    loadingTipos,
+  } = useProjectFilters(projects, async () => {});
+
+  // Vistas
+  const [currentView, setCurrentView] = useState("list");
+  const [selectedProjectId, setSelectedProjectId] = useState(null);
 
   const handleProjectClick = (project) => {
-    console.log("Proyecto seleccionado:", project);
-    // Aquí se abrirá el detalle del proyecto
+    setSelectedProjectId(project.id);
+    setCurrentView("details");
   };
 
   const handleDocumentsClick = (projectId, e) => {
     e?.stopPropagation();
-    console.log("Ver documentos del proyecto:", projectId);
-    // Aquí se abrirá la vista de documentos
+    setSelectedProjectId(projectId);
+    setCurrentView("documents");
   };
 
   const handleCodeClick = (projectId, e) => {
     e?.stopPropagation();
-    console.log("Ver código del proyecto:", projectId);
-    // Aquí se abrirá el repositorio o código
+    setSelectedProjectId(projectId);
+    setCurrentView("development");
   };
 
-  return (
-    <StudentLayout title="Mis Proyectos">
-      <div className="w-full max-w-6xl mx-auto py-8 px-6">
-        <div className="mb-4 flex items-center">
-          <SearchBar placeholder="Buscar por nombre o tecnología" onSearch={setQuery} />
+  const handleVersionsClick = (projectId, e) => {
+    e?.stopPropagation();
+    setSelectedProjectId(projectId);
+    setCurrentView("versions");
+  };
+
+  const renderContent = () => {
+    if (currentView === "details" && selectedProjectId) {
+      return (
+        <ProjectDetailsView
+          projectId={selectedProjectId}
+          onBack={() => setCurrentView("list")}
+        />
+      );
+    }
+    if (currentView === "versions" && selectedProjectId) {
+      return (
+        <ProjectVersionsView
+          projectId={selectedProjectId}
+          onBack={() => setCurrentView("list")}
+        />
+      );
+    }
+    if (currentView === "documents" && selectedProjectId) {
+      return (
+        <ProjectDocumentsView
+          projectId={selectedProjectId}
+          onBack={() => setCurrentView("list")}
+        />
+      );
+    }
+    if (currentView === "development" && selectedProjectId) {
+      return (
+        <ProjectDevelopmentView
+          projectId={selectedProjectId}
+          onBack={() => setCurrentView("list")}
+        />
+      );
+    }
+
+    return (
+      <>
+        <div className="mb-6">
+          <ProjectFilters
+            onSearch={handleSearch}
+            onSearchByStudent={handleSearchByStudentCode}
+            onApplyFilters={handleApplyFilters}
+            onClearAll={clearFilters}
+            searchTerm={searchTerm}
+            studentCode={studentCode}
+            filters={filters}
+            filterOptions={filterOptions}
+            isSearchingStudent={isSearchingStudent}
+            loadingTipos={loadingTipos}
+          />
         </div>
+
+        {hasActiveFilters && (
+          <div className="text-sm text-gray-600 mb-2">
+            Mostrando {filteredProjects.length} de {projects.length} proyectos
+          </div>
+        )}
+
         {filteredProjects.length === 0 ? (
           <div className="text-center py-12 bg-gray-100 rounded-2xl">
             <p className="text-gray-500 text-lg">No se encontraron proyectos.</p>
@@ -91,11 +162,18 @@ const MyProjects = () => {
                 onClick={() => handleProjectClick(project)}
                 onDocumentsClick={(e) => handleDocumentsClick(project.id, e)}
                 onCodeClick={(e) => handleCodeClick(project.id, e)}
+                onVersionsClick={(e) => handleVersionsClick(project.id, e)}
               />
             ))}
           </div>
         )}
-      </div>
+      </>
+    );
+  };
+
+  return (
+    <StudentLayout title="Mis Proyectos">
+      <div className="w-full max-w-6xl mx-auto py-8 px-6">{renderContent()}</div>
     </StudentLayout>
   );
 };
