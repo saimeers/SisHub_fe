@@ -1,8 +1,13 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { listarTiposAlcance } from "../../../services/alcanceService";
 
-const useProjectFilters = (projects, onSearchByStudent) => {
+const useProjectFilters = (
+  projects,
+  onSearchByStudent,
+  onClearStudentSearch
+) => {
   const [searchTerm, setSearchTerm] = useState("");
+  const [studentCode, setStudentCode] = useState("");
   const [filters, setFilters] = useState({
     tipoAlcance: "",
     tecnologia: "",
@@ -17,7 +22,6 @@ const useProjectFilters = (projects, onSearchByStudent) => {
       setLoadingTipos(true);
       try {
         const data = await listarTiposAlcance();
-        // Extraer solo los nombres de los tipos de alcance
         const nombres = data.map((tipo) => tipo.nombre);
         setTiposAlcanceBackend(nombres);
       } catch (error) {
@@ -31,27 +35,6 @@ const useProjectFilters = (projects, onSearchByStudent) => {
     cargarTiposAlcance();
   }, []);
 
-  // Detectar si es un código de estudiante (solo números, típicamente 7-10 dígitos)
-  const isStudentCode = (value) => {
-    const trimmed = value.trim();
-    return /^\d{7,10}$/.test(trimmed);
-  };
-
-  // Efecto para buscar por estudiante cuando se detecta un código
-  useEffect(() => {
-    const trimmed = searchTerm.trim();
-
-    if (isStudentCode(trimmed)) {
-      setIsSearchingStudent(true);
-      // Llamar al endpoint de búsqueda por estudiante
-      if (onSearchByStudent) {
-        onSearchByStudent(trimmed);
-      }
-    } else {
-      setIsSearchingStudent(false);
-    }
-  }, [searchTerm, onSearchByStudent]);
-
   // Obtener todas las opciones únicas de los proyectos
   const filterOptions = useMemo(() => {
     const allTags = new Set();
@@ -63,7 +46,6 @@ const useProjectFilters = (projects, onSearchByStudent) => {
     });
 
     return {
-      // Usar los tipos de alcance del backend en lugar de extraerlos de los proyectos
       tiposAlcance: tiposAlcanceBackend,
       tecnologias: Array.from(allTags).sort(),
     };
@@ -71,22 +53,33 @@ const useProjectFilters = (projects, onSearchByStudent) => {
 
   // Aplicar filtros y búsqueda
   const filteredProjects = useMemo(() => {
-    // Si está buscando por estudiante, no filtrar aquí
-    // (los proyectos ya vienen filtrados del backend)
+    console.log(
+      "🔧 Aplicando filtros. isSearchingStudent:",
+      isSearchingStudent
+    );
+
+    // Si está buscando por estudiante, devolver los proyectos tal cual
+    // (ya vienen filtrados del backend)
     if (isSearchingStudent) {
+      console.log(
+        "✅ Modo búsqueda por estudiante, retornando",
+        projects.length,
+        "proyectos"
+      );
       return projects;
     }
 
     let result = [...projects];
 
-    // Filtrar por búsqueda (título, descripción, tecnologías)
+    // Filtrar por búsqueda general (título, descripción, tecnologías y palabras clave)
     if (searchTerm.trim()) {
       const search = searchTerm.toLowerCase().trim();
       result = result.filter(
         (project) =>
           project.title?.toLowerCase().includes(search) ||
           project.description?.toLowerCase().includes(search) ||
-          project.tags?.some((tag) => tag.toLowerCase().includes(search))
+          project.tags?.some((tag) => tag.toLowerCase().includes(search)) ||
+          project.keywords?.toLowerCase().includes(search)
       );
     }
 
@@ -104,34 +97,97 @@ const useProjectFilters = (projects, onSearchByStudent) => {
       );
     }
 
+    console.log("✅ Filtros aplicados, retornando", result.length, "proyectos");
     return result;
   }, [projects, searchTerm, filters, isSearchingStudent]);
 
-  const handleSearch = (value) => {
-    setSearchTerm(value);
-  };
+  const handleSearch = useCallback(
+    (value) => {
+      console.log("🔎 Búsqueda general actualizada:", value);
+      setSearchTerm(value);
+      // Si había búsqueda por estudiante, limpiarla
+      if (isSearchingStudent) {
+        setIsSearchingStudent(false);
+        setStudentCode("");
+      }
+    },
+    [isSearchingStudent]
+  );
 
-  const handleApplyFilters = (newFilters) => {
-    setFilters(newFilters);
-  };
+  const handleSearchByStudentCode = useCallback(
+    (code) => {
+      console.log("👨‍🎓 Buscando por código de estudiante:", code);
+      setStudentCode(code);
+      setIsSearchingStudent(true);
+      // Limpiar búsqueda general y filtros
+      setSearchTerm("");
+      setFilters({
+        tipoAlcance: "",
+        tecnologia: "",
+      });
+      // Llamar a la función de búsqueda del padre
+      if (onSearchByStudent) {
+        onSearchByStudent(code);
+      }
+    },
+    [onSearchByStudent]
+  );
 
-  const clearAllFilters = () => {
+  const handleApplyFilters = useCallback(
+    (newFilters) => {
+      console.log("🎯 Filtros aplicados:", newFilters);
+      setFilters(newFilters);
+      // Si había una búsqueda por estudiante, limpiarla y recargar proyectos
+      if (isSearchingStudent) {
+        console.log(
+          "🔄 Limpiando búsqueda por estudiante y recargando todos los proyectos"
+        );
+        setIsSearchingStudent(false);
+        setStudentCode("");
+        // Llamar a la función para recargar todos los proyectos
+        if (onClearStudentSearch) {
+          onClearStudentSearch();
+        }
+      }
+    },
+    [isSearchingStudent, onClearStudentSearch]
+  );
+
+  const clearAllFilters = useCallback(() => {
+    console.log("🧹 Limpiando todos los filtros");
+    const wasSearchingStudent = isSearchingStudent;
+
     setSearchTerm("");
+    setStudentCode("");
     setFilters({
       tipoAlcance: "",
       tecnologia: "",
     });
-  };
+    setIsSearchingStudent(false);
+
+    // Si estaba buscando por estudiante, recargar todos los proyectos
+    if (wasSearchingStudent && onClearStudentSearch) {
+      console.log(
+        "🔄 Recargando todos los proyectos después de limpiar búsqueda de estudiante"
+      );
+      onClearStudentSearch();
+    }
+  }, [isSearchingStudent, onClearStudentSearch]);
 
   const hasActiveFilters =
-    searchTerm.trim() !== "" || filters.tipoAlcance || filters.tecnologia;
+    searchTerm.trim() !== "" ||
+    studentCode.trim() !== "" ||
+    filters.tipoAlcance ||
+    filters.tecnologia;
 
   return {
     searchTerm,
+    studentCode,
     filters,
     filteredProjects,
     filterOptions,
     handleSearch,
+    handleSearchByStudentCode,
     handleApplyFilters,
     clearAllFilters,
     hasActiveFilters,

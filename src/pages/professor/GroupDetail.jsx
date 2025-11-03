@@ -303,7 +303,6 @@ const GroupDetail = () => {
 
   const tabs = [
     { id: "proyecto", label: "Actividad" },
-    { id: "equipo", label: "Equipo" },
     { id: "participantes", label: "Participantes" },
   ];
 
@@ -422,11 +421,6 @@ const GroupDetail = () => {
               </div>
             )}
 
-            {activeTab === "equipo" && (
-              <div className="text-center py-12 text-gray-500">
-                <p>Información del equipo próximamente...</p>
-              </div>
-            )}
           </div>
         )}
       </div>
