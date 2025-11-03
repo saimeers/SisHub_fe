@@ -23,18 +23,17 @@ const ProyectoEnCurso = ({
   const tipoAlcance = actividad?.id_tipo_alcance;
   const esInvestigativo = tipoAlcance === 1;
 
-  // ✅ CORREGIDO: Manejo mejorado de errores al cargar entregables
   useEffect(() => {
     const loadEntregables = async () => {
       if (!proyecto?.id_proyecto || !actividad?.id_actividad) return;
-
+      console.log(proyecto.id_proyecto, actividad.id_actividad);
       try {
         setLoadingEntregables(true);
         const data = await obtenerEntregablesProyecto(
           proyecto.id_proyecto,
           actividad.id_actividad
         );
-        // obtenerEntregablesProyecto ya retorna [] si no hay datos
+        console.log('Entregables recibidos:', data);
         setEntregables(data);
       } catch (error) {
         console.error("Error al cargar entregables:", error);
@@ -61,6 +60,16 @@ const ProyectoEnCurso = ({
         return nuevos;
       }
       return [...prev, nuevoEntregable];
+    });
+  };
+
+  const handleEntregableActualizado = (entregableActualizado) => {
+    setEntregables(prev => {
+      return prev.map(e => 
+        e.id_entregable === entregableActualizado.id_entregable 
+          ? entregableActualizado 
+          : e
+      );
     });
   };
 
@@ -91,7 +100,6 @@ const ProyectoEnCurso = ({
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="bg-white rounded-xl border border-gray-200 p-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
@@ -139,6 +147,7 @@ const ProyectoEnCurso = ({
           entregables={entregables}
           currentUserCode={currentUserCode}
           onEntregableCreado={handleEntregableCreado}
+          onEntregableActualizado={handleEntregableActualizado}
         />
       ) : (
         <EntregablesDesarrollo
@@ -152,7 +161,6 @@ const ProyectoEnCurso = ({
         />
       )}
 
-      {/* Botón enviar a revisión */}
       <div className="bg-white rounded-xl border border-gray-200 p-6">
         <button
           onClick={handleEnviarRevision}
@@ -171,7 +179,7 @@ const ProyectoEnCurso = ({
             </>
           )}
         </button>
-        
+
         {entregables.length === 0 && (
           <p className="text-center text-sm text-gray-500 mt-3">
             Debes subir al menos un entregable antes de enviar a revisión

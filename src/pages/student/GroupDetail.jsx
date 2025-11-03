@@ -378,6 +378,7 @@ const GroupDetail = () => {
           setCurrentEquipo(equipo);
           setCurrentIdeaData(idea);
           setCurrentView("proyectoEnCurso");
+          console.log("pre",actividad.id_actividad, proyecto.id_proyecto);
           return;
         }
 

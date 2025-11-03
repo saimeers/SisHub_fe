@@ -1,19 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
-  FileText, Video, Music, Image as ImageIcon, Code, 
-  Upload, Loader2, Link as LinkIcon, CheckCircle, ExternalLink, Download, Trash2
+  FileText, Video, Music, Image, Code, 
+  Upload, Loader2, Link, CheckCircle, ExternalLink, 
+  Download, Trash2, Eye, EyeOff
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import {
   crearEntregable,
   deshabilitarEntregable
 } from '../../../services/EntregableService';
+import Swal from 'sweetalert2';
 
 const TIPO_CONFIG = {
   DOCUMENTO: {
     icon: FileText,
     label: 'Documento',
-    accept: '.pdf,.doc,.docx',
+    accept: '.doc,.docx',
     color: 'blue',
     esArchivo: true 
   },
@@ -23,7 +25,7 @@ const TIPO_CONFIG = {
     accept: 'video/*',
     color: 'purple',
     esArchivo: false,
-    placeholder: 'https://youtube.com/watch?v=...'
+    placeholder: 'https://youtube.com/watch?v=... o https://youtu.be/...'
   },
   AUDIO: {
     icon: Music,
@@ -31,10 +33,10 @@ const TIPO_CONFIG = {
     accept: 'audio/*',
     color: 'green',
     esArchivo: false,
-    placeholder: 'https://soundcloud.com/...'
+    placeholder: 'https://soundcloud.com/... o archivo MP3'
   },
   IMAGEN: {
-    icon: ImageIcon,
+    icon: Image,
     label: 'Imagen',
     accept: 'image/*',
     color: 'pink',
@@ -47,7 +49,7 @@ const TIPO_CONFIG = {
     color: 'gray',
     accept: '.zip',
     esArchivo: false, 
-    placeholder: 'https://github.com/usuario/repositorio.git'
+    placeholder: 'https://github.com/usuario/repositorio'
   }
 };
 
@@ -60,45 +62,43 @@ const EntregablesDesarrollo = ({
   currentUserCode,
   onEntregableCreado
 }) => {
-  // ✅ Estado local para manejar entregables con key única
   const [entregablesLocales, setEntregablesLocales] = useState(entregables);
-  const [ultimoAgregado, setUltimoAgregado] = useState(null);
-  
-  // ✅ Actualizar SOLO cuando viene nueva data del servidor (no cuando agregamos local)
-  React.useEffect(() => {
-    // Si el nuevo entregable ya está en la lista del servidor, no sobrescribir
-    if (ultimoAgregado && entregables.some(e => e.id_entregable === ultimoAgregado.id_entregable)) {
-      setEntregablesLocales(entregables);
-      setUltimoAgregado(null);
-    } else if (!ultimoAgregado) {
-      // Primera carga o cambio de actividad
+  const isUpdatingRef = useRef(false);
+
+  useEffect(() => {
+    if (!isUpdatingRef.current) {
       setEntregablesLocales(entregables);
     }
-  }, [entregables, ultimoAgregado]);
+  }, [entregables]);
 
   const tiposRequeridos = actividad?.Actividad_items?.map(ai => ai.Item.nombre.toUpperCase()) || [];
 
-  // ✅ Handler mejorado para agregar entregable local
   const handleNuevoEntregable = (nuevoEntregable) => {
-    // Agregar inmediatamente a la UI
+    isUpdatingRef.current = true;
+    
     setEntregablesLocales(prev => {
-      // Evitar duplicados
       const existe = prev.some(e => e.id_entregable === nuevoEntregable.id_entregable);
       if (existe) return prev;
       return [...prev, nuevoEntregable];
     });
     
-    setUltimoAgregado(nuevoEntregable);
-    
-    // Notificar al padre (para refetch opcional)
     if (onEntregableCreado) {
       onEntregableCreado(nuevoEntregable);
     }
+
+    setTimeout(() => {
+      isUpdatingRef.current = false;
+    }, 500);
   };
 
-  // ✅ Handler para eliminar entregable
   const handleEliminarEntregable = (id_entregable) => {
+    isUpdatingRef.current = true;
+    
     setEntregablesLocales(prev => prev.filter(e => e.id_entregable !== id_entregable));
+    
+    setTimeout(() => {
+      isUpdatingRef.current = false;
+    }, 500);
   };
 
   return (
@@ -137,16 +137,31 @@ const EntregableCard = ({
   const config = TIPO_CONFIG[tipo] || {};
   const Icon = config.icon || FileText;
 
-  // ✅ Para DOCUMENTO, nunca debe estar en modo URL
   const [modoUrl, setModoUrl] = useState(!config.esArchivo && tipo !== 'DOCUMENTO');
   const [url, setUrl] = useState('');
   const [archivo, setArchivo] = useState(null);
   const [subiendo, setSubiendo] = useState(false);
-  const [eliminando, setEliminando] = useState(null); // ID del entregable que se está eliminando
+  const [eliminando, setEliminando] = useState(null);
+  const [previewing, setPreviewing] = useState(null);
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
+
+    // Validación especial para documentos - solo Word
+    if (tipo === 'DOCUMENTO') {
+      const allowedTypes = [
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+      ];
+
+      if (!allowedTypes.includes(file.type)) {
+        toast.error('Solo se permiten archivos Word (.doc, .docx)');
+        e.target.value = '';
+        return;
+      }
+    }
+
     setArchivo(file);
   };
 
@@ -159,26 +174,32 @@ const EntregableCard = ({
     }
   };
 
-  // ✅ Formatear fecha correctamente
   const formatearFecha = (fechaString) => {
-    if (!fechaString) return '';
+    if (!fechaString) return 'Fecha no disponible';
     
-    // Si ya viene formateada del backend, retornarla directamente
-    if (typeof fechaString === 'string' && !fechaString.includes('T')) {
-      return fechaString;
+    try {
+      if (typeof fechaString === 'string' && !fechaString.includes('T') && !fechaString.includes('-')) {
+        return fechaString;
+      }
+      
+      const fecha = new Date(fechaString);
+      
+      if (isNaN(fecha.getTime())) {
+        return 'Fecha no disponible';
+      }
+      
+      return fecha.toLocaleDateString('es-CO', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      });
+    } catch (error) {
+      console.error('Error al formatear fecha:', error);
+      return 'Fecha no disponible';
     }
-    
-    // Si no, formatearla
-    const fecha = new Date(fechaString);
-    return fecha.toLocaleDateString('es-CO', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
   };
 
   const handleSubir = async () => {
-    // Validaciones
     if (modoUrl) {
       if (!url.trim()) {
         toast.error('Debes ingresar una URL');
@@ -216,92 +237,62 @@ const EntregableCard = ({
       }
 
       const response = await crearEntregable(formData, currentUserCode);
-      
-      // ✅ Actualizar la lista de entregables inmediatamente
       const nuevoEntregable = response.data || response;
       
-      // Formatear la fecha del nuevo entregable antes de agregarlo
       if (nuevoEntregable.fecha_subida) {
-        const fecha = new Date(nuevoEntregable.fecha_subida);
-        nuevoEntregable.fecha_subida = fecha.toLocaleDateString('es-CO', {
-          year: 'numeric',
-          month: 'short',
-          day: 'numeric'
-        });
+        nuevoEntregable.fecha_subida_formateada = formatearFecha(nuevoEntregable.fecha_subida);
       }
       
       onEntregableCreado(nuevoEntregable);
       toast.success(`${config.label} cargado exitosamente`);
       
-      // ✅ Limpiar formulario
       setUrl('');
       setArchivo(null);
       
-      // Limpiar input file
       const fileInput = document.getElementById(`file-${tipo}`);
       if (fileInput) fileInput.value = '';
       
-      // ✅ Resetear modo URL si aplica (para siguiente carga)
       if (!config.esArchivo && tipo !== 'DOCUMENTO') {
         setModoUrl(true);
       }
     } catch (error) {
+      console.error('Error al subir:', error);
       toast.error(error.message || `Error al subir ${config.label.toLowerCase()}`);
     } finally {
       setSubiendo(false);
     }
   };
 
-  const handleVisualizar = (entregable) => {
-    if (!entregable) return;
+  const handleEliminar = async (id_entregable, nombreArchivo) => {
+    const result = await Swal.fire({
+      title: '¿Eliminar entregable?',
+      html: `
+        <div style="text-align: center;">
+          <p style="margin-bottom: 15px;">
+            Estás a punto de eliminar: <strong>${nombreArchivo}</strong>
+          </p>
+          <div style="background-color: #fef2f2; border-left: 3px solid #dc2626; padding: 12px; border-radius: 4px; margin-top: 15px;">
+            <p style="color: #dc2626; font-weight: 600; margin: 0; font-size: 0.9em;">
+              ⚠️ Esta acción no se puede deshacer
+            </p>
+          </div>
+        </div>
+      `,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#dc2626',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar'
+    });
 
-    // Si tiene URL externa guardada
-    if (entregable.url_repositorio) {
-      window.open(entregable.url_repositorio, '_blank');
-      return;
-    }
-    if (entregable.url_video) {
-      window.open(entregable.url_video, '_blank');
-      return;
-    }
-    if (entregable.url_audio) {
-      window.open(entregable.url_audio, '_blank');
-      return;
-    }
-    if (entregable.url_imagen) {
-      window.open(entregable.url_imagen, '_blank');
-      return;
-    }
-
-    // Si es archivo subido
-    const extension = entregable.nombre_archivo?.split('.').pop()?.toLowerCase();
-    
-    if (extension === 'pdf' || ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(extension)) {
-      window.open(entregable.url_archivo, '_blank');
-    } else {
-      // Descargar archivos (ZIP, videos, audios, etc.)
-      const link = document.createElement('a');
-      link.href = entregable.url_archivo;
-      link.download = entregable.nombre_archivo;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      toast.info('Descargando archivo...');
-    }
-  };
-
-  // ✅ Manejar eliminación de entregable
-  const handleEliminar = async (id_entregable) => {
-    const confirmar = window.confirm('¿Estás seguro de que deseas eliminar este entregable?');
-    if (!confirmar) return;
+    if (!result.isConfirmed) return;
 
     try {
       setEliminando(id_entregable);
-      console.log(currentUserCode);
       await deshabilitarEntregable(id_entregable, currentUserCode);
       toast.success('Entregable eliminado exitosamente');
       
-      // Eliminar del estado local
       if (onEntregableEliminado) {
         onEntregableEliminado(id_entregable);
       }
@@ -310,6 +301,10 @@ const EntregableCard = ({
     } finally {
       setEliminando(null);
     }
+  };
+
+  const togglePreview = (id_entregable) => {
+    setPreviewing(prev => prev === id_entregable ? null : id_entregable);
   };
 
   const colorClasses = {
@@ -322,7 +317,6 @@ const EntregableCard = ({
 
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-6">
-      {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
           <div className={`p-2 rounded-lg border ${colorClasses[config.color] || colorClasses.blue}`}>
@@ -340,108 +334,46 @@ const EntregableCard = ({
         </div>
       </div>
 
-      {/* ✅ Lista de entregables existentes */}
       {entregablesExistentes.length > 0 && (
-        <div className="mb-4 space-y-2">
+        <div className="mb-4 space-y-3">
           <p className="text-sm font-semibold text-gray-700">Archivos cargados:</p>
           {entregablesExistentes.map((entregable) => (
-            <div key={entregable.id_entregable} className="bg-gray-50 rounded-lg p-3 flex items-center justify-between gap-3">
-              <div className="flex-1 min-w-0">
-                <p className="text-sm text-gray-900 font-medium truncate">
-                  {entregable.nombre_archivo}
-                </p>
-                <p className="text-xs text-gray-500">
-                  {formatearFecha(entregable.fecha_subida)}
-                </p>
-              </div>
-              
-              {/* Botones de acción */}
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => handleVisualizar(entregable)}
-                  className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm font-medium transition-colors"
-                  title={tipo === 'REPOSITORIO' && entregable.url_repositorio ? 'Ver repositorio' : 'Ver/Descargar archivo'}
-                >
-                  {tipo === 'REPOSITORIO' && entregable.url_repositorio ? (
-                    <>
-                      <ExternalLink className="w-4 h-4" />
-                      Ver
-                    </>
-                  ) : tipo === 'REPOSITORIO' ? (
-                    <>
-                      <Download className="w-4 h-4" />
-                      Descargar
-                    </>
-                  ) : tipo === 'VIDEO' || entregable.url_video ? (
-                    <>
-                      <ExternalLink className="w-4 h-4" />
-                      Ver
-                    </>
-                  ) : tipo === 'AUDIO' || entregable.url_audio ? (
-                    <>
-                      <ExternalLink className="w-4 h-4" />
-                      Escuchar
-                    </>
-                  ) : tipo === 'IMAGEN' || entregable.url_imagen ? (
-                    <>
-                      <ExternalLink className="w-4 h-4" />
-                      Ver
-                    </>
-                  ) : (
-                    <>
-                      <Download className="w-4 h-4" />
-                      Descargar
-                    </>
-                  )}
-                </button>
-                
-                {/* Botón eliminar */}
-                <button
-                  onClick={() => handleEliminar(entregable.id_entregable)}
-                  disabled={eliminando === entregable.id_entregable}
-                  className="inline-flex items-center justify-center p-2 bg-red-600 hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded transition-colors"
-                  title="Eliminar entregable"
-                >
-                  {eliminando === entregable.id_entregable ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <Trash2 className="w-4 h-4" />
-                  )}
-                </button>
-              </div>
-            </div>
+            <EntregablePreviewCard
+              key={entregable.id_entregable}
+              entregable={entregable}
+              tipo={tipo}
+              isPreviewing={previewing === entregable.id_entregable}
+              onTogglePreview={() => togglePreview(entregable.id_entregable)}
+              onEliminar={handleEliminar}
+              eliminando={eliminando === entregable.id_entregable}
+              formatearFecha={formatearFecha}
+            />
           ))}
         </div>
       )}
 
-      {/* Formulario para subir nuevo */}
       <div className="border-t border-gray-200 pt-4">
         <p className="text-sm font-semibold text-gray-700 mb-3">
           {entregablesExistentes.length > 0 ? 'Agregar otro' : 'Subir nuevo'}
         </p>
 
-        {/* ✅ Selector URL/Archivo (NO mostrar para DOCUMENTO) */}
         {!config.esArchivo && (
           <div className="flex gap-2 mb-4">
             <button
               type="button"
               onClick={() => setModoUrl(true)}
               className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                modoUrl
-                  ? 'bg-red-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                modoUrl ? 'bg-red-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
-              <LinkIcon className="w-4 h-4 inline mr-2" />
+              <Link className="w-4 h-4 inline mr-2" />
               URL
             </button>
             <button
               type="button"
               onClick={() => setModoUrl(false)}
               className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                !modoUrl
-                  ? 'bg-red-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                !modoUrl ? 'bg-red-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
               <Upload className="w-4 h-4 inline mr-2" />
@@ -450,7 +382,6 @@ const EntregableCard = ({
           </div>
         )}
 
-        {/* ✅ Input según modo - SIEMPRE archivo para DOCUMENTO */}
         {modoUrl && !config.esArchivo ? (
           <div className="mb-4">
             <input
@@ -478,13 +409,15 @@ const EntregableCard = ({
             >
               <Upload className="w-5 h-5 text-gray-400" />
               <span className="text-sm text-gray-600">
-                {archivo ? archivo.name : `Seleccionar ${tipo === 'REPOSITORIO' ? 'archivo ZIP' : config.label.toLowerCase()}`}
+                {archivo 
+                  ? archivo.name 
+                  : `Seleccionar ${tipo === 'DOCUMENTO' ? 'Word (.doc/.docx)' : tipo === 'REPOSITORIO' ? 'archivo ZIP' : config.label.toLowerCase()}`
+                }
               </span>
             </label>
           </div>
         )}
 
-        {/* Botón subir */}
         <button
           onClick={handleSubir}
           disabled={subiendo || (!modoUrl && !archivo) || (modoUrl && !url.trim())}
@@ -503,6 +436,272 @@ const EntregableCard = ({
           )}
         </button>
       </div>
+    </div>
+  );
+};
+
+const EntregablePreviewCard = ({ 
+  entregable, 
+  tipo, 
+  isPreviewing, 
+  onTogglePreview, 
+  onEliminar, 
+  eliminando,
+  formatearFecha 
+}) => {
+  const getYouTubeEmbedUrl = (url) => {
+    if (!url) return null;
+    
+    const patterns = [
+      /(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\?]+)/,
+      /youtube\.com\/embed\/([^&\?]+)/
+    ];
+    
+    for (const pattern of patterns) {
+      const match = url.match(pattern);
+      if (match) {
+        return `https://www.youtube.com/embed/${match[1]}`;
+      }
+    }
+    return null;
+  };
+
+  const getGitHubEmbedUrl = (url) => {
+    if (!url) return null;
+    if (url.includes('github.com')) {
+      return url;
+    }
+    return null;
+  };
+
+  const getExtension = (filename) => {
+    return filename?.split('.').pop()?.toLowerCase() || '';
+  };
+
+  const canPreview = () => {
+    if (entregable.url_video) return true;
+    if (entregable.url_audio) return true;
+    if (entregable.url_imagen) return true;
+    if (entregable.url_repositorio) return true;
+    
+    if (entregable.url_archivo) {
+      const ext = getExtension(entregable.nombre_archivo);
+      return ['doc', 'docx', 'jpg', 'jpeg', 'png', 'gif', 'webp', 'mp4', 'webm', 'mp3', 'wav'].includes(ext);
+    }
+    
+    return false;
+  };
+
+  const handleDownload = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const url = entregable.url_archivo || entregable.url_repositorio;
+    if (!url) return;
+    
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = entregable.nombre_archivo || 'archivo';
+    link.target = '_blank';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.info('Descargando archivo...');
+  };
+
+  const renderPreview = () => {
+    if (entregable.url_video) {
+      const embedUrl = getYouTubeEmbedUrl(entregable.url_video);
+      if (embedUrl) {
+        return (
+          <iframe
+            src={embedUrl}
+            title="Video de YouTube"
+            className="w-full h-[400px] rounded-lg"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+          />
+        );
+      }
+      return <p className="text-sm text-gray-600">URL de video no válida</p>;
+    }
+
+    if (entregable.url_audio) {
+      return (
+        <audio controls className="w-full">
+          <source src={entregable.url_audio} />
+          Tu navegador no soporta el elemento de audio.
+        </audio>
+      );
+    }
+
+    if (entregable.url_imagen) {
+      return (
+        <img
+          src={entregable.url_imagen}
+          alt={entregable.nombre_archivo || 'Imagen'}
+          className="max-w-full max-h-[500px] rounded-lg mx-auto"
+        />
+      );
+    }
+
+    if (entregable.url_repositorio) {
+      const githubUrl = getGitHubEmbedUrl(entregable.url_repositorio);
+      if (githubUrl) {
+        return (
+          <div className="bg-gray-50 rounded-lg p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <Code className="w-5 h-5 text-gray-600" />
+              <p className="text-sm font-medium text-gray-900">Repositorio de GitHub</p>
+            </div>
+            <a
+              href={githubUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 hover:underline text-sm break-all"
+            >
+              {githubUrl}
+            </a>
+            <p className="text-xs text-gray-500 mt-2">
+              Haz clic en el enlace para ver el repositorio completo
+            </p>
+          </div>
+        );
+      }
+      
+      return (
+        <div className="bg-gray-50 rounded-lg p-4">
+          <p className="text-sm text-gray-600">
+            Archivo comprimido (.zip). Descárgalo para ver su contenido.
+          </p>
+        </div>
+      );
+    }
+
+    if (entregable.url_archivo) {
+      const ext = getExtension(entregable.nombre_archivo);
+
+      if (ext === 'doc' || ext === 'docx') {
+        return (
+          <div className="relative">
+            <iframe
+              src={`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(entregable.url_archivo)}`}
+              title="Vista previa Word"
+              className="w-full h-[600px] rounded-lg border"
+              onError={(e) => {
+                console.error('Error al cargar Word:', e);
+              }}
+            />
+            <div className="mt-2 text-center">
+              <a
+                href={entregable.url_archivo}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 text-sm"
+              >
+                <ExternalLink className="w-4 h-4" />
+                Abrir en nueva pestaña
+              </a>
+            </div>
+          </div>
+        );
+      }
+
+      if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) {
+        return (
+          <img
+            src={entregable.url_archivo}
+            alt={entregable.nombre_archivo}
+            className="max-w-full max-h-[500px] rounded-lg mx-auto"
+          />
+        );
+      }
+
+      if (['mp4', 'webm'].includes(ext)) {
+        return (
+          <video controls className="w-full max-h-[500px] rounded-lg bg-black">
+            <source src={entregable.url_archivo} />
+            Tu navegador no soporta el elemento de video.
+          </video>
+        );
+      }
+
+      if (['mp3', 'wav'].includes(ext)) {
+        return (
+          <audio controls className="w-full">
+            <source src={entregable.url_archivo} />
+            Tu navegador no soporta el elemento de audio.
+          </audio>
+        );
+      }
+    }
+
+    return <p className="text-sm text-gray-600">No hay vista previa disponible</p>;
+  };
+
+  return (
+    <div className="bg-gray-50 rounded-lg border border-gray-200">
+      <div className="p-3 flex items-center justify-between gap-3">
+        <div className="flex-1 min-w-0">
+          <p className="text-sm text-gray-900 font-medium truncate">
+            {entregable.nombre_archivo || 'Sin nombre'}
+          </p>
+          <p className="text-xs text-gray-500">
+            {entregable.fecha_subida_formateada || formatearFecha(entregable.fecha_subida)}
+          </p>
+        </div>
+        
+        <div className="flex items-center gap-2">
+          {canPreview() && (
+            <button
+              onClick={onTogglePreview}
+              className="inline-flex items-center gap-1 px-3 py-1.5 bg-white hover:bg-gray-100 border border-gray-300 text-gray-700 rounded text-sm font-medium transition-colors"
+              title={isPreviewing ? 'Ocultar vista previa' : 'Ver vista previa'}
+            >
+              {isPreviewing ? (
+                <>
+                  <EyeOff className="w-4 h-4" />
+                  Ocultar
+                </>
+              ) : (
+                <>
+                  <Eye className="w-4 h-4" />
+                  Ver
+                </>
+              )}
+            </button>
+          )}
+          
+          {(entregable.url_archivo || entregable.url_repositorio) && (
+            <button
+              onClick={handleDownload}
+              className="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm font-medium transition-colors"
+              title="Descargar"
+            >
+              <Download className="w-4 h-4" />
+            </button>
+          )}
+          
+          <button
+            onClick={() => onEliminar(entregable.id_entregable, entregable.nombre_archivo)}
+            disabled={eliminando}
+            className="inline-flex items-center justify-center p-2 bg-red-600 hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded transition-colors"
+            title="Eliminar entregable"
+          >
+            {eliminando ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Trash2 className="w-4 h-4" />
+            )}
+          </button>
+        </div>
+      </div>
+
+      {isPreviewing && (
+        <div className="p-4 border-t border-gray-200 bg-white">
+          {renderPreview()}
+        </div>
+      )}
     </div>
   );
 };

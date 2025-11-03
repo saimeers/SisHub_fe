@@ -1,8 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FileText, Upload, CheckCircle, XCircle, Loader2, ExternalLink, Download } from 'lucide-react';
 import { toast } from 'react-toastify';
 import mammoth from 'mammoth';
-import pdfjsLib from '../config/pdfConfig';
 import {
   crearEntregable,
   actualizarEntregable,
@@ -16,14 +15,16 @@ const EntregablesInvestigativo = ({
   esquemaInfo,
   entregables,
   currentUserCode,
-  onEntregableCreado
+  onEntregableCreado,
+  onEntregableActualizado
 }) => {
   const [archivo, setArchivo] = useState(null);
   const [analizando, setAnalizando] = useState(false);
   const [subiendo, setSubiendo] = useState(false);
   const [analisisResultado, setAnalisisResultado] = useState(null);
 
-  const entregableDocumento = entregables.find(e => e.tipo === 'DOCUMENTO');
+  // Buscar el entregable de tipo DOCUMENTO
+  const entregableDocumento = entregables.find(e => e.tipo === 'DOCUMENTO') || null;
 
   // Extraer nombres de los items seleccionados
   const itemsActividad = actividad?.Actividad_items?.map(ai => ai.Item.nombre) || [];
@@ -31,42 +32,27 @@ const EntregablesInvestigativo = ({
   const extraerTexto = async (file) => {
     const extension = file.name.split('.').pop().toLowerCase();
 
-    if (extension === 'pdf') {
-      const arrayBuffer = await file.arrayBuffer();
-      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-      let textoCompleto = '';
-
-      for (let i = 1; i <= pdf.numPages; i++) {
-        const page = await pdf.getPage(i);
-        const content = await page.getTextContent();
-        const pageText = content.items.map(item => item.str).join(' ');
-        textoCompleto += pageText + '\n';
-      }
-
-      return textoCompleto;
-    } else if (extension === 'docx' || extension === 'doc') {
+    if (extension === 'docx' || extension === 'doc') {
       const arrayBuffer = await file.arrayBuffer();
       const result = await mammoth.extractRawText({ arrayBuffer });
       return result.value;
     } else {
-      throw new Error('Formato de archivo no soportado');
+      throw new Error('Formato de archivo no soportado. Solo se permiten archivos Word (.doc, .docx)');
     }
   };
 
-  // ✅ CORREGIDO: Mejorado para poder cambiar archivo incluso si fue rechazado
   const handleFileChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
     const allowedTypes = [
-      'application/pdf',
       'application/msword',
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
     ];
 
     if (!allowedTypes.includes(file.type)) {
-      toast.error('Solo se permiten archivos PDF o Word');
-      e.target.value = ''; // Limpiar input
+      toast.error('Solo se permiten archivos Word (.doc, .docx)');
+      e.target.value = '';
       return;
     }
 
@@ -97,7 +83,7 @@ const EntregablesInvestigativo = ({
       }
     } catch (error) {
       console.error('Error al analizar:', error);
-      toast.error('Error al analizar el documento');
+      toast.error(error.message || 'Error al analizar el documento');
       setAnalisisResultado({ analisis: false, faltantes: [] });
     } finally {
       setAnalizando(false);
@@ -124,56 +110,96 @@ const EntregablesInvestigativo = ({
       formData.append('id_actividad', actividad.id_actividad);
       formData.append('id_equipo', equipo.id_equipo);
       formData.append('id_proyecto', proyecto.id_proyecto);
-
+      console.log(entregableDocumento);
       let response;
       if (entregableDocumento) {
+        // Actualizar documento existente
         response = await actualizarEntregable(
           entregableDocumento.id_entregable,
           formData,
           currentUserCode
         );
         toast.success('Documento actualizado exitosamente');
+        
+        if (onEntregableActualizado) {
+          onEntregableActualizado(response.data || response);
+        }
       } else {
+        // Crear nuevo documento
         response = await crearEntregable(formData, currentUserCode);
         toast.success('Documento cargado exitosamente');
+        
+        if (onEntregableCreado) {
+          onEntregableCreado(response.data || response);
+        }
       }
 
-      onEntregableCreado(response);
+      // Limpiar formulario
       setArchivo(null);
       setAnalisisResultado(null);
-      // Limpiar input file
       const fileInput = document.getElementById('file-upload');
       if (fileInput) fileInput.value = '';
     } catch (error) {
+      console.error('Error al subir:', error);
       toast.error(error.message || 'Error al subir el documento');
     } finally {
       setSubiendo(false);
     }
   };
 
-  // ✅ NUEVO: Función para visualizar documento
   const handleVisualizarDocumento = () => {
     if (!entregableDocumento?.url_archivo) return;
 
     const extension = entregableDocumento.nombre_archivo?.split('.').pop().toLowerCase();
 
-    if (extension === 'pdf') {
-      // Abrir PDF en nueva pestaña
-      window.open(entregableDocumento.url_archivo, '_blank');
-    } else if (extension === 'doc' || extension === 'docx') {
-      // Descargar archivo Word
-      const link = document.createElement('a');
-      link.href = entregableDocumento.url_archivo;
-      link.download = entregableDocumento.nombre_archivo;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      toast.info('Descargando documento...');
+    if (extension === 'doc' || extension === 'docx') {
+      // Intentar abrir con Office Online Viewer
+      const encodedUrl = encodeURIComponent(entregableDocumento.url_archivo);
+      const officeViewerUrl = `https://view.officeapps.live.com/op/view.aspx?src=${encodedUrl}`;
+      window.open(officeViewerUrl, '_blank');
     } else {
-      // Para otros formatos, abrir en nueva pestaña
+      // Para otros formatos, abrir directamente
       window.open(entregableDocumento.url_archivo, '_blank');
     }
   };
+
+  const handleDescargarDocumento = () => {
+    if (!entregableDocumento?.url_archivo) return;
+
+    const link = document.createElement('a');
+    link.href = entregableDocumento.url_archivo;
+    link.download = entregableDocumento.nombre_archivo || 'documento.docx';
+    link.target = '_blank';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.info('Descargando documento...');
+  };
+
+const formatearFecha = (fechaString) => {
+  if (!fechaString) return 'Fecha no disponible';
+
+  try {
+    // Si ya viene formateada (ej: texto sin formato ISO)
+    if (typeof fechaString === 'string' && !fechaString.includes('T') && !fechaString.includes('-')) {
+      return fechaString;
+    }
+
+    const fecha = new Date(fechaString);
+    if (isNaN(fecha.getTime())) return fechaString;
+
+    return fecha.toLocaleDateString('es-CO', {
+      year: 'numeric',
+      month: 'short', // Ejemplo: "nov."
+      day: 'numeric',
+      timeZone: 'America/Bogota', // asegura que sea hora local Colombia
+    });
+  } catch (error) {
+    console.error('Error al formatear fecha:', error);
+    return 'Fecha no disponible';
+  }
+};
+
 
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-6">
@@ -183,39 +209,49 @@ const EntregablesInvestigativo = ({
           Ítems Requeridos en el Documento
         </h3>
         <div className="bg-gray-50 rounded-lg p-4 space-y-2">
-          {itemsActividad.map((item, idx) => (
-            <div key={idx} className="flex items-center gap-2">
-              <CheckCircle className="w-4 h-4 text-green-600" />
-              <span className="text-gray-700">{item}</span>
-            </div>
-          ))}
+          {itemsActividad.length > 0 ? (
+            itemsActividad.map((item, idx) => (
+              <div key={idx} className="flex items-center gap-2">
+                <CheckCircle className="w-4 h-4 text-green-600" />
+                <span className="text-gray-700">{item}</span>
+              </div>
+            ))
+          ) : (
+            <p className="text-gray-500 text-sm">No hay ítems específicos requeridos</p>
+          )}
         </div>
       </div>
 
-      {/* Estado actual - MEJORADO con visualización */}
+      {/* Documento actual - Solo se muestra si existe */}
       {entregableDocumento && (
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <div className="flex items-center gap-2 mb-2">
+          <div className="flex items-center gap-2 mb-3">
             <FileText className="w-5 h-5 text-blue-600" />
             <span className="font-semibold text-blue-900">Documento Actual</span>
           </div>
-          <p className="text-sm text-gray-700 mb-3">{entregableDocumento.nombre_archivo}</p>
-          <button
-            onClick={handleVisualizarDocumento}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors"
-          >
-            {entregableDocumento.nombre_archivo?.endsWith('.pdf') ? (
-              <>
-                <ExternalLink className="w-4 h-4" />
-                Ver Documento
-              </>
-            ) : (
-              <>
-                <Download className="w-4 h-4" />
-                Descargar Documento
-              </>
-            )}
-          </button>
+          
+          <div className="space-y-2 mb-4">
+            <p className="text-sm font-medium text-gray-900">
+              {entregableDocumento.nombre_archivo}
+            </p>
+          </div>
+
+          <div className="flex gap-2">
+            <button
+              onClick={handleVisualizarDocumento}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors"
+            >
+              <ExternalLink className="w-4 h-4" />
+              Ver Documento
+            </button>
+            <button
+              onClick={handleDescargarDocumento}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg text-sm font-medium transition-colors"
+            >
+              <Download className="w-4 h-4" />
+              Descargar
+            </button>
+          </div>
         </div>
       )}
 
@@ -227,12 +263,12 @@ const EntregablesInvestigativo = ({
             {entregableDocumento ? 'Actualizar Documento' : 'Subir Documento'}
           </h3>
           <p className="text-sm text-gray-500 mb-4">
-            Formatos permitidos: PDF, Word (.doc, .docx) - Máximo 10MB
+            Formato permitido: Word (.doc, .docx) - Máximo 10MB
           </p>
 
           <input
             type="file"
-            accept=".pdf,.doc,.docx"
+            accept=".doc,.docx"
             onChange={handleFileChange}
             className="hidden"
             id="file-upload"
@@ -244,7 +280,7 @@ const EntregablesInvestigativo = ({
               analizando || subiendo ? 'opacity-50 cursor-not-allowed' : ''
             }`}
           >
-            Seleccionar archivo
+            Seleccionar archivo Word
           </label>
         </div>
 
@@ -312,7 +348,7 @@ const EntregablesInvestigativo = ({
             {subiendo ? (
               <>
                 <Loader2 className="w-5 h-5 animate-spin" />
-                Subiendo...
+                {entregableDocumento ? 'Actualizando...' : 'Subiendo...'}
               </>
             ) : (
               <>
