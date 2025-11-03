@@ -88,7 +88,12 @@ const GroupDetail = () => {
   const checkActivity = async () => {
     setLoadingActivity(true);
     try {
-      const tiene = await verificarActividadGrupo(codigo_materia, nombre, periodo, anio);
+      const tiene = await verificarActividadGrupo(
+        codigo_materia,
+        nombre,
+        periodo,
+        anio
+      );
 
       if (tiene.tieneActividad) {
         const response = await obtenerActividadById(tiene.id_actividad);
@@ -111,11 +116,12 @@ const GroupDetail = () => {
   const loadIdeas = async () => {
     setLoadingIdeas(true);
     try {
-      const [propuestasResponse, libresResponse, continuablesResponse] = await Promise.all([
-        listarPropuestasLibres(),
-        listarIdeasLibres(),
-        obtenerProyectosContinuables(userData.codigo),
-      ]);
+      const [propuestasResponse, libresResponse, continuablesResponse] =
+        await Promise.all([
+          listarPropuestasLibres(),
+          listarIdeasLibres(),
+          obtenerProyectosContinuables(userData.codigo),
+        ]);
 
       const propuestasData = Array.isArray(propuestasResponse.data)
         ? propuestasResponse.data
@@ -156,14 +162,18 @@ const GroupDetail = () => {
       const objetivosArray = Array.isArray(itemData.objetivos_especificos)
         ? itemData.objetivos_especificos
         : typeof itemData.objetivos_especificos === "string"
-          ? itemData.objetivos_especificos.split(/\r?\n/).filter((line) => line.trim())
-          : [""];
+        ? itemData.objetivos_especificos
+            .split(/\r?\n/)
+            .filter((line) => line.trim())
+        : [""];
 
       setIdeaInitialData({
         titulo: itemData.titulo || itemData.Idea?.titulo || "",
         problematica: itemData.problema || itemData.Idea?.problema || "",
-        justificacion: itemData.justificacion || itemData.Idea?.justificacion || "",
-        objetivo_general: itemData.objetivo_general || itemData.Idea?.objetivo_general || "",
+        justificacion:
+          itemData.justificacion || itemData.Idea?.justificacion || "",
+        objetivo_general:
+          itemData.objetivo_general || itemData.Idea?.objetivo_general || "",
         objetivos_especificos: objetivosArray,
       });
 
@@ -227,7 +237,11 @@ const GroupDetail = () => {
 
     if (result.isConfirmed) {
       try {
-        await adoptarPropuesta(selectedItem.id_proyecto, userData.codigo, groupParams);
+        await adoptarPropuesta(
+          selectedItem.id_proyecto,
+          userData.codigo,
+          groupParams
+        );
         toast.success("Propuesta adoptada exitosamente");
         backToActivities();
         loadIdeas();
@@ -288,7 +302,18 @@ const GroupDetail = () => {
         setCurrentView("ideas");
         return;
       }
+      // ✅ CASO 1: No tiene ni idea ni proyecto → Mostrar banco de ideas
+      if (!proyecto && !idea) {
+        console.log("✅ Sin idea ni proyecto → Banco de ideas");
+        setSelectedActivity(activity);
+        setCurrentView("ideas");
+        return;
+      }
 
+      // ✅ CASO 2: Tiene idea, verificar su estado
+      if (idea && idea.id_idea) {
+        const estadoIdea = idea.estado;
+        console.log("📌 Estado de la idea:", estadoIdea);
       // ✅ CASO 2: Tiene idea, verificar su estado
       if (idea && idea.id_idea) {
         const estadoIdea = idea.estado;
@@ -306,30 +331,36 @@ const GroupDetail = () => {
           setCurrentView("rejected");
           return;
         }
-
-        // Sub-caso 2.3: Idea con observaciones (Stand by)
-        if (estadoIdea === "STAND_BY") {
-          // ✅ Validar que la idea tenga ID antes de pasar a SuggestionReview
-          if (!idea.id_idea) {
-            console.error("❌ Idea en STAND_BY sin ID");
-            toast.error("Error: Idea sin identificador válido");
-            return;
-          }
+        // Sub-caso 2.2: Idea rechazada
+        if (estadoIdea === "RECHAZADO") {
           setCurrentIdeaId(idea.id_idea);
-          setCurrentIdeaData(idea);
-          setCurrentView("suggestion");
+          setCurrentView("rejected");
           return;
         }
 
-        // Sub-caso 2.4: Idea aprobada
-        if (estadoIdea === "APROBADO") {
-          // Si está aprobada pero no tiene proyecto, completar datos
-          if (!proyecto || !proyecto.id_proyecto) {
+          // Sub-caso 2.3: Idea con observaciones (Stand by)
+          if (estadoIdea === "STAND_BY") {
+            // ✅ Validar que la idea tenga ID antes de pasar a SuggestionReview
+            if (!idea.id_idea) {
+              console.error("❌ Idea en STAND_BY sin ID");
+              toast.error("Error: Idea sin identificador válido");
+              return;
+            }
             setCurrentIdeaId(idea.id_idea);
             setCurrentIdeaData(idea);
-            setCurrentView("completarDatos");
+            setCurrentView("suggestion");
             return;
           }
+
+          // Sub-caso 2.4: Idea aprobada
+          if (estadoIdea === "APROBADO") {
+            // Si está aprobada pero no tiene proyecto, completar datos
+            if (!proyecto || !proyecto.id_proyecto) {
+              setCurrentIdeaId(idea.id_idea);
+              setCurrentIdeaData(idea);
+              setCurrentView("completarDatos");
+              return;
+            }
 
           // Si tiene proyecto EN_CURSO
           if (proyecto.estado === "EN_CURSO") {
@@ -413,10 +444,13 @@ const GroupDetail = () => {
 
     try {
       const objetivo_general = payload.objetivo_general || "";
-      const objetivos_especificos = payload.objetivos_especificos?.join("\n") || "";
+      const objetivos_especificos =
+        payload.objetivos_especificos?.join("\n") || "";
 
       const integrantes = payload.integrantes
-        ? payload.integrantes.map((m) => (typeof m === "string" ? m : m.codigo || m.value))
+        ? payload.integrantes.map((m) =>
+            typeof m === "string" ? m : m.codigo || m.value
+          )
         : [];
 
       if (currentIdeaId) {
@@ -471,7 +505,13 @@ const GroupDetail = () => {
       if (hasLoaded.current) return;
       hasLoaded.current = true;
 
-      if (!codigo_materia || !nombre || !periodo || !anio || !userData?.codigo) {
+      if (
+        !codigo_materia ||
+        !nombre ||
+        !periodo ||
+        !anio ||
+        !userData?.codigo
+      ) {
         return;
       }
 
@@ -505,7 +545,9 @@ const GroupDetail = () => {
           anio
         );
 
-        setParticipants(Array.isArray(participantsData) ? participantsData : []);
+        setParticipants(
+          Array.isArray(participantsData) ? participantsData : []
+        );
         setGroupInfo({
           nombre: codigo_materia,
           grupo: nombre,
@@ -519,7 +561,9 @@ const GroupDetail = () => {
             "Esta materia no existe en el catálogo o no estás registrado en este grupo."
           );
         } else {
-          setValidationError("Error al cargar los datos del grupo. Por favor, intenta nuevamente.");
+          setValidationError(
+            "Error al cargar los datos del grupo. Por favor, intenta nuevamente."
+          );
         }
         setIsAuthorized(false);
         error("No se pudieron cargar los datos del grupo");
@@ -548,8 +592,7 @@ const GroupDetail = () => {
   }, [currentView, isAuthorized, codigo_materia, nombre, periodo, anio]);
 
   const tabs = [
-    { id: "proyecto", label: "Proyecto" },
-    { id: "equipo", label: "Equipo" },
+    { id: "proyecto", label: "Actividad" },
     { id: "participantes", label: "Participantes" },
   ];
 
@@ -584,10 +627,11 @@ const GroupDetail = () => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`px-6 py-2 rounded-full text-sm font-medium transition-all duration-200 ${activeTab === tab.id
+                className={`px-6 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
+                  activeTab === tab.id
                   ? "bg-white shadow text-gray-900"
                   : "text-gray-600 hover:text-gray-800"
-                  }`}
+                }`}
               >
                 {tab.label}
               </button>
@@ -605,7 +649,9 @@ const GroupDetail = () => {
                 </div>
                 <div className="flex flex-col gap-3">
                   {isLoading ? (
-                    <p className="text-gray-500 text-center py-6">Cargando participantes...</p>
+                    <p className="text-gray-500 text-center py-6">
+                      Cargando participantes...
+                    </p>
                   ) : participants.length > 0 ? (
                     <GroupParticipants participants={participants} />
                   ) : (
@@ -629,7 +675,9 @@ const GroupDetail = () => {
                       <ActivityDetailStudent
                         actividad={actividad}
                         esquemaInfo={esquemaInfo}
-                        onStartActivity={() => handleActivityClick({ id: actividad.id_actividad })}
+                        onStartActivity={() =>
+                          handleActivityClick({ id: actividad.id_actividad })
+                        }
                       />
                     ) : (
                       <div className="text-center py-12">
@@ -653,8 +701,8 @@ const GroupDetail = () => {
                             En espera de actividad
                           </h3>
                           <p className="text-gray-500">
-                            Aún no hay una actividad asignada a este grupo. Por favor espera a que tu
-                            profesor cree una actividad.
+                            Aún no hay una actividad asignada a este grupo. Por
+                            favor espera a que tu profesor cree una actividad.
                           </p>
                         </div>
                       </div>
@@ -682,7 +730,9 @@ const GroupDetail = () => {
                           title="Proyectos por Continuar"
                           items={proyectosContinuables.map((proyecto) => ({
                             id_proyecto: proyecto.id_proyecto,
-                            title: proyecto.Idea?.titulo || proyecto.linea_investigacion,
+                            title:
+                              proyecto.Idea?.titulo ||
+                              proyecto.linea_investigacion,
                             ...proyecto,
                           }))}
                           onView={(item) => handleViewItem(item, "proyecto")}
@@ -713,7 +763,9 @@ const GroupDetail = () => {
                     <div className="flex justify-between items-center mb-6">
                       <button
                         type="button"
-                        onClick={() => setCurrentView(viewMode ? "ideas" : "ideas")}
+                        onClick={() =>
+                          setCurrentView(viewMode ? "ideas" : "ideas")
+                        }
                         className="px-4 py-2 rounded-full text-sm font-medium border border-gray-300 bg-white hover:bg-gray-50"
                       >
                         ← Volver
@@ -731,10 +783,10 @@ const GroupDetail = () => {
                         viewMode === "idea"
                           ? handleAdoptIdea
                           : viewMode === "propuesta"
-                            ? handleAdoptPropuesta
-                            : viewMode === "proyecto"
-                              ? handleContinuarProyecto
-                              : null
+                          ? handleAdoptPropuesta
+                          : viewMode === "proyecto"
+                          ? handleContinuarProyecto
+                          : null
                       }
                     />
                   </div>
@@ -772,12 +824,6 @@ const GroupDetail = () => {
                 ) : null}
               </div>
             )}
-
-            {activeTab === "equipo" && (
-              <div className="text-center py-12 text-gray-500">
-                <p>Información del equipo próximamente...</p>
-              </div>
-            )}
           </div>
         )}
       </div>
@@ -790,18 +836,20 @@ const ActivityDetailStudent = ({ actividad, esquemaInfo, onStartActivity }) => {
   const buildItemsHierarchy = () => {
     if (!actividad.Actividad_items || !esquemaInfo?.Items) return [];
 
-    const selectedItemIds = actividad.Actividad_items.map(ai => ai.Item.id_item);
+    const selectedItemIds = actividad.Actividad_items.map(
+      (ai) => ai.Item.id_item
+    );
     const allItems = esquemaInfo.Items;
 
     const itemsMap = {};
-    allItems.forEach(item => {
+    allItems.forEach((item) => {
       if (selectedItemIds.includes(item.id_item)) {
         itemsMap[item.id_item] = { ...item, subitems: [] };
       }
     });
 
     const rootItems = [];
-    Object.values(itemsMap).forEach(item => {
+    Object.values(itemsMap).forEach((item) => {
       if (item.super_item === null) {
         rootItems.push(item);
       } else if (itemsMap[item.super_item]) {
@@ -822,7 +870,8 @@ const ActivityDetailStudent = ({ actividad, esquemaInfo, onStartActivity }) => {
       <div
         className="relative px-6 py-10 text-center text-white"
         style={{
-          background: "linear-gradient(90deg, #ed3a3aff 0%, #d94228ff 50%, #b62121ff 100%)",
+          background:
+            "linear-gradient(90deg, #ed3a3aff 0%, #d94228ff 50%, #b62121ff 100%)",
         }}
       >
         <h2 className="text-2xl md:text-3xl font-extrabold tracking-wide mb-4">
@@ -831,13 +880,19 @@ const ActivityDetailStudent = ({ actividad, esquemaInfo, onStartActivity }) => {
       </div>
       <div className="px-8 py-6 space-y-6">
         <div>
-          <h3 className="text-sm font-semibold text-gray-500 mb-2">DESCRIPCIÓN</h3>
-          <p className="text-gray-700 leading-relaxed">{actividad.descripcion}</p>
+          <h3 className="text-sm font-semibold text-gray-500 mb-2">
+            DESCRIPCIÓN
+          </h3>
+          <p className="text-gray-700 leading-relaxed">
+            {actividad.descripcion}
+          </p>
         </div>
 
         <div className="grid grid-cols-2 gap-6">
           <div>
-            <h3 className="text-sm font-semibold text-gray-500 mb-2">FECHA INICIO</h3>
+            <h3 className="text-sm font-semibold text-gray-500 mb-2">
+              FECHA INICIO
+            </h3>
             <p className="text-gray-900 font-medium">
               {new Date(actividad.fecha_inicio).toLocaleDateString("es-ES", {
                 year: "numeric",
@@ -847,7 +902,9 @@ const ActivityDetailStudent = ({ actividad, esquemaInfo, onStartActivity }) => {
             </p>
           </div>
           <div>
-            <h3 className="text-sm font-semibold text-gray-500 mb-2">FECHA CIERRE</h3>
+            <h3 className="text-sm font-semibold text-gray-500 mb-2">
+              FECHA CIERRE
+            </h3>
             <p className="text-gray-900 font-medium">
               {new Date(actividad.fecha_cierre).toLocaleDateString("es-ES", {
                 year: "numeric",
@@ -868,7 +925,9 @@ const ActivityDetailStudent = ({ actividad, esquemaInfo, onStartActivity }) => {
         </div>
 
         <div>
-          <h3 className="text-sm font-semibold text-gray-500 mb-2">TIPO DE ALCANCE</h3>
+          <h3 className="text-sm font-semibold text-gray-500 mb-2">
+            TIPO DE ALCANCE
+          </h3>
           <p className="text-gray-900 font-medium">
             {actividad.id_tipo_alcance === 1 ? "Investigativo" : "Desarrollo"}
           </p>
@@ -876,8 +935,12 @@ const ActivityDetailStudent = ({ actividad, esquemaInfo, onStartActivity }) => {
 
         {esquemaInfo && (
           <div>
-            <h3 className="text-sm font-semibold text-gray-500 mb-2">ESQUEMA</h3>
-            <p className="text-gray-900 font-medium">{esquemaInfo.id_esquema}</p>
+            <h3 className="text-sm font-semibold text-gray-500 mb-2">
+              ESQUEMA
+            </h3>
+            <p className="text-gray-900 font-medium">
+              {esquemaInfo.id_esquema}
+            </p>
           </div>
         )}
 
@@ -905,7 +968,11 @@ const ItemsDisplayTree = ({ items, level = 0 }) => {
         <div key={item.id_item}>
           <div className="flex items-center gap-2 py-1">
             <span className="w-2 h-2 bg-red-600 rounded-full"></span>
-            <span className={`${level === 0 ? "font-semibold text-gray-900" : "text-gray-700"}`}>
+            <span
+              className={`${
+                level === 0 ? "font-semibold text-gray-900" : "text-gray-700"
+              }`}
+            >
               {item.nombre}
             </span>
           </div>
