@@ -3,6 +3,9 @@ import AdminLayout from "../../modules/admin/layouts/AdminLayout";
 import ApprovedProjectCard from "../../components/ui/ProjectCard";
 import ProjectFilters from "../../modules/admin/components/ProjectFilters";
 import useProjectFilters from "../../modules/admin/hooks/useProjectFilters";
+import ProjectVersionsView from "../../components/ui/ProjectVersionsView";
+import ProjectDocumentsView from "../../components/ui/ProjectDocumentsView";
+import ProjectDevelopmentView from "../../components/ui/ProjectDevelopmentView";
 import {
   listarProyectosParaDirector,
   listarProyectosParaEstudiante,
@@ -12,6 +15,10 @@ const Projects = () => {
   const [projects, setProjects] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchError, setSearchError] = useState(null);
+
+  // Vistas: list | versions | documents | development
+  const [currentView, setCurrentView] = useState("list");
+  const [selectedProjectId, setSelectedProjectId] = useState(null);
 
   // Función para buscar proyectos por código de estudiante (memoizada)
   const handleSearchByStudent = useCallback(async (codigo) => {
@@ -35,9 +42,9 @@ const Projects = () => {
                 .filter(Boolean),
               keywords: p.palabras_clave || "",
               status: p.Estado?.descripcion || "EN_CURSO",
-              progress: 0,
+              progress: p.porcentaje || 0,
               logo: null,
-              tipoAlcance: p.Tipo_alcance?.nombre,
+              tipoAlcance: p.Tipo_alcance?.nombre || p.TipoAlcance?.nombre,
             };
           })
         : [];
@@ -80,9 +87,9 @@ const Projects = () => {
               .filter(Boolean),
             keywords: p.palabras_clave || "",
             status: p.Estado?.descripcion || "EN_CURSO",
-            progress: 0,
+            progress: p.porcentaje || 0,
             logo: null,
-            tipoAlcance: p.Tipo_alcance?.nombre,
+            tipoAlcance: p.Tipo_alcance?.nombre || p.TipoAlcance?.nombre,
           }))
         : [];
 
@@ -146,9 +153,9 @@ const Projects = () => {
                 .filter(Boolean),
               keywords: p.palabras_clave || "",
               status: p.Estado?.descripcion || "EN_CURSO",
-              progress: 0,
+              progress: p.porcentaje || 0,
               logo: null,
-              tipoAlcance: p.Tipo_alcance?.nombre,
+              tipoAlcance: p.Tipo_alcance?.nombre || p.TipoAlcance?.nombre,
             }))
           : [];
 
@@ -170,25 +177,25 @@ const Projects = () => {
 
   const handleProjectClick = (project) => {
     console.log("Proyecto seleccionado:", project);
-    // Aquí se abrirá el detalle del proyecto
+    // Podrías agregar una vista de detalle aquí si lo deseas
   };
 
   const handleDocumentsClick = (projectId, e) => {
     e?.stopPropagation();
-    console.log("Ver documentos del proyecto:", projectId);
-    // Aquí se abrirá la vista de documentos
+    setSelectedProjectId(projectId);
+    setCurrentView("documents");
   };
 
   const handleCodeClick = (projectId, e) => {
     e?.stopPropagation();
-    console.log("Ver código del proyecto:", projectId);
-    // Aquí se abrirá el repositorio o código
+    setSelectedProjectId(projectId);
+    setCurrentView("development");
   };
 
   const handleVersionsClick = (projectId, e) => {
     e?.stopPropagation();
-    console.log("Ver versiones del proyecto:", projectId);
-    // Aquí se abrirá la gestión de versiones
+    setSelectedProjectId(projectId);
+    setCurrentView("versions");
   };
 
   console.log("🎯 Estado actual:", {
@@ -200,10 +207,34 @@ const Projects = () => {
     searchError,
   });
 
-  return (
-    <AdminLayout title="Proyectos">
-      <div className="w-full max-w-6xl mx-auto py-8 px-6">
-        <div className="flex flex-col gap-4">
+  const renderContent = () => {
+    if (currentView === "versions" && selectedProjectId) {
+      return (
+        <ProjectVersionsView
+          projectId={selectedProjectId}
+          onBack={() => setCurrentView("list")}
+        />
+      );
+    }
+    if (currentView === "documents" && selectedProjectId) {
+      return (
+        <ProjectDocumentsView
+          projectId={selectedProjectId}
+          onBack={() => setCurrentView("list")}
+        />
+      );
+    }
+    if (currentView === "development" && selectedProjectId) {
+      return (
+        <ProjectDevelopmentView
+          projectId={selectedProjectId}
+          onBack={() => setCurrentView("list")}
+        />
+      );
+    }
+
+    return (
+      <>
           {/* Componente de filtros */}
           <ProjectFilters
             onSearch={handleSearch}
@@ -279,30 +310,39 @@ const Projects = () => {
               </div>
             )}
 
-          {/* Projects list */}
-          {!isLoading && filteredProjects.length > 0 && (
-            <div className="space-y-4">
-              {filteredProjects.map((project) => (
-                <div key={project.id}>
-                  <ApprovedProjectCard
-                    title={project.title}
-                    description={project.description}
-                    tags={project.tags}
-                    logo={project.logo}
-                    status={project.status}
-                    progress={project.progress}
-                    tipoAlcance={project.tipoAlcance}
-                    onClick={() => handleProjectClick(project)}
-                    onDocumentsClick={(e) =>
-                      handleDocumentsClick(project.id, e)
-                    }
-                    onCodeClick={(e) => handleCodeClick(project.id, e)}
-                    onVersionsClick={(e) => handleVersionsClick(project.id, e)}
-                  />
-                </div>
-              ))}
-            </div>
-          )}
+        {/* Projects list */}
+        {!isLoading && filteredProjects.length > 0 && (
+          <div className="space-y-4">
+            {filteredProjects.map((project) => (
+              <div key={project.id}>
+                <ApprovedProjectCard
+                  title={project.title}
+                  description={project.description}
+                  tags={project.tags}
+                  logo={project.logo}
+                  status={project.status}
+                  progress={project.progress}
+                  tipoAlcance={project.tipoAlcance}
+                  onClick={() => handleProjectClick(project)}
+                  onDocumentsClick={(e) =>
+                    handleDocumentsClick(project.id, e)
+                  }
+                  onCodeClick={(e) => handleCodeClick(project.id, e)}
+                  onVersionsClick={(e) => handleVersionsClick(project.id, e)}
+                />
+              </div>
+            ))}
+          </div>
+        )}
+      </>
+    );
+  };
+
+  return (
+    <AdminLayout title="Proyectos">
+      <div className="w-full max-w-6xl mx-auto py-8 px-6">
+        <div className="flex flex-col gap-4">
+          {renderContent()}
         </div>
       </div>
     </AdminLayout>

@@ -302,18 +302,7 @@ const GroupDetail = () => {
         setCurrentView("ideas");
         return;
       }
-      // ✅ CASO 1: No tiene ni idea ni proyecto → Mostrar banco de ideas
-      if (!proyecto && !idea) {
-        console.log("✅ Sin idea ni proyecto → Banco de ideas");
-        setSelectedActivity(activity);
-        setCurrentView("ideas");
-        return;
-      }
 
-      // ✅ CASO 2: Tiene idea, verificar su estado
-      if (idea && idea.id_idea) {
-        const estadoIdea = idea.estado;
-        console.log("📌 Estado de la idea:", estadoIdea);
       // ✅ CASO 2: Tiene idea, verificar su estado
       if (idea && idea.id_idea) {
         const estadoIdea = idea.estado;
@@ -325,12 +314,6 @@ const GroupDetail = () => {
           return;
         }
 
-        // Sub-caso 2.2: Idea rechazada
-        if (estadoIdea === "RECHAZADO") {
-          setCurrentIdeaId(idea.id_idea);
-          setCurrentView("rejected");
-          return;
-        }
         // Sub-caso 2.2: Idea rechazada
         if (estadoIdea === "RECHAZADO") {
           setCurrentIdeaId(idea.id_idea);
