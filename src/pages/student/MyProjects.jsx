@@ -14,6 +14,26 @@ const MyProjects = () => {
   const [projects, setProjects] = useState([]);
   const { userData } = useAuth();
 
+  const getStudentShortStatus = (ideaStatusRaw, projectStatusRaw) => {
+    const idea = ideaStatusRaw ? ideaStatusRaw.toUpperCase().trim() : null;
+    const proj = projectStatusRaw ? projectStatusRaw.toUpperCase().trim() : null;
+
+    if (idea === "REVISION" && proj === null) return "En revisión";
+    if (idea === "STAND_BY" && proj === null) return "Corregir idea";
+    if (idea === "APROBADO" && proj === null) return "Completar datos";
+    if (idea === "REVISION" && proj === "SELECCIONADO") return "En revisión";
+    if (idea === "REVISION" && proj === "CALIFICADO") return "En revisión";
+    if (idea === "STAND_BY" && proj === "SELECCIONADO") return "Corregir selección";
+    if (idea === "STAND_BY" && proj === "CALIFICADO") return "Corregir";
+    if (idea === "APROBADO" && proj === "EN_CURSO") return "Enviar entregables";
+    if (idea === "REVISION" && proj === "EN_CURSO") return "Enviado a calificar";
+    if (idea === "APROBADO" && proj === "CALIFICADO") return "Calificado";
+    if (idea === "LIBRE" && proj === "CALIFICADO") return "Propuesta libre";
+    if (idea === "LIBRE" && proj === null) return "Idea libre";
+
+    return proj || idea || "EN_CURSO";
+  };
+
   useEffect(() => {
     const load = async () => {
       if (!userData?.codigo) return;
@@ -28,7 +48,10 @@ const MyProjects = () => {
                 .split(",")
                 .map((s) => s.trim())
                 .filter(Boolean),
-              status: p.Estado?.descripcion || "EN_CURSO",
+            status: getStudentShortStatus(
+              p.Idea?.Estado?.descripcion,
+              p.Estado?.descripcion
+            ),
               logo: null,
               tipoAlcance: p.Tipo_alcance?.nombre || p.TipoAlcance?.nombre,
               progress: p.porcentaje || 0,
