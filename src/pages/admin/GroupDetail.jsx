@@ -4,6 +4,8 @@ import AdminLayout from "../../modules/admin/layouts/AdminLayout";
 import GroupParticipants from "../../components/ui/GroupParticipants";
 import { listarParticipantesGrupo } from "../../services/groupUserServices";
 import { useToast } from "../../hooks/useToast";
+import ProjectTabContent from "../../components/ui/ProjectTabContent";
+import ActivityCard from "../../components/ui/ActivityCard";
 
 const GroupDetail = () => {
   const { codigo_materia, nombre, periodo, anio } = useParams();
@@ -19,17 +21,32 @@ const GroupDetail = () => {
     const loadGroupData = async () => {
       if (hasLoaded.current) return;
       hasLoaded.current = true;
-      
-      console.log("Parámetros recibidos en GroupDetail:", { codigo_materia, nombre, periodo, anio });
-      
+
+      console.log("Parámetros recibidos en GroupDetail:", {
+        codigo_materia,
+        nombre,
+        periodo,
+        anio,
+      });
+
       if (!codigo_materia || !nombre || !periodo || !anio) {
-        console.error("Faltan parámetros requeridos:", { codigo_materia, nombre, periodo, anio });
+        console.error("Faltan parámetros requeridos:", {
+          codigo_materia,
+          nombre,
+          periodo,
+          anio,
+        });
         return;
       }
 
       setIsLoading(true);
       try {
-        const participantsData = await listarParticipantesGrupo(codigo_materia, nombre, periodo, anio);
+        const participantsData = await listarParticipantesGrupo(
+          codigo_materia,
+          nombre,
+          periodo,
+          anio
+        );
         setParticipants(
           Array.isArray(participantsData) ? participantsData : []
         );
@@ -53,8 +70,7 @@ const GroupDetail = () => {
   }, [codigo_materia, nombre, periodo, anio, error]);
 
   const tabs = [
-    { id: "proyecto", label: "Proyecto" },
-    { id: "equipo", label: "Equipo" },
+    { id: "proyecto", label: "Actividad" },
     { id: "participantes", label: "Participantes" },
   ];
 
@@ -112,14 +128,14 @@ const GroupDetail = () => {
           )}
 
           {activeTab === "proyecto" && (
-            <div className="text-center py-12 text-gray-500">
-              <p>Contenido del proyecto próximamente...</p>
-            </div>
-          )}
-
-          {activeTab === "equipo" && (
-            <div className="text-center py-12 text-gray-500">
-              <p>Información del equipo próximamente...</p>
+            <div className="max-w-4xl mx-auto">
+              <div className="mb-8">
+                <ActivityCard
+                  title="Actividad 1"
+                  description="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco."
+                />
+              </div>
+              <ProjectTabContent perfil="admin" onCrearActividad={() => {}} />
             </div>
           )}
         </div>

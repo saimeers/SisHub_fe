@@ -1,10 +1,10 @@
 import React from "react";
 import AdminLayout from "../layouts/AdminLayout";
-import UploadSubjectsHeader from "./UploadSubjectsHeader";
-import UploadSubjectsControlsForm from "./UploadSubjectsControlsForm";
-import UploadSubjectsTableForm from "./UploadSubjectsTableForm";
-import UploadSubjectsPaginationForm from "./UploadSubjectsPaginationForm";
-import UploadSubjectsActionsForm from "./UploadSubjectsActionsForm";
+import UploadSubjectsHeader from "./uploadSubjects/UploadSubjectsHeader";
+import UploadSubjectsControlsForm from "./uploadSubjects/UploadSubjectsControlsForm";
+import UploadSubjectsTableForm from "./uploadSubjects/UploadSubjectsTableForm";
+import UploadSubjectsPaginationForm from "./uploadSubjects/UploadSubjectsPaginationForm";
+import UploadSubjectsActionsForm from "./uploadSubjects/UploadSubjectsActionsForm";
 import { useSubjectForm } from "../hooks/useSubjectForm";
 
 const FormCreateSubject = () => {
@@ -44,7 +44,7 @@ const FormCreateSubject = () => {
   return (
     <AdminLayout title="Crear materias">
       <div className="space-y-6">
-        <UploadSubjectsHeader 
+        <UploadSubjectsHeader
           onFileUpload={handleFileUpload}
           isSubmitting={isSubmitting}
         />

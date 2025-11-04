@@ -5,13 +5,25 @@ import { useNavigate } from "react-router-dom";
 const gradientClasses = [
   "from-purple-500 to-indigo-500",
   "from-teal-400 to-cyan-500",
-  "from-pink-500 to-rose-500",
   "from-yellow-400 to-orange-400",
   "from-sky-500 to-blue-600",
-  "from-emerald-500 to-teal-600",
-  "from-violet-500 to-purple-600",
-  "from-amber-500 to-yellow-600",
 ];
+
+const AREA_TO_GRADIENT_INDEX = {
+  1: 0, 
+  2: 1,
+  3: 2,
+  4: 3,
+};
+
+const getGradientIndexByArea = (group, fallbackIndex = 0) => {
+  const idArea = group.id_area ?? null;
+  console.log("grupo completo:", group);
+  if (idArea != null && AREA_TO_GRADIENT_INDEX[idArea] !== undefined) {
+    return AREA_TO_GRADIENT_INDEX[idArea];
+  }
+  return fallbackIndex % gradientClasses.length;
+};
 
 const GroupCard = ({
   group,
@@ -20,8 +32,9 @@ const GroupCard = ({
   showQRButton = true,
   role = "admin",
 }) => {
+  const gradientIndex = getGradientIndexByArea(group, index);
+  const gradient = gradientClasses[gradientIndex];
   const navigate = useNavigate();
-  const gradient = gradientClasses[index % gradientClasses.length];
 
   const handleQRCode = (e) => {
     e.stopPropagation(); // evita que al hacer click en el ícono también navegue

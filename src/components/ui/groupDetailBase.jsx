@@ -80,7 +80,7 @@ const GroupDetailBase = ({ groupInfo, participants, isLoading, activeTab, setAct
 
         {activeTab === "proyecto" && (
           <div className="text-center py-12 text-gray-500">
-            <p>Contenido del proyecto próximamente...</p>
+            <p>No hay actividades creadas para este grupo</p>
           </div>
         )}
 

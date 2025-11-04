@@ -5,13 +5,28 @@ import { useNavigate } from "react-router-dom";
 const gradientClasses = [
   "from-purple-500 to-indigo-500",
   "from-teal-400 to-cyan-500",
-  "from-pink-500 to-rose-500",
   "from-yellow-400 to-orange-400",
   "from-sky-500 to-blue-600",
 ];
 
+const AREA_TO_GRADIENT_INDEX = {
+  1: 0, 
+  2: 1,
+  3: 2,
+  4: 3,
+};
+
+const getGradientIndexByArea = (subject, fallbackIndex = 0) => {
+  const idArea = subject?.id_area ?? null;
+  if (idArea != null && AREA_TO_GRADIENT_INDEX[idArea] !== undefined) {
+    return AREA_TO_GRADIENT_INDEX[idArea];
+  }
+  return fallbackIndex % gradientClasses.length;
+};
+
 const SubjectCard = ({ subject, index = 0, onDetails, showSettings = true }) => {
-  const gradient = gradientClasses[index % gradientClasses.length];
+  const gradientIndex = getGradientIndexByArea(subject, index);
+  const gradient = gradientClasses[gradientIndex];
   const navigate = useNavigate();
 
   const handleEdit = () => {
