@@ -33,10 +33,11 @@ export const adoptarPropuesta = async (id_proyecto, codigo_usuario, grupo) => {
   }
 };
 
-export const continuarProyecto = async (id_proyecto, codigo_usuario) => {
+export const continuarProyecto = async (id_proyecto, codigo_usuario, grupo) => {
   try {
     const response = await axiosInstance.post(`/proyectos/${id_proyecto}/continuar`, {
-      codigo_usuario
+      codigo_usuario,
+      grupo
     });
     return response.data;
   } catch (error) {
@@ -86,7 +87,7 @@ export const calificarProyecto = async (id_proyecto, observacion, codigo_usuario
 
 export async function getHistorialProyecto(id_proyecto) {
   try {
-    const { data } = await api.get(`/proyectos/historial/${id_proyecto}`);
+    const { data } = await axiosInstance.get(`/proyectos/historial/${id_proyecto}`);
     return data.historial;
   } catch (error) {
     console.error("Error al obtener historial del entregable:", error);

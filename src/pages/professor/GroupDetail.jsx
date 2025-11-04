@@ -24,6 +24,9 @@ import ProjectDetailsView from "../../components/ui/ProjectDetailsView";
 import ProjectDocumentsView from "../../components/ui/ProjectDocumentsView";
 import ProjectDevelopmentView from "../../components/ui/ProjectDevelopmentView";
 import ProjectVersionsView from "../../components/ui/ProjectVersionsView";
+import CalificarProyecto from "../../modules/professor/components/CalificarProyecto";
+import ReviewProyecto from "../../modules/professor/components/ReviewProyecto";
+import ProyectoCalificado from "../../components/ui/ProyectoCalificado";
 import { listarProyectosPorGrupo } from "../../services/projectServices";
 import { toast } from "react-toastify";
 
@@ -255,7 +258,8 @@ const GroupDetail = () => {
         listarIdeasGrupo(groupParams),
         listarProyectosPorGrupo(groupParams),
       ]);
-
+      console.log("idea principal:",ideasResp);
+      console.log("proyecto principal:", projectsResp);
       // Ideas retorna: { total, grupo, data: [...] }
       const ideas = ideasResp?.data ?? [];
       setGroupIdeas(Array.isArray(ideas) ? ideas : []);
@@ -292,6 +296,7 @@ const GroupDetail = () => {
     try {
       const ideasResp = await listarIdeasGrupo(groupParams);
       const ideas = ideasResp?.data ?? [];
+      console.log("ideas secundarias:", ideas)
       setGroupIdeas(Array.isArray(ideas) ? ideas : []);
       toast.success("Las ideas han sido actualizadas");
     } catch (err) {
@@ -341,11 +346,10 @@ const GroupDetail = () => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`px-6 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
-                  activeTab === tab.id
-                    ? "bg-white shadow text-gray-900"
-                    : "text-gray-600 hover:text-gray-800"
-                }`}
+                className={`px-6 py-2 rounded-full text-sm font-medium transition-all duration-200 ${activeTab === tab.id
+                  ? "bg-white shadow text-gray-900"
+                  : "text-gray-600 hover:text-gray-800"
+                  }`}
               >
                 {tab.label}
               </button>
@@ -420,6 +424,8 @@ const GroupDetail = () => {
                     projects={groupProjects}
                     onBack={handleBackToActivity}
                     onReviewIdea={handleReviewIdea}
+                    userData={userData}
+                    groupParams={groupParams}
                   />
                 ) : null}
               </div>
@@ -438,9 +444,12 @@ const IdeasListView = ({
   projects,
   onBack,
   onReviewIdea,
+   userData,
+  groupParams,
 }) => {
   const [currentView, setCurrentView] = useState("list"); // list | details | documents | development | versions
   const [selectedProjectId, setSelectedProjectId] = useState(null);
+  const [selectedActivityId, setSelectedActivityId] = useState(null);
   const [statusInfoMessage, setStatusInfoMessage] = useState("");
   const [documentsInfoMessage, setDocumentsInfoMessage] = useState("");
   const [developmentInfoMessage, setDevelopmentInfoMessage] = useState("");
@@ -450,20 +459,20 @@ const IdeasListView = ({
   const hasProjects = projects && projects.length > 0;
   const isLoading = loadingIdeas || loadingProjects;
   const isEmpty = !hasIdeas && !hasProjects && !isLoading;
-
+  console.log(projects);
   // Removed long descriptive status mapping; we now use concise labels via getProjectShortStatus
 
   const getProjectShortStatus = (ideaStatusRaw, projectStatusRaw) => {
-    const idea = ideaStatusRaw ? ideaStatusRaw.toUpperCase().trim() : null;
-    const proj = projectStatusRaw ? projectStatusRaw.toUpperCase().trim() : null;
+    const idea = ideaStatusRaw ? ideaStatusRaw : null;
+    const proj = projectStatusRaw ? projectStatusRaw : null;
 
     if (idea === "REVISION" && proj === null) return "A revisar";
     if (idea === "STAND_BY" && proj === null) return "En espera de corrección del estudiante";
     if (idea === "APROBADO" && proj === null) return "En espera de que el estudiante datos";
     if (idea === "REVISION" && proj === "SELECCIONADO") return "A revisar";
     if (idea === "REVISION" && proj === "CALIFICADO") return "A revisar";
-    if (idea === "STAND_BY" && proj === "SELECCIONADO") return "Enviado a correccion";
-    if (idea === "STAND_BY" && proj === "CALIFICADO") return "Enviado a correccion";
+    if (idea === "STAND_BY" && proj === "SELECCIONADO") return "En espera de corrección del estudiante.";
+    if (idea === "STAND_BY" && proj === "CALIFICADO") return "En espera de corrección del estudiante.";
     if (idea === "APROBADO" && proj === "EN_CURSO") return "Esperando entregables";
     if (idea === "REVISION" && proj === "EN_CURSO") return "A calificar";
     if (idea === "APROBADO" && proj === "CALIFICADO") return "Calificado";
@@ -477,8 +486,8 @@ const IdeasListView = ({
     const set = new Set();
     (projects || []).forEach((proy) => {
       const txt = getProjectShortStatus(
-        proy?.Idea?.Estado?.descripcion,
-        proy?.Estado?.descripcion
+        proy?.Idea?.estado,
+        proy?.estado
       );
       if (txt) set.add(txt);
     });
@@ -492,15 +501,15 @@ const IdeasListView = ({
       ? proy.tecnologias.join(", ")
       : (proy?.tecnologias || "");
     const statusText = getProjectShortStatus(
-      proy?.Idea?.Estado?.descripcion,
-      proy?.Estado?.descripcion
+      proy?.Idea?.estado,
+      proy?.estado
     );
 
     const textOk = filterText
       ? [title, description, technologies]
-          .join(" ")
-          .toLowerCase()
-          .includes(filterText.toLowerCase())
+        .join(" ")
+        .toLowerCase()
+        .includes(filterText.toLowerCase())
       : true;
     const statusOk = filterStatus && filterStatus !== "__IDEAS_REVISION__"
       ? statusText === filterStatus
@@ -511,6 +520,65 @@ const IdeasListView = ({
   const renderProjects = () => {
     const getSelectedProject = () =>
       projects.find((p) => p?.id_proyecto === selectedProjectId);
+
+    if (currentView === "calificarProyecto" && selectedProjectId) {
+      return (
+        <CalificarProyecto
+          projectId={selectedProjectId}
+          activityId={selectedActivityId}
+          currentUserCode={userData?.codigo}
+          onBack={() => setCurrentView("list")}
+          onCalificacionComplete={async () => {
+            // Recargar proyectos después de calificar
+            setLoadingProjects(true);
+            try {
+              const projectsResp = await listarProyectosPorGrupo(groupParams);
+              setGroupProjects(Array.isArray(projectsResp) ? projectsResp : []);
+              toast.success("Proyecto calificado exitosamente");
+            } catch (err) {
+              console.error("Error al recargar proyectos:", err);
+            } finally {
+              setLoadingProjects(false);
+            }
+            setCurrentView("list");
+          }}
+        />
+      );
+    }
+
+    if (currentView === "reviewProyecto" && selectedProjectId) {
+      return (
+        <ReviewProyecto
+          projectId={selectedProjectId}
+          currentUserCode={userData?.codigo}
+          onBack={() => setCurrentView("list")}
+          onReviewComplete={async () => {
+            // Recargar proyectos después de revisar
+            setLoadingProjects(true);
+            try {
+              const projectsResp = await listarProyectosPorGrupo(groupParams);
+              setGroupProjects(Array.isArray(projectsResp) ? projectsResp : []);
+              toast.success("Proyecto revisado exitosamente");
+            } catch (err) {
+              console.error("Error al recargar proyectos:", err);
+            } finally {
+              setLoadingProjects(false);
+            }
+            setCurrentView("list");
+          }}
+        />
+      );
+    }
+
+    // Vista: ProyectoCalificado
+    if (currentView === "proyectoCalificado" && selectedProjectId) {
+      return (
+        <ProyectoCalificado
+          projectId={selectedProjectId}
+          onBack={() => setCurrentView("list")}
+        />
+      );
+    }
 
     if (currentView === "statusInfo" && selectedProjectId) {
       return (
@@ -566,59 +634,14 @@ const IdeasListView = ({
         </div>
       );
     }
-    if (currentView === "development" && selectedProjectId) {
-      const sel = getSelectedProject();
-      const idea = sel?.Idea?.Estado?.descripcion
-        ? sel.Idea.Estado.descripcion.toUpperCase().trim()
-        : null;
-      const proj = sel?.Estado?.descripcion
-        ? sel.Estado.descripcion.toUpperCase().trim()
-        : null;
 
-      if (idea === "REVISION" && proj === "EN_CURSO") {
-        return (
-          <div className="p-6 bg-gray-50 rounded-xl border border-gray-200">
-            <p className="text-gray-700">Entregables enviados a calificar</p>
-          </div>
-        );
-      }
-      return (
-        <ProjectDevelopmentView
-          projectId={selectedProjectId}
-          onBack={() => setCurrentView("list")}
-        />
-      );
-    }
-    if (currentView === "documents" && selectedProjectId) {
-      const sel = getSelectedProject();
-      const idea = sel?.Idea?.Estado?.descripcion
-        ? sel.Idea.Estado.descripcion.toUpperCase().trim()
-        : null;
-      const proj = sel?.Estado?.descripcion
-        ? sel.Estado.descripcion.toUpperCase().trim()
-        : null;
-
-      if (idea === "REVISION" && proj === "EN_CURSO") {
-        return (
-          <div className="p-6 bg-gray-50 rounded-xl border border-gray-200">
-            <p className="text-gray-700">Entregables enviados a calificar</p>
-          </div>
-        );
-      }
-      return (
-        <ProjectDocumentsView
-          projectId={selectedProjectId}
-          onBack={() => setCurrentView("list")}
-        />
-      );
-    }
     if (currentView === "details" && selectedProjectId) {
       const sel = getSelectedProject();
-      const idea = sel?.Idea?.Estado?.descripcion
-        ? sel.Idea.Estado.descripcion.toUpperCase().trim()
+      const idea = sel?.Idea?.estado
+        ? sel.Idea.estado
         : null;
-      const proj = sel?.Estado?.descripcion
-        ? sel.Estado.descripcion.toUpperCase().trim()
+      const proj = sel?.estado
+        ? sel.estado
         : null;
 
       const showSentForReviewNotice = idea === "REVISION" && proj === "EN_CURSO";
@@ -641,6 +664,7 @@ const IdeasListView = ({
       return (
         <ProjectDocumentsView
           projectId={selectedProjectId}
+          activityId={selectedActivityId}
           onBack={() => setCurrentView("list")}
         />
       );
@@ -649,6 +673,7 @@ const IdeasListView = ({
       return (
         <ProjectDevelopmentView
           projectId={selectedProjectId}
+          activityId={selectedActivityId}
           onBack={() => setCurrentView("list")}
         />
       );
@@ -668,36 +693,74 @@ const IdeasListView = ({
           const tags = Array.isArray(proy?.tecnologias)
             ? proy.tecnologias
             : typeof proy?.tecnologias === "string"
-            ? proy.tecnologias
+              ? proy.tecnologias
                 .split(",")
-                .map((t) => t.trim())
+                .map((t) => t)
                 .filter(Boolean)
-            : proy?.tags || [];
+              : proy?.tags || [];
 
           const progress = typeof proy?.porcentaje === "number" ? proy.porcentaje : 0;
-          const alcanceTexto = proy?.Tipo_alcance?.nombre || proy?.TipoAlcance?.nombre || undefined;
+          console.log("proyecto",proy)
+          const alcanceTexto = proy?.Tipo_alcance?.nombre || proy?.tipo_alcance || undefined;
           const statusTexto = getProjectShortStatus(
-            proy?.Idea?.Estado?.descripcion,
-            proy?.Estado?.descripcion
+            proy?.Idea?.estado,
+            proy?.estado
           );
 
           const handleProjectClick = () => {
-            const ideaState = proy?.Idea?.Estado?.descripcion || null;
-            const projectState = proy?.Estado?.descripcion || null;
-            const idea = ideaState ? ideaState.toUpperCase().trim() : null;
-            const proj = projectState ? projectState.toUpperCase().trim() : null;
-
-            const shouldShowStatusInfo =
-              proj === "SELECCIONADO" ||
-              proj === "CALIFICADO";
-
+            const ideaState = proy?.Idea?.estado || null;
+            const projectState = proy?.estado || null;
+            const idea = ideaState ? ideaState : null;
+            const proj = projectState ? projectState : null;
+            console.log("estado proyecto v1:", proj);
+            console.log("estado idea v1:", idea);
+            console.log("id_actividad:", proy.id_actividad);
+            
             setSelectedProjectId(proy.id_proyecto);
-            if (shouldShowStatusInfo) {
+
+            // 📍 REEMPLAZAR toda esta lógica con:
+
+            // CASO 1: REVISION + SELECCIONADO/CALIFICADO → ReviewProyecto
+            if (idea === "REVISION" && (proj === "SELECCIONADO" || proj === "CALIFICADO")) {
+              setCurrentView("reviewProyecto");
+              return;
+            }
+
+            // CASO 2: STAND_BY + SELECCIONADO/CALIFICADO → Toast
+            if (idea === "STAND_BY" && (proj === "SELECCIONADO" || proj === "CALIFICADO")) {
+              toast.info("El estudiante debe corregir las observaciones antes de continuar");
+              return;
+            }
+
+            // CASO 3: APROBADO + EN_CURSO → Toast
+            if (idea === "APROBADO" && proj === "EN_CURSO") {
+              toast.info("Esperando que el estudiante suba entregables");
+              return;
+            }
+
+            // CASO 4: REVISION + EN_CURSO → CalificarProyecto
+            if (idea === "REVISION" && proj === "EN_CURSO") {
+              // Necesitamos obtener el id_actividad del proyecto
+              setSelectedActivityId(proy.id_actividad); 
+              setCurrentView("calificarProyecto");
+              return;
+            }
+
+            // CASO 5: APROBADO + CALIFICADO → ProyectoCalificado
+            if (idea === "APROBADO" && proj === "CALIFICADO") {
+              setCurrentView("proyectoCalificado");
+              return;
+            }
+
+            // CASO 6: SELECCIONADO o CALIFICADO sin REVISION → StatusInfo
+            if (proj === "SELECCIONADO" || proj === "CALIFICADO") {
               setStatusInfoMessage(statusTexto);
               setCurrentView("statusInfo");
-            } else {
-              setCurrentView("details");
+              return;
             }
+
+            // CASO DEFAULT: Mostrar detalles
+            setCurrentView("details");
           };
 
           return (
@@ -712,31 +775,32 @@ const IdeasListView = ({
               tags={tags}
               tipoAlcance={alcanceTexto}
               onDocumentsClick={() => {
-                // Determinar antes de cambiar de vista para evitar condiciones de carrera
-                const ideaState = proy?.Idea?.Estado?.descripcion || null;
-                const projectState = proy?.Estado?.descripcion || null;
-                const idea = ideaState ? ideaState.toUpperCase().trim() : null;
-                const proj = projectState ? projectState.toUpperCase().trim() : null;
+                const ideaState = proy?.Idea?.estado || null;
+                const projectState = proy?.estado || null;
+                const idea = ideaState ? ideaState : null;
+                const proj = projectState ? projectState : null;
 
                 setSelectedProjectId(proy.id_proyecto);
                 if (idea === "REVISION" && proj === "EN_CURSO") {
-                  setDocumentsInfoMessage("Entregables enviados a calificar");
+                  setDocumentsInfoMessage("Entregables enviados a calificar. Usa el botón principal para calificar.");
                   setCurrentView("documentsInfo");
                 } else {
+                  setSelectedActivityId(proy.id_actividad); 
                   setCurrentView("documents");
                 }
               }}
               onCodeClick={() => {
-                const ideaState = proy?.Idea?.Estado?.descripcion || null;
-                const projectState = proy?.Estado?.descripcion || null;
-                const idea = ideaState ? ideaState.toUpperCase().trim() : null;
-                const proj = projectState ? projectState.toUpperCase().trim() : null;
-
+                const idea = proy?.Idea?.estado || null;
+                const proj = proy?.estado || null;
+                console.log("estado idea v2:", idea);
+                console.log("estado projecto v2:", proj);
                 setSelectedProjectId(proy.id_proyecto);
+
                 if (idea === "REVISION" && proj === "EN_CURSO") {
-                  setDevelopmentInfoMessage("Entregables enviados a calificar");
+                  setDevelopmentInfoMessage("Entregables enviados a calificar. Usa el botón principal para calificar.");
                   setCurrentView("developmentInfo");
                 } else {
+                  setSelectedActivityId(proy.id_actividad); 
                   setCurrentView("development");
                 }
               }}
@@ -756,7 +820,7 @@ const IdeasListView = ({
 
   return (
     <div className="bg-white rounded-2xl border border-gray-200 p-6">
-      
+
 
       {currentView === "list" && (
         <div className="bg-white border border-gray-200 rounded-2xl p-4 mb-8">
@@ -856,23 +920,23 @@ const IdeasListView = ({
                 <div className="space-y-4">
                   {(filterStatus === "__IDEAS_REVISION__"
                     ? ideas.filter(
-                        (i) =>
-                          (i?.Estado?.descripcion || "").toUpperCase() === "REVISION" &&
-                          (!filterText ||
-                            ((i?.titulo || "") + " " + (i?.objetivo_general || ""))
-                              .toLowerCase()
-                              .includes(filterText.toLowerCase()))
-                      )
-                    : ideas.filter(
-                        (i) =>
-                          !filterText ||
+                      (i) =>
+                        (i?.estado || "") === "REVISION" &&
+                        (!filterText ||
                           ((i?.titulo || "") + " " + (i?.objetivo_general || ""))
                             .toLowerCase()
-                            .includes(filterText.toLowerCase())
-                      )
+                            .includes(filterText.toLowerCase()))
+                    )
+                    : ideas.filter(
+                      (i) =>
+                        !filterText ||
+                        ((i?.titulo || "") + " " + (i?.objetivo_general || ""))
+                          .toLowerCase()
+                          .includes(filterText.toLowerCase())
+                    )
                   ).map((idea, idx) => {
                     const isEnRevision =
-                      idea?.Estado?.descripcion?.toUpperCase() === "REVISION";
+                      idea?.estado === "REVISION";
 
                     return (
                       <div
@@ -882,7 +946,7 @@ const IdeasListView = ({
                             "🖱️ Click en idea:",
                             idea.id_idea,
                             "Estado:",
-                            idea?.Estado?.descripcion
+                            idea?.estado
                           );
                           if (isEnRevision && onReviewIdea) {
                             onReviewIdea(idea.id_idea);
@@ -890,17 +954,16 @@ const IdeasListView = ({
                             console.log("⚠️ Idea no está en revisión");
                           }
                         }}
-                        className={`${
-                          isEnRevision
-                            ? "cursor-pointer hover:shadow-lg hover:border-red-300"
-                            : "cursor-default opacity-60"
-                        } transition-all`}
+                        className={`${isEnRevision
+                          ? "cursor-pointer hover:shadow-lg hover:border-red-300"
+                          : "cursor-default opacity-60"
+                          } transition-all`}
                       >
                         <ProjectCard
                           title={idea?.titulo || "Idea"}
                           description={idea?.objetivo_general || ""}
                           status={(() => {
-                            const st = (idea?.Estado?.descripcion || "").toUpperCase();
+                            const st = (idea?.estado || "");
                             if (st === "REVISION") return "A revisar";
                             if (st === "STAND_BY") return "Corrección estudiante";
                             if (st === "APROBADO") return "Completar datos";
@@ -975,7 +1038,7 @@ const ActivityDetail = ({ actividad, esquemaInfo, onEdit, onViewIdeas }) => {
       (ai) => ai.Item.id_item
     );
     const allItems = esquemaInfo.Items;
-
+    
     // Filtrar solo los items seleccionados y construir jerarquía
     const itemsMap = {};
     allItems.forEach((item) => {
@@ -1132,9 +1195,8 @@ const ItemsDisplayTree = ({ items, level = 0 }) => {
           <div className="flex items-center gap-2 py-1">
             <span className="w-2 h-2 bg-red-600 rounded-full"></span>
             <span
-              className={`${
-                level === 0 ? "font-semibold text-gray-900" : "text-gray-700"
-              }`}
+              className={`${level === 0 ? "font-semibold text-gray-900" : "text-gray-700"
+                }`}
             >
               {item.nombre}
             </span>
@@ -1376,17 +1438,17 @@ const ActivityForm = ({
 
   const hasChanges = isEditing
     ? form.titulo !== initialData?.titulo ||
-      form.descripcion !== initialData?.descripcion ||
-      form.fecha_inicio !== initialData?.fecha_inicio ||
-      form.fecha_cierre !== initialData?.fecha_cierre ||
-      form.maximo_integrantes !== initialData?.maximo_integrantes ||
-      form.id_tipo_alcance !== initialData?.id_tipo_alcance ||
-      JSON.stringify(selectedItems.sort()) !==
-        JSON.stringify(
-          (initialData?.Actividad_items || [])
-            .map((ai) => ai.Item.id_item)
-            .sort()
-        )
+    form.descripcion !== initialData?.descripcion ||
+    form.fecha_inicio !== initialData?.fecha_inicio ||
+    form.fecha_cierre !== initialData?.fecha_cierre ||
+    form.maximo_integrantes !== initialData?.maximo_integrantes ||
+    form.id_tipo_alcance !== initialData?.id_tipo_alcance ||
+    JSON.stringify(selectedItems.sort()) !==
+    JSON.stringify(
+      (initialData?.Actividad_items || [])
+        .map((ai) => ai.Item.id_item)
+        .sort()
+    )
     : true;
 
   const canSubmit =
@@ -1589,9 +1651,8 @@ const ItemsTree = ({ items, selectedItems, onToggle, level = 0 }) => {
                 className="mt-1 w-4 h-4 text-red-600 rounded focus:ring-2 focus:ring-red-500"
               />
               <span
-                className={`flex-1 ${
-                  level === 0 ? "font-semibold text-gray-900" : "text-gray-700"
-                } ${hasSelectedChildren && !isSelected ? "text-red-600" : ""}`}
+                className={`flex-1 ${level === 0 ? "font-semibold text-gray-900" : "text-gray-700"
+                  } ${hasSelectedChildren && !isSelected ? "text-red-600" : ""}`}
               >
                 {item.nombre}
               </span>

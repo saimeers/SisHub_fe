@@ -1,5 +1,8 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
+import { obtenerEntregablesProyecto } from "../../services/EntregableService";
 import { verDetallesProyecto } from "../../services/projectServices";
+import { Loader2, Download, Eye, EyeOff, FileText, ExternalLink } from "lucide-react";
+import { toast } from "react-toastify";
 
 const StatusBadge = ({ status }) => {
   const map = {
@@ -8,11 +11,16 @@ const StatusBadge = ({ status }) => {
     RECHAZADO: "bg-red-100 text-red-800 border-red-200",
   };
   const cls = map[status] || "bg-gray-100 text-gray-800 border-gray-200";
-  return <span className={`px-2 py-1 rounded-full text-xs font-semibold border ${cls}`}>{status || "Sin estado"}</span>;
+  return (
+    <span className={`px-2 py-1 rounded-full text-xs font-semibold border ${cls}`}>
+      {status || "Sin estado"}
+    </span>
+  );
 };
 
-const ProjectDocumentsView = ({ projectId, onBack }) => {
-  const [data, setData] = useState(null);
+const ProjectDocumentsView = ({ projectId, activityId, onBack }) => {
+  const [proyecto, setProyecto] = useState(null);
+  const [documentos, setDocumentos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [expandedIndex, setExpandedIndex] = useState(null);
@@ -23,149 +31,214 @@ const ProjectDocumentsView = ({ projectId, onBack }) => {
       setLoading(true);
       setError(null);
       try {
-        const resp = await verDetallesProyecto(projectId);
+        // Obtener datos del proyecto
+        const proyectoData = await verDetallesProyecto(projectId);
         if (!mounted) return;
-        setData(resp);
+        setProyecto(proyectoData);
+
+        // Obtener entregables del proyecto para esta actividad
+        const entregablesData = await obtenerEntregablesProyecto(projectId, activityId);
+        if (!mounted) return;
+        
+        // Filtrar SOLO documentos (tipo investigativo)
+        const docs = (Array.isArray(entregablesData) ? entregablesData : [])
+          .filter(e => e.tipo === 'DOCUMENTO');
+        
+        setDocumentos(docs);
       } catch (e) {
         if (!mounted) return;
-        setError("Error al cargar los entregables");
+        console.error("Error al cargar documentos:", e);
+        setError("Error al cargar los documentos");
+        toast.error("Error al cargar los documentos");
       } finally {
         if (mounted) setLoading(false);
       }
     };
-    if (projectId) load();
+    if (projectId && activityId) load();
     return () => {
       mounted = false;
     };
-  }, [projectId]);
+  }, [projectId, activityId]);
 
-  const documentos = useMemo(() => {
-    return (data?.entregables || []).filter((e) => e.tipo === "DOCUMENTO" || e.tipo === "VIDEO");
-  }, [data]);
-
-  const handleOpen = (url) => {
-    if (url) window.open(url, "_blank");
-  };
-
-  const handleDownload = (url, name) => {
+  const handleDownload = (documento) => {
+    const url = documento.url_archivo;
     if (!url) return;
+    
     const link = document.createElement("a");
     link.href = url;
-    link.download = name || "archivo";
+    link.download = documento.nombre_archivo || "documento";
+    link.target = "_blank";
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
 
   const getExt = (name = "") => name.split(".").pop()?.toLowerCase();
-  const canPreview = (ent) => {
-    const ext = getExt(ent?.nombre_archivo || "");
-    if (!ent?.url_archivo) return false;
-    if (ent.tipo === "VIDEO") return true;
-    return ["pdf", "png", "jpg", "jpeg", "webp", "doc", "docx"].includes(ext);
+
+  const canPreview = (documento) => {
+    if (!documento.url_archivo) return false;
+    const ext = getExt(documento.nombre_archivo || "");
+    return ["doc", "docx", "pdf"].includes(ext);
   };
+
+  const renderPreview = (documento) => {
+    if (!documento.url_archivo) {
+      return <div className="text-sm text-gray-600">No hay archivo disponible.</div>;
+    }
+
+    const ext = getExt(documento.nombre_archivo);
+
+    if (["doc", "docx"].includes(ext)) {
+      return (
+        <div className="relative">
+          <iframe
+            title="vista-previa-word"
+            src={`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(documento.url_archivo)}`}
+            className="w-full h-[600px] border rounded-lg"
+          />
+          <div className="mt-2 text-center">
+            <a
+              href={documento.url_archivo}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 text-sm"
+            >
+              <ExternalLink className="w-4 h-4" />
+              Abrir en nueva pestaña
+            </a>
+          </div>
+        </div>
+      );
+    }
+
+    if (ext === "pdf") {
+      return (
+        <iframe
+          title="vista-previa-pdf"
+          src={documento.url_archivo}
+          className="w-full h-[600px] border rounded-lg"
+        />
+      );
+    }
+
+    return <div className="text-sm text-gray-600">No hay vista previa disponible para este formato.</div>;
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-16">
+        <Loader2 className="w-8 h-8 text-red-600 animate-spin mr-3" />
+        <span className="text-gray-500">Cargando documentos...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="py-16 text-center">
+        <p className="text-red-600">{error}</p>
+        {onBack && (
+          <button
+            onClick={onBack}
+            className="mt-4 px-4 py-2 text-red-600 hover:underline"
+          >
+            Volver
+          </button>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="w-full max-w-6xl mx-auto">
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Documentación</h2>
-          <p className="text-gray-600">{data?.Idea?.titulo || `Proyecto ${projectId}`}</p>
+          <p className="text-gray-600">{proyecto?.Idea?.titulo || `Proyecto ${projectId}`}</p>
         </div>
-        <button
-          type="button"
-          onClick={onBack}
-          className="px-4 py-2 rounded-lg bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 text-sm font-medium shadow-sm"
-        >
-          Volver
-        </button>
+        {onBack && (
+          <button
+            type="button"
+            onClick={onBack}
+            className="px-4 py-2 rounded-lg bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 text-sm font-medium shadow-sm"
+          >
+            ← Volver
+          </button>
+        )}
       </div>
 
-      {loading && <div className="py-16 text-center text-gray-500">Cargando entregables...</div>}
-      {error && <div className="py-16 text-center text-red-600">{error}</div>}
+      <div className="space-y-4">
+        {documentos.length === 0 ? (
+          <div className="py-16 text-center text-gray-600 bg-gray-50 rounded-2xl">
+            No hay documentos cargados
+          </div>
+        ) : (
+          documentos.map((documento, idx) => {
+            const isExpanded = expandedIndex === idx;
 
-      {!loading && !error && (
-        <div className="space-y-4">
-          {documentos.length === 0 ? (
-            <div className="py-16 text-center text-gray-600 bg-gray-50 rounded-2xl">No hay entregables</div>
-          ) : (
-            documentos.map((d, idx) => (
-              <div key={idx} className="border border-gray-200 rounded-xl p-5 bg-white">
+            return (
+              <div key={documento.id_entregable || idx} className="border border-gray-200 rounded-xl p-5 bg-white">
                 <div className="flex items-start justify-between">
-                  <div className="pr-4">
+                  <div className="flex-1 pr-4">
                     <div className="flex items-center gap-2 mb-1">
+                      <FileText className="w-5 h-5 text-gray-600" />
                       <h3 className="font-semibold text-gray-900">
-                        {d.nombre_archivo || (d.tipo === "VIDEO" ? "Video" : "Documento")}
+                        {documento.nombre_archivo || 'Documento'}
                       </h3>
-                      {d.Estado?.descripcion && <StatusBadge status={d.Estado.descripcion} />}
+                      {documento.Estado?.descripcion && (
+                        <StatusBadge status={documento.Estado.descripcion} />
+                      )}
                     </div>
-                    <p className="text-sm text-gray-600">Tipo: {d.tipo}</p>
-                    {d.fecha_subida && (
-                      <p className="text-sm text-gray-600">Subido: {d.fecha_subida}</p>
+                    <p className="text-sm text-gray-600">Tipo: Documento</p>
+                    {documento.fecha_subida && (
+                      <p className="text-sm text-gray-600">Subido: {documento.fecha_subida}</p>
                     )}
                   </div>
                   <div className="flex items-center gap-2">
-                    {d.url_archivo && canPreview(d) && (
+                    {canPreview(documento) && (
                       <button
                         type="button"
-                        onClick={() => setExpandedIndex(expandedIndex === idx ? null : idx)}
-                        className="px-4 py-2 rounded-lg bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 text-sm font-medium"
+                        onClick={() => setExpandedIndex(isExpanded ? null : idx)}
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 text-sm font-medium"
                       >
-                        {expandedIndex === idx ? "Ocultar" : "Ver"}
+                        {isExpanded ? (
+                          <>
+                            <EyeOff className="w-4 h-4" />
+                            Ocultar
+                          </>
+                        ) : (
+                          <>
+                            <Eye className="w-4 h-4" />
+                            Ver
+                          </>
+                        )}
                       </button>
                     )}
-                    {d.url_archivo && (
+                    {documento.url_archivo && (
                       <button
                         type="button"
-                        onClick={() => handleDownload(d.url_archivo, d.nombre_archivo)}
-                        className="px-3 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 text-sm font-medium"
+                        onClick={() => handleDownload(documento)}
+                        className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 text-sm font-medium"
                       >
+                        <Download className="w-4 h-4" />
                         Descargar
                       </button>
                     )}
                   </div>
                 </div>
 
-                {expandedIndex === idx && d.url_archivo && (
+                {isExpanded && (
                   <div className="mt-4 pt-4 border-t border-gray-100">
-                    {d.tipo === "VIDEO" ? (
-                      <video
-                        controls
-                        src={d.url_archivo}
-                        className="w-full max-h-[520px] rounded-lg bg-black"
-                      />
-                    ) : getExt(d.nombre_archivo) === "pdf" ? (
-                      <iframe
-                        title="vista-previa-pdf"
-                        src={d.url_archivo}
-                        className="w-full h-[600px] border rounded-lg"
-                      />
-                    ) : ["png", "jpg", "jpeg", "webp"].includes(getExt(d.nombre_archivo)) ? (
-                      <img
-                        src={d.url_archivo}
-                        alt={d.nombre_archivo || "entregable"}
-                        className="max-h-[520px] rounded-lg"
-                      />
-                    ) : ["doc", "docx"].includes(getExt(d.nombre_archivo)) ? (
-                      <iframe
-                        title="vista-previa-docx"
-                        src={`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(d.url_archivo)}`}
-                        className="w-full h-[600px] border rounded-lg"
-                      />
-                    ) : (
-                      <div className="text-sm text-gray-600">No hay vista previa disponible. Usa Abrir o Descargar.</div>
-                    )}
+                    {renderPreview(documento)}
                   </div>
                 )}
               </div>
-            ))
-          )}
-        </div>
-      )}
+            );
+          })
+        )}
+      </div>
     </div>
   );
 };
 
 export default ProjectDocumentsView;
-
-

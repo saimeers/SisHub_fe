@@ -1,9 +1,9 @@
 import React from 'react';
-import ProyectoCalificado from '../../modules/student/components/ProyectoCalificado';
+import CalificarProyecto from '../../modules/professor/components/CalificarProyecto';
 
 const Calificado = () => {
     return (
-        <ProyectoCalificado />
+        <CalificarProyecto />
     )
 }
 

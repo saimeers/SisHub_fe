@@ -16,7 +16,7 @@ const CorregirProyecto = ({
   groupParams, 
   currentUserCode, 
   onBack,
-  esProyectoSeleccionado // true si es SELECCIONADO, false si es CALIFICADO
+  esProyectoSeleccionado 
 }) => {
   const [ideaData, setIdeaData] = useState(null);
   const [observationData, setObservationData] = useState(null);
@@ -26,6 +26,7 @@ const CorregirProyecto = ({
   useEffect(() => {
     const loadData = async () => {
       if (!idIdea) {
+
         console.error("❌ CorregirProyecto: idIdea es null o undefined");
         toast.error("Error: No se proporcionó un ID de idea válido");
         if (onBack) onBack();

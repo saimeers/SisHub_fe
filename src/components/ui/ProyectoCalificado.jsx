@@ -1,71 +1,42 @@
 import React, { useState, useEffect } from 'react';
-import { FileText, Download, ExternalLink, Save, Send, Loader2, Eye, EyeOff, Music, Video, Image, Code } from 'lucide-react';
+import { FileText, Download, ExternalLink, Eye, EyeOff, Music, Video, Image, Code, Loader2, Award } from 'lucide-react';
 import { toast } from 'react-toastify';
-import Swal from 'sweetalert2';
-import { verDetallesProyecto } from '../../../services/projectServices';
-import { obtenerEntregablesProyecto, retroalimentarEntregable } from '../../../services/EntregableService';
-import { calificarProyecto } from '../../../services/proyectoServices';
+import { verDetallesProyecto } from '../../services/projectServices';
+import { historicoEntregables } from '../../services/EntregableService';
 
-const CalificarProyecto = ({
+const ProyectoCalificado = ({
   projectId,
-  activityId,
-  currentUserCode,
-  onBack,
-  onCalificacionComplete
+  onBack
 }) => {
+  console.log("llega en calificado el siguiente id:", projectId)
   const [loading, setLoading] = useState(true);
   const [proyecto, setProyecto] = useState(null);
-  const [entregables, setEntregables] = useState([]);
-  const [calificaciones, setCalificaciones] = useState({});
-  const [submitting, setSubmitting] = useState(false);
+  const [historialEntregables, setHistorialEntregables] = useState([]);
   const [previewing, setPreviewing] = useState(null);
-  const [savingFeedback, setSavingFeedback] = useState(null);
 
   useEffect(() => {
     loadProjectData();
-  }, [projectId, activityId]);
+  }, [projectId]);
 
   const loadProjectData = async () => {
     try {
       setLoading(true);
-      
+
       // Obtener datos del proyecto
       const proyectoData = await verDetallesProyecto(projectId);
       setProyecto(proyectoData);
 
-      // Obtener entregables del proyecto para esta actividad
-      const entregablesData = await obtenerEntregablesProyecto(projectId, activityId);
-      setEntregables(Array.isArray(entregablesData) ? entregablesData : []);
-
-      // Inicializar calificaciones
-      const initialCalificaciones = {};
-      (Array.isArray(entregablesData) ? entregablesData : []).forEach(e => {
-        initialCalificaciones[e.id_entregable] = {
-          calificacion: e.calificacion || '',
-          comentarios: e.comentarios || '',
-          guardado: e.calificacion !== null && e.calificacion !== undefined
-        };
-      });
-      setCalificaciones(initialCalificaciones);
+      // Obtener historial de entregables
+      const historial = await historicoEntregables(projectId);
+      setHistorialEntregables(Array.isArray(historial) ? historial : []);
 
     } catch (error) {
       console.error("Error al cargar datos del proyecto:", error);
-      toast.error("Error al cargar el proyecto");
+      toast.error("Error al cargar el proyecto calificado");
       if (onBack) onBack();
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleCalificacionChange = (id_entregable, field, value) => {
-    setCalificaciones(prev => ({
-      ...prev,
-      [id_entregable]: {
-        ...prev[id_entregable],
-        [field]: value,
-        guardado: false
-      }
-    }));
   };
 
   const togglePreview = (id_entregable) => {
@@ -85,7 +56,9 @@ const CalificarProyecto = ({
     return null;
   };
 
-  const renderPreview = (entregable) => {
+  const renderPreview = (entregableData) => {
+    const entregable = entregableData.entregable || entregableData;
+
     if (entregable.url_video) {
       const embedUrl = getYouTubeEmbedUrl(entregable.url_video);
       if (embedUrl) {
@@ -198,7 +171,8 @@ const CalificarProyecto = ({
     return <p className="text-sm text-gray-600">No hay vista previa disponible</p>;
   };
 
-  const handleDescargar = (entregable) => {
+  const handleDescargar = (entregableData) => {
+    const entregable = entregableData.entregable || entregableData;
     const url = entregable.url_archivo || entregable.url_repositorio;
     if (!url) return;
 
@@ -210,95 +184,6 @@ const CalificarProyecto = ({
     link.click();
     document.body.removeChild(link);
     toast.info('Descargando archivo...');
-  };
-
-  const handleGuardarRetroalimentacion = async (id_entregable) => {
-    const cal = calificaciones[id_entregable];
-    
-    if (!cal?.calificacion || cal.calificacion === '') {
-      toast.error('Debes asignar una calificación');
-      return;
-    }
-
-    const nota = parseFloat(cal.calificacion);
-    if (isNaN(nota) || nota < 0 || nota > 5) {
-      toast.error('La calificación debe estar entre 0 y 5');
-      return;
-    }
-
-    try {
-      setSavingFeedback(id_entregable);
-
-      await retroalimentarEntregable(
-        id_entregable,
-        cal.comentarios || null,
-        nota,
-        currentUserCode
-      );
-
-      setCalificaciones(prev => ({
-        ...prev,
-        [id_entregable]: {
-          ...prev[id_entregable],
-          guardado: true
-        }
-      }));
-
-      toast.success('Retroalimentación guardada exitosamente');
-
-    } catch (error) {
-      console.error("Error al guardar retroalimentación:", error);
-      toast.error(error.message || "Error al guardar la retroalimentación");
-    } finally {
-      setSavingFeedback(null);
-    }
-  };
-
-  const todosRetroalimentados = () => {
-    return entregables.every(e => calificaciones[e.id_entregable]?.guardado);
-  };
-
-  const handleEnviarCalificacion = async () => {
-    if (!todosRetroalimentados()) {
-      toast.error("Debes guardar la retroalimentación de todos los entregables antes de enviar");
-      return;
-    }
-
-    const result = await Swal.fire({
-      title: '¿Calificar proyecto?',
-      html: `
-        <p>Se calificará el proyecto completo y se notificará al estudiante.</p>
-        <p class="text-sm text-gray-600 mt-2">Esta acción no se puede deshacer.</p>
-      `,
-      icon: 'question',
-      showCancelButton: true,
-      confirmButtonColor: '#16a34a',
-      cancelButtonColor: '#6b7280',
-      confirmButtonText: 'Sí, calificar',
-      cancelButtonText: 'Cancelar'
-    });
-
-    if (!result.isConfirmed) return;
-
-    try {
-      setSubmitting(true);
-
-      await calificarProyecto(
-        projectId,
-        "Proyecto calificado exitosamente",
-        currentUserCode
-      );
-
-      toast.success("Proyecto calificado exitosamente");
-      if (onCalificacionComplete) onCalificacionComplete();
-      else if (onBack) onBack();
-
-    } catch (error) {
-      console.error("Error al calificar proyecto:", error);
-      toast.error(error.message || "Error al calificar el proyecto");
-    } finally {
-      setSubmitting(false);
-    }
   };
 
   const getEntregableIcon = (tipo) => {
@@ -315,7 +200,7 @@ const CalificarProyecto = ({
     return (
       <div className="flex items-center justify-center py-12">
         <Loader2 className="w-8 h-8 text-red-600 animate-spin mr-3" />
-        <p className="text-gray-500">Cargando proyecto...</p>
+        <p className="text-gray-500">Cargando proyecto calificado...</p>
       </div>
     );
   }
@@ -339,8 +224,8 @@ const CalificarProyecto = ({
       <div className="bg-white rounded-xl border border-gray-200 p-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
-            <FileText className="w-6 h-6 text-red-600" />
-            <h2 className="text-xl font-bold text-gray-900">Calificar Proyecto</h2>
+            <Award className="w-6 h-6 text-green-600" />
+            <h2 className="text-xl font-bold text-gray-900">Proyecto Calificado</h2>
           </div>
           {onBack && (
             <button
@@ -352,7 +237,7 @@ const CalificarProyecto = ({
           )}
         </div>
 
-        <div className="space-y-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <span className="text-sm text-gray-500">Título:</span>
             <p className="font-semibold text-gray-900">{proyecto.Idea?.titulo}</p>
@@ -367,37 +252,56 @@ const CalificarProyecto = ({
               <p className="text-gray-900">{proyecto.tecnologias}</p>
             </div>
           )}
+          {proyecto.palabras_clave && (
+            <div>
+              <span className="text-sm text-gray-500">Palabras Clave:</span>
+              <p className="text-gray-900">{proyecto.palabras_clave}</p>
+            </div>
+          )}
           <div>
             <span className="text-sm text-gray-500">Tipo de Alcance:</span>
             <p className="text-gray-900">{proyecto.Tipo_alcance?.nombre}</p>
           </div>
+          <div>
+            <span className="text-sm text-gray-500">Estado:</span>
+            <span className="ml-2 px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">
+              CALIFICADO
+            </span>
+          </div>
         </div>
+
+        {proyecto.Idea?.objetivo_general && (
+          <div className="mt-4 pt-4 border-t border-gray-200">
+            <span className="text-sm text-gray-500">Objetivo General:</span>
+            <p className="text-gray-700 mt-1">{proyecto.Idea.objetivo_general}</p>
+          </div>
+        )}
       </div>
 
-      {/* Entregables */}
+      {/* Historial de Entregables Calificados */}
       <div className="bg-white rounded-xl border border-gray-200 p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">
-          Entregables a Calificar ({entregables.length})
+          Historial de Entregables ({historialEntregables.length})
         </h3>
 
-        {entregables.length === 0 ? (
+        {historialEntregables.length === 0 ? (
           <div className="text-center py-8 text-gray-500">
-            No se encontraron entregables para esta actividad
+            No se encontraron entregables calificados
           </div>
         ) : (
           <div className="space-y-6">
-            {entregables.map((entregable) => {
+            {historialEntregables.map((historial) => {
+              const entregable = historial.entregable;
+              if (!entregable) return null;
+
               const Icon = getEntregableIcon(entregable.tipo);
               const isPreviewing = previewing === entregable.id_entregable;
-              const isSaving = savingFeedback === entregable.id_entregable;
-              const isGuardado = calificaciones[entregable.id_entregable]?.guardado;
+              const tieneCalificacion = entregable.calificacion !== null && entregable.calificacion !== undefined;
 
               return (
                 <div
-                  key={entregable.id_entregable}
-                  className={`border rounded-xl p-5 transition-colors ${
-                    isGuardado ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'
-                  }`}
+                  key={historial.id_historial_entregable}
+                  className="border border-gray-200 rounded-xl p-5 bg-gray-50"
                 >
                   {/* Header del entregable */}
                   <div className="flex items-start justify-between mb-4">
@@ -410,9 +314,13 @@ const CalificarProyecto = ({
                         <span className="text-sm text-gray-500">
                           {entregable.fecha_subida}
                         </span>
-                        {isGuardado && (
-                          <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">
-                            ✓ Retroalimentación guardada
+                        {entregable.Estado?.descripcion && (
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            entregable.Estado.descripcion === 'APROBADO' 
+                              ? 'bg-green-100 text-green-700' 
+                              : 'bg-gray-100 text-gray-700'
+                          }`}>
+                            {entregable.Estado.descripcion}
                           </span>
                         )}
                       </div>
@@ -429,7 +337,7 @@ const CalificarProyecto = ({
                       </button>
                       {(entregable.url_archivo || entregable.url_repositorio) && (
                         <button
-                          onClick={() => handleDescargar(entregable)}
+                          onClick={() => handleDescargar(historial)}
                           className="p-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors"
                           title="Descargar"
                         >
@@ -442,106 +350,43 @@ const CalificarProyecto = ({
                   {/* Vista previa */}
                   {isPreviewing && (
                     <div className="mb-4 p-4 border-t border-gray-200 bg-white rounded-lg">
-                      {renderPreview(entregable)}
+                      {renderPreview(historial)}
                     </div>
                   )}
 
-                  {/* Formulario de calificación */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        Calificación (0-5) <span className="text-red-600">*</span>
-                      </label>
-                      <input
-                        type="number"
-                        min="0"
-                        max="5"
-                        step="0.1"
-                        value={calificaciones[entregable.id_entregable]?.calificacion || ''}
-                        onChange={(e) => handleCalificacionChange(
-                          entregable.id_entregable,
-                          'calificacion',
-                          e.target.value
-                        )}
-                        disabled={isGuardado}
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-600 disabled:bg-gray-100"
-                        placeholder="Ej: 4.5"
-                      />
-                    </div>
+                  {/* Calificación y Observaciones */}
+                  {tieneCalificacion && (
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-gray-200">
+                      <div className="bg-white rounded-lg p-3">
+                        <label className="block text-sm font-semibold text-gray-700 mb-1">
+                          Calificación
+                        </label>
+                        <div className="flex items-center gap-2">
+                          <span className="text-2xl font-bold text-green-600">
+                            {entregable.calificacion}
+                          </span>
+                          <span className="text-sm text-gray-500">/ 5.0</span>
+                        </div>
+                      </div>
 
-                    <div className="md:col-span-2">
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        Observaciones (opcional)
-                      </label>
-                      <div className="flex gap-2">
-                        <textarea
-                          value={calificaciones[entregable.id_entregable]?.comentarios || ''}
-                          onChange={(e) => handleCalificacionChange(
-                            entregable.id_entregable,
-                            'comentarios',
-                            e.target.value
-                          )}
-                          disabled={isGuardado}
-                          className="flex-1 rounded-lg border border-gray-300 px-3 py-2 min-h-[80px] resize-none focus:outline-none focus:ring-2 focus:ring-red-600 disabled:bg-gray-100"
-                          placeholder="Comentarios sobre este entregable..."
-                        />
-                        {!isGuardado && (
-                          <button
-                            onClick={() => handleGuardarRetroalimentacion(entregable.id_entregable)}
-                            disabled={isSaving}
-                            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
-                            title="Guardar retroalimentación"
-                          >
-                            {isSaving ? (
-                              <Loader2 className="w-4 h-4 animate-spin" />
-                            ) : (
-                              <>
-                                <Save className="w-4 h-4" />
-                                <span className="hidden sm:inline">Guardar</span>
-                              </>
-                            )}
-                          </button>
-                        )}
+                      <div className="md:col-span-2 bg-white rounded-lg p-3">
+                        <label className="block text-sm font-semibold text-gray-700 mb-1">
+                          Observaciones del Profesor
+                        </label>
+                        <p className="text-gray-700 text-sm">
+                          {entregable.comentarios || 'Sin observaciones'}
+                        </p>
                       </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               );
             })}
           </div>
         )}
       </div>
-
-      {/* Botón enviar calificación final */}
-      {entregables.length > 0 && (
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
-          <button
-            onClick={handleEnviarCalificacion}
-            disabled={submitting || !todosRetroalimentados()}
-            className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-xl font-medium transition-all shadow-sm hover:shadow-md active:scale-95"
-          >
-            {submitting ? (
-              <>
-                <Loader2 className="w-5 h-5 animate-spin" />
-                Enviando calificación...
-              </>
-            ) : (
-              <>
-                <Send className="w-5 h-5" />
-                Calificar Proyecto Completo
-              </>
-            )}
-          </button>
-
-          {!todosRetroalimentados() && (
-            <p className="text-center text-sm text-amber-600 mt-3 font-medium">
-              ⚠️ Debes guardar la retroalimentación de todos los entregables antes de calificar el proyecto
-            </p>
-          )}
-        </div>
-      )}
     </div>
   );
 };
 
-export default CalificarProyecto;
+export default ProyectoCalificado;

@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import StudentLayout from "../../modules/student/layouts/StudentLayout";
 import GroupParticipants from "../../components/ui/GroupParticipants";
 import CorregirProyecto from "../../modules/student/components/CorregirProyecto";
-import ProyectoCalificado from "../../modules/student/components/ProyectoCalificado";
+import ProyectoCalificado from "../../components/ui/ProyectoCalificado";
 import AccessDenied from "../../components/ui/AccessDenied";
 import { listarParticipantesGrupo } from "../../services/groupUserServices";
 import { listarGruposPorUsuario } from "../../services/groupServices";
@@ -148,46 +148,51 @@ const GroupDetail = () => {
     }
   };
 
-  const handleViewItem = async (item, type) => {
-    try {
-      let itemData;
+const handleViewItem = async (item, type) => {
+  try {
+    let itemData;
 
-      if (type === "idea" && item.id_idea) {
-        const ideaCompleta = await obtenerIdea(item.id_idea);
-        itemData = ideaCompleta.data || ideaCompleta;
-      } else if (type === "propuesta" || type === "proyecto") {
-        itemData = item;
-      } else {
-        itemData = item;
-      }
+    if (type === "idea" && item.id_idea) {
+      const ideaCompleta = await obtenerIdea(item.id_idea);
+      itemData = ideaCompleta.data || ideaCompleta;
+    } else {
+      itemData = item;
+    }
 
-      const objetivosArray = Array.isArray(itemData.objetivos_especificos)
-        ? itemData.objetivos_especificos
-        : typeof itemData.objetivos_especificos === "string"
-          ? itemData.objetivos_especificos
-            .split(/\r?\n/)
-            .filter((line) => line.trim())
+    console.log("datos del proyecto a continuar", itemData);
+
+    // Tomar siempre la fuente de la idea, ya sea directa o dentro de Proyecto
+    const idea = itemData.Idea || itemData;
+
+    // Convertir objetivos_especificos en array (por salto de línea o coma)
+    const objetivosArray =
+      Array.isArray(idea.objetivos_especificos)
+        ? idea.objetivos_especificos
+        : typeof idea.objetivos_especificos === "string"
+          ? idea.objetivos_especificos
+              .split(/\r?\n|,/)
+              .map((line) => line.trim())
+              .filter(Boolean)
           : [""];
 
-      setIdeaInitialData({
-        titulo: itemData.titulo || itemData.Idea?.titulo || "",
-        problematica: itemData.problema || itemData.Idea?.problema || "",
-        justificacion:
-          itemData.justificacion || itemData.Idea?.justificacion || "",
-        objetivo_general:
-          itemData.objetivo_general || itemData.Idea?.objetivo_general || "",
-        objetivos_especificos: objetivosArray,
-      });
+    setIdeaInitialData({
+      titulo: idea.titulo || "",
+      problematica: idea.problema || "",
+      justificacion: idea.justificacion || "",
+      objetivo_general: idea.objetivo_general || "",
+      objetivos_especificos: objetivosArray,
+    });
 
-      setSelectedItem(item);
-      setViewMode(type);
-      setIdeaReadOnly(true);
-      setCurrentView("ideaForm");
-    } catch (err) {
-      console.error("Error al cargar item:", err);
-      toast.error("Error al cargar la información");
-    }
-  };
+    setSelectedItem(item);
+    setViewMode(type);
+    setIdeaReadOnly(true);
+    setCurrentView("ideaForm");
+  } catch (err) {
+    console.error("Error al cargar item:", err);
+    toast.error("Error al cargar la información");
+  }
+};
+
 
   const handleAdoptIdea = async () => {
     if (!selectedItem || !userData?.codigo) return;
@@ -269,18 +274,19 @@ const GroupDetail = () => {
 
     if (result.isConfirmed) {
       try {
-        await continuarProyecto(selectedItem.id_proyecto, userData.codigo);
+        response = await continuarProyecto(selectedItem.id_proyecto, userData.codigo, groupParams);
         toast.success("Proyecto continuado exitosamente");
         backToActivities();
         loadIdeas();
       } catch (err) {
         toast.error(err.message || "Error al continuar el proyecto");
-      }
+      } 
     }
   };
 
   const handleActivityClick = async (activity) => {
     // Si no hay actividad asignada, mostrar mensaje
+    console.log("el proyecto es:", currentProyecto);
     if (!tieneActividad) {
       toast.info("Aún no hay una actividad asignada a este grupo. Por favor espera.");
       return;
@@ -294,7 +300,7 @@ const GroupDetail = () => {
 
       const response = await verificarIdeaYProyecto(userData.codigo, groupParams);
       const { proyecto, idea, equipo } = response.data || response;
-
+      console.log("codigo del estudiante:",userData.codigo, groupParams);
       console.log("📋 Estado del estudiante:", { proyecto, idea, equipo });
 
       // ✅ CASO 1: No tiene ni idea ni proyecto → Mostrar banco de ideas
@@ -853,9 +859,7 @@ const GroupDetail = () => {
                   />
                 ) : currentView === "proyectoCalificado" ? (
                   <ProyectoCalificado
-                    proyecto={currentProyecto}
-                    actividad={actividad}
-                    currentUserCode={userData?.codigo}
+                    projectId={currentProyecto.id_proyecto}
                     onBack={backToActivities}
                   />
                 ) : currentView === "completarDatos" ? (

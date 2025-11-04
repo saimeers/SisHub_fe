@@ -171,3 +171,13 @@ export async function getHistorialEntregable(id_entregable) {
     throw error.response?.data || { message: "Error al obtener historial del entregable" };
   }
 }
+
+export async function historicoEntregables(id_proyecto) {
+  try {
+    const { data } = await axiosInstance.get(`/entregables/historial/proyecto/${id_proyecto}`);
+    return data;
+  } catch (error) {
+    console.error("Error al obtener historial del proyecto:", error);
+    throw error.response?.data || { message: "Error al obtener historial del proyecto" };
+  }
+}
