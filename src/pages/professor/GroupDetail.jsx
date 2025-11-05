@@ -258,7 +258,7 @@ const GroupDetail = () => {
         listarIdeasGrupo(groupParams),
         listarProyectosPorGrupo(groupParams),
       ]);
-      console.log("idea principal:",ideasResp);
+      console.log("idea principal:", ideasResp);
       console.log("proyecto principal:", projectsResp);
       // Ideas retorna: { total, grupo, data: [...] }
       const ideas = ideasResp?.data ?? [];
@@ -444,7 +444,7 @@ const IdeasListView = ({
   projects,
   onBack,
   onReviewIdea,
-   userData,
+  userData,
   groupParams,
 }) => {
   const [currentView, setCurrentView] = useState("list"); // list | details | documents | development | versions
@@ -700,7 +700,7 @@ const IdeasListView = ({
               : proy?.tags || [];
 
           const progress = typeof proy?.porcentaje === "number" ? proy.porcentaje : 0;
-          console.log("proyecto",proy)
+          console.log("proyecto", proy)
           const alcanceTexto = proy?.Tipo_alcance?.nombre || proy?.tipo_alcance || undefined;
           const statusTexto = getProjectShortStatus(
             proy?.Idea?.estado,
@@ -715,7 +715,7 @@ const IdeasListView = ({
             console.log("estado proyecto v1:", proj);
             console.log("estado idea v1:", idea);
             console.log("id_actividad:", proy.id_actividad);
-            
+
             setSelectedProjectId(proy.id_proyecto);
 
             // 📍 REEMPLAZAR toda esta lógica con:
@@ -741,7 +741,7 @@ const IdeasListView = ({
             // CASO 4: REVISION + EN_CURSO → CalificarProyecto
             if (idea === "REVISION" && proj === "EN_CURSO") {
               // Necesitamos obtener el id_actividad del proyecto
-              setSelectedActivityId(proy.id_actividad); 
+              setSelectedActivityId(proy.id_actividad);
               setCurrentView("calificarProyecto");
               return;
             }
@@ -780,27 +780,31 @@ const IdeasListView = ({
                 const idea = ideaState ? ideaState : null;
                 const proj = projectState ? projectState : null;
 
+                console.log("📄 Click documents:", { projectId: proy.id_proyecto, activityId: proy.id_actividad });
+
                 setSelectedProjectId(proy.id_proyecto);
+                setSelectedActivityId(proy.id_actividad); // ✅ AGREGAR ESTA LÍNEA ANTES DEL IF
+
                 if (idea === "REVISION" && proj === "EN_CURSO") {
                   setDocumentsInfoMessage("Entregables enviados a calificar. Usa el botón principal para calificar.");
                   setCurrentView("documentsInfo");
                 } else {
-                  setSelectedActivityId(proy.id_actividad); 
                   setCurrentView("documents");
                 }
               }}
               onCodeClick={() => {
                 const idea = proy?.Idea?.estado || null;
                 const proj = proy?.estado || null;
-                console.log("estado idea v2:", idea);
-                console.log("estado projecto v2:", proj);
+
+                console.log("💻 Click code:", { projectId: proy.id_proyecto, activityId: proy.id_actividad });
+
                 setSelectedProjectId(proy.id_proyecto);
+                setSelectedActivityId(proy.id_actividad); // ✅ AGREGAR ESTA LÍNEA ANTES DEL IF
 
                 if (idea === "REVISION" && proj === "EN_CURSO") {
                   setDevelopmentInfoMessage("Entregables enviados a calificar. Usa el botón principal para calificar.");
                   setCurrentView("developmentInfo");
                 } else {
-                  setSelectedActivityId(proy.id_actividad); 
                   setCurrentView("development");
                 }
               }}
@@ -1038,7 +1042,7 @@ const ActivityDetail = ({ actividad, esquemaInfo, onEdit, onViewIdeas }) => {
       (ai) => ai.Item.id_item
     );
     const allItems = esquemaInfo.Items;
-    
+
     // Filtrar solo los items seleccionados y construir jerarquía
     const itemsMap = {};
     allItems.forEach((item) => {

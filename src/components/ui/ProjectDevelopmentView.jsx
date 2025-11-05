@@ -19,6 +19,7 @@ const StatusBadge = ({ status }) => {
 };
 
 const ProjectDevelopmentView = ({ projectId, activityId, onBack }) => {
+  console.log("ProjectDevelopmentView props:", { projectId, activityId });
   const [proyecto, setProyecto] = useState(null);
   const [entregables, setEntregables] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -231,7 +232,7 @@ const ProjectDevelopmentView = ({ projectId, activityId, onBack }) => {
     <div className="w-full max-w-6xl mx-auto">
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Documentación</h2>
+          <h2 className="text-2xl font-bold text-gray-900">Desarrollo</h2>
           <p className="text-gray-600">{proyecto?.Idea?.titulo || `Proyecto ${projectId}`}</p>
         </div>
         {onBack && (

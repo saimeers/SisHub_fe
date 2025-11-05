@@ -79,6 +79,7 @@ export const deshabilitarEntregable = async (id_entregable, codigo_usuario) => {
 export const obtenerEntregablesProyecto = async (id_proyecto, id_actividad) => {
   try {
     const response = await axios.get(`${ENTREGABLES_BASE}/proyecto/${id_proyecto}/actividad/${id_actividad}`);
+    console.log("data que llega para entregables", response);
     return Array.isArray(response.data) ? response.data : [];
   } catch (error) {
     // Si es 404, retornar array vacío (no hay entregables aún)
