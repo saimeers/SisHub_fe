@@ -37,7 +37,9 @@ const ProjectDocumentsView = ({ projectId, activityId, onBack }) => {
         setProyecto(proyectoData);
 
         // Obtener entregables del proyecto para esta actividad
+        console.log("el id de idea y proyecto antes de buscar:", projectId, activityId);
         const entregablesData = await obtenerEntregablesProyecto(projectId, activityId);
+        console.log("esto llega al buscar entregables", entregablesData);
         if (!mounted) return;
         
         // Filtrar SOLO documentos (tipo investigativo)

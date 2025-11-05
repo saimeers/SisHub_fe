@@ -180,7 +180,7 @@ const handleViewItem = async (item, type) => {
       problematica: idea.problema || "",
       justificacion: idea.justificacion || "",
       objetivo_general: idea.objetivo_general || "",
-      objetivos_especificos: objetivosArray,
+      objetivos_especificos:  objetivosArray,
     });
 
     setSelectedItem(item);
@@ -274,7 +274,7 @@ const handleViewItem = async (item, type) => {
 
     if (result.isConfirmed) {
       try {
-        response = await continuarProyecto(selectedItem.id_proyecto, userData.codigo, groupParams);
+        await continuarProyecto(selectedItem.id_proyecto, userData.codigo, groupParams);
         toast.success("Proyecto continuado exitosamente");
         backToActivities();
         loadIdeas();
@@ -393,9 +393,9 @@ const handleViewItem = async (item, type) => {
           toast.info("Tu proyecto ha sido enviado para calificación. Por favor espera.");
           return;
         }
-
         // APROBADO - CALIFICADO: Ver calificaciones
         if (estadoIdea === "APROBADO" && estadoProyecto === "CALIFICADO") {
+          console.log("estado idea para continuar:", estadoIdea)
           setCurrentProyecto(proyecto);
           setCurrentIdeaData(idea);
           setCurrentView("proyectoCalificado");
