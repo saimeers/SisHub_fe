@@ -92,6 +92,22 @@ export const obtenerEntregablesProyecto = async (id_proyecto, id_actividad) => {
   }
 };
 
+export const obtenerEntregables = async (id_proyecto, id_actividad) => {
+  try {
+    const response = await axios.get(`${ENTREGABLES_BASE}/proyecto/${id_proyecto}`);
+    console.log("data que llega para entregables", response);
+    return Array.isArray(response.data) ? response.data : [];
+  } catch (error) {
+    // Si es 404, retornar array vacío (no hay entregables aún)
+    if (error.response?.status === 404) {
+      console.log("No se encontraron entregables para este proyecto (es la primera vez)");
+      return [];
+    }
+    console.error("Error al obtener entregables:", error);
+    throw error;
+  }
+};
+
 /**
  * Analiza un documento con Magic Loops
  */

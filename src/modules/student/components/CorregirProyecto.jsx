@@ -7,7 +7,7 @@ import {
   actualizarIdea,
   rechazarObservacion
 } from '../../../services/ideaServices';
-import { getHistorialProyecto } from '../../../services/proyectoServices';
+import { obtenerUltimoHistorial } from '../../../services/proyectoServices';
 import IdeaForm from '../../../components/ui/IdeaForm';
 
 const CorregirProyecto = ({ 
@@ -72,7 +72,7 @@ const CorregirProyecto = ({
 
         // Cargar historial del proyecto
         try {
-          const historial = await getHistorialProyecto(idProyecto);
+          const historial = await obtenerUltimoHistorial(idProyecto);
           console.log('📝 Historial del proyecto:', historial);
 
           if (historial && historial.length > 0) {

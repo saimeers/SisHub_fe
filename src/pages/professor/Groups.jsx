@@ -1,6 +1,6 @@
 import { useNavigate, useLocation, useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
-import AdminLayout from "../../modules/professor/layouts/ProfessorLayout";
+import ProfessorLayout from "../../modules/professor/layouts/ProfessorLayout";
 import Button from "../../components/ui/Button";
 import RowItem from "../../components/ui/RowItem";
 import { listarGruposPorMateria } from "../../services/groupServices";
@@ -83,7 +83,7 @@ const Groups = () => {
 
   if (loading) {
     return (
-      <AdminLayout title="Grupos">
+      <ProfessorLayout title="Grupos">
         <div className="text-center py-16">
           <div className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-500">
             <svg
@@ -109,23 +109,23 @@ const Groups = () => {
             Cargando...
           </div>
         </div>
-      </AdminLayout>
+      </ProfessorLayout>
     );
   }
 
   if (error) {
     return (
-      <AdminLayout title="Grupos">
+      <ProfessorLayout title="Grupos">
         <div className="text-center py-8">
           <p className="text-red-600 mb-4">{error}</p>
           <Button onClick={() => navigate("/professor/subjects")} text="Ver Catálogo de Materias" />
         </div>
-      </AdminLayout>
+      </ProfessorLayout>
     );
   }
 
   return (
-    <AdminLayout title="Grupos">
+    <ProfessorLayout title="Grupos">
       <div className="mb-4 flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
           <label className="text-bm font-medium text-gray-700 whitespace-nowrap">
@@ -197,7 +197,7 @@ const Groups = () => {
           ))}
         </div>
       )}
-    </AdminLayout>
+    </ProfessorLayout>
   );
 };
 
