@@ -165,7 +165,8 @@ const CorregirProyecto = ({
 
     if (result.isConfirmed) {
       try {
-        await rechazarObservacion(idIdea, currentUserCode);
+        console.log("Al rechazar:",idIdea, currentUserCode, idProyecto);
+        await rechazarObservacion(idIdea, idProyecto, currentUserCode);
         toast.success(
           esProyectoSeleccionado 
             ? 'Proyecto liberado al banco de propuestas'

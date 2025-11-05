@@ -176,10 +176,12 @@ export const obtenerUltimoHistorial = async (id_idea) => {
 };
 
 
-export const rechazarObservacion = async (id_proyecto, codigo_usuario) => {
+export const rechazarObservacion = async (id_idea, id_proyecto, codigo_usuario) => {
   try {
-    const response = await axiosInstance.put(`/proyectos/${id_proyecto}/rechazar`, {
-      codigo_usuario
+    console.log("Rechazando observación para idea:", id_idea, "por usuario:", codigo_usuario);
+    const response = await axiosInstance.put(`/proyectos/${id_idea}/rechazar`, {
+      codigo_usuario,
+      id_proyecto,
     });
     return response.data;
   } catch (error) {

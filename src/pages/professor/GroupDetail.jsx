@@ -783,7 +783,7 @@ const IdeasListView = ({
                 console.log("📄 Click documents:", { projectId: proy.id_proyecto, activityId: proy.id_actividad });
 
                 setSelectedProjectId(proy.id_proyecto);
-                setSelectedActivityId(proy.id_actividad); // ✅ AGREGAR ESTA LÍNEA ANTES DEL IF
+                setSelectedActivityId(proy.id_actividad); 
 
                 if (idea === "REVISION" && proj === "EN_CURSO") {
                   setDocumentsInfoMessage("Entregables enviados a calificar. Usa el botón principal para calificar.");
