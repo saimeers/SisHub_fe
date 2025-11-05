@@ -80,7 +80,7 @@ export const obtenerUltimoHistorial = async (id_proyecto) => {
   }
 
   try {
-    const response = await axiosInstance.get(`${IDEAS_BASE}/${id_proyecto}/ultimo-historial`);
+    const response = await axiosInstance.get(`proyectos/${id_proyecto}/ultimo-historial`);
     return response.data;
   } catch (error) {
     console.error("Error al obtener historial:", error);
