@@ -1,5 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { verDetallesProyecto } from "../../services/projectServices";
+import { verDetallesProyecto, liberarProyecto } from "../../services/projectServices";
+import { useAuth } from "../../contexts/AuthContext";
+import { useToast } from "../../hooks/useToast";
+import Swal from 'sweetalert2';
 
 const InfoItem = ({ label, value }) => (
   <div className="bg-gray-50 rounded-lg p-4">
@@ -19,10 +22,12 @@ const StatusBadge = ({ status }) => {
   return <span className={`px-2 py-1 rounded-full text-xs font-semibold border ${cls}`}>{status || "Sin estado"}</span>;
 };
 
-const ProjectDetailsView = ({ projectId, onBack }) => {
+const ProjectDetailsView = ({ projectId, onBack, onProjectLiberated }) => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { userData } = useAuth();
+  const { success: showSuccess, error: showError } = useToast();
 
   useEffect(() => {
     let mounted = true;
@@ -63,6 +68,61 @@ const ProjectDetailsView = ({ projectId, onBack }) => {
     return withTeam?.equipo?.Integrante_Equipos || [];
   })();
 
+  // Verificar si el usuario es estudiante
+  const isStudent = userData?.Rol?.descripcion === "ESTUDIANTE";
+
+  const handleLiberarProyecto = async () => {
+    const result = await Swal.fire({
+      title: 'Confirmar liberación de proyecto',
+      text: '¿Estás seguro de que deseas liberar este proyecto? Esta acción no se puede deshacer.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#dc2626',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Liberar Proyecto',
+      cancelButtonText: 'Cancelar'
+    });
+
+    if (result.isConfirmed) {
+      try {
+        if (!userData?.codigo) {
+          showError('No se pudo obtener el código del usuario');
+          return;
+        }
+
+        const resultado = await liberarProyecto(projectId, userData.codigo);
+        
+        showSuccess('Proyecto liberado exitosamente');
+
+        // Notificar al componente padre que se liberó el proyecto
+        if (onProjectLiberated) {
+          onProjectLiberated(projectId);
+        }
+
+        // Regresar automáticamente a la lista de proyectos
+        if (onBack) {
+          onBack();
+        }
+      } catch (error) {
+        console.error('Error al liberar proyecto:', error);
+        
+        // Extraer el mensaje de error del backend
+        let errorMessage = 'No se pudo liberar el proyecto. Inténtalo de nuevo.';
+        
+        // El interceptor de axios ya procesa el error y lo pone en error.message
+        if (error.message) {
+          errorMessage = error.message;
+        } else if (error.response?.data?.message) {
+          errorMessage = error.response.data.message;
+        } else if (error.response?.data?.error) {
+          errorMessage = error.response.data.error;
+        }
+        
+        showError(errorMessage);
+      }
+    }
+  };
+
   return (
     <div className="w-full max-w-6xl mx-auto">
       <div className="mb-6 flex items-center justify-between">
@@ -70,13 +130,24 @@ const ProjectDetailsView = ({ projectId, onBack }) => {
           <h2 className="text-2xl font-bold text-gray-900">Detalles del Proyecto</h2>
           <p className="text-gray-600">{data?.Idea?.titulo || `Proyecto ${projectId}`}</p>
         </div>
-        <button
-          type="button"
-          onClick={onBack}
-          className="px-4 py-2 rounded-lg bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 text-sm font-medium shadow-sm"
-        >
-          Volver
-        </button>
+        <div className="flex gap-3">
+          {isStudent && !loading && data && (
+            <button
+              type="button"
+              onClick={handleLiberarProyecto}
+              className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 text-sm font-medium shadow-sm"
+            >
+              Liberar Proyecto
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={onBack}
+            className="px-4 py-2 rounded-lg bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 text-sm font-medium shadow-sm"
+          >
+            Volver
+          </button>
+        </div>
       </div>
 
       {loading && <div className="py-16 text-center text-gray-500">Cargando detalles...</div>}
@@ -182,6 +253,7 @@ const ProjectDetailsView = ({ projectId, onBack }) => {
           {/* Secciones de Entregables e Historial se gestionan en sus vistas dedicadas */}
         </div>
       )}
+
     </div>
   );
 };

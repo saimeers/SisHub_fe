@@ -14,6 +14,38 @@ const MyProjects = () => {
   const [projects, setProjects] = useState([]);
   const { userData } = useAuth();
 
+  // Función para recargar proyectos
+  const reloadProjects = async () => {
+    if (!userData?.codigo) return;
+    
+    try {
+      const data = await listarProyectosParaEstudiante(userData.codigo);
+      
+      const mapped = Array.isArray(data)
+        ? data.map((p) => ({
+            id: p.id_proyecto,
+            title: p.Idea?.titulo || `Proyecto ${p.id_proyecto}`,
+            description: p.Idea?.objetivo_general || "",
+            tags: (p.tecnologias || "")
+              .split(",")
+              .map((s) => s.trim())
+              .filter(Boolean),
+          status: getStudentShortStatus(
+            p.Idea?.Estado?.descripcion,
+            p.Estado?.descripcion
+          ),
+            logo: null,
+            tipoAlcance: p.Tipo_alcance?.nombre || p.TipoAlcance?.nombre,
+            progress: p.porcentaje || 0,
+          }))
+        : [];
+        
+      setProjects(mapped);
+    } catch (e) {
+      console.error("Error al recargar proyectos:", e);
+    }
+  };
+
   const getStudentShortStatus = (ideaStatusRaw, projectStatusRaw) => {
     const idea = ideaStatusRaw ? ideaStatusRaw.toUpperCase().trim() : null;
     const proj = projectStatusRaw ? projectStatusRaw.toUpperCase().trim() : null;
@@ -35,36 +67,14 @@ const MyProjects = () => {
   };
 
   useEffect(() => {
-    const load = async () => {
-      if (!userData?.codigo) return;
-      try {
-        const data = await listarProyectosParaEstudiante(userData.codigo);
-        const mapped = Array.isArray(data)
-          ? data.map((p) => ({
-              id: p.id_proyecto,
-              title: p.Idea?.titulo || `Proyecto ${p.id_proyecto}`,
-              description: p.Idea?.objetivo_general || "",
-              tags: (p.tecnologias || "")
-                .split(",")
-                .map((s) => s.trim())
-                .filter(Boolean),
-            status: getStudentShortStatus(
-              p.Idea?.Estado?.descripcion,
-              p.Estado?.descripcion
-            ),
-              logo: null,
-              tipoAlcance: p.Tipo_alcance?.nombre || p.TipoAlcance?.nombre,
-              progress: p.porcentaje || 0,
-            }))
-          : [];
-        setProjects(mapped);
-      } catch (e) {
-        console.error(e);
-        setProjects([]);
-      }
-    };
-    load();
+    if (!userData?.codigo) return;
+    reloadProjects();
   }, [userData]);
+
+  // Handler para cuando se libera un proyecto
+  const handleProjectLiberated = async (projectId) => {
+    await reloadProjects();
+  };
 
   // Filtros similares a admin
   const {
@@ -115,6 +125,7 @@ const MyProjects = () => {
         <ProjectDetailsView
           projectId={selectedProjectId}
           onBack={() => setCurrentView("list")}
+          onProjectLiberated={handleProjectLiberated}
         />
       );
     }

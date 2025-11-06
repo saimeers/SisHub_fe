@@ -81,10 +81,24 @@ export const verDetallesProyecto = async (id_proyecto) => {
   }
 };
 
+export const liberarProyecto = async (idProyecto, codigo_usuario) => {
+  try {
+    const response = await axiosInstance.patch(
+      `${PROJECTS_BASE}/liberar/${idProyecto}`,
+      { codigo_usuario }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error al liberar proyecto:", error);
+    throw error;
+  }
+};
+
 export default {
   listarProyectosParaDirector,
   listarProyectosParaEstudiante,
   listarProyectosParaDocente,
   listarProyectosPorGrupo,
   verDetallesProyecto,
+  liberarProyecto,
 };
