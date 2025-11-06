@@ -26,14 +26,14 @@ const ProyectoEnCurso = ({
   useEffect(() => {
     const loadEntregables = async () => {
       if (!proyecto?.id_proyecto || !actividad?.id_actividad) return;
-      console.log(proyecto.id_proyecto, actividad.id_actividad);
+     
       try {
         setLoadingEntregables(true);
         const data = await obtenerEntregablesProyecto(
           proyecto.id_proyecto,
           actividad.id_actividad
         );
-        console.log('Entregables recibidos:', data);
+       
         setEntregables(data);
       } catch (error) {
         console.error("Error al cargar entregables:", error);
