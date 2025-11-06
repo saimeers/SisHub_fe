@@ -1,6 +1,6 @@
 import React from "react";
 import { Edit2, Trash2, Check, X } from "lucide-react";
-import SelectField from "../../../components/ui/SelectField";
+import SelectField from "../../../../components/ui/SelectField";
 import "./UploadSubjectsTableForm.css";
 
 const UploadSubjectsTableForm = ({

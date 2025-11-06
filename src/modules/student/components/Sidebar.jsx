@@ -46,7 +46,11 @@ const Sidebar = () => {
       label: "Mis Grupos",
       path: "/student/my-groups",
     },
-    { icon: <FaFolder size={20} />, label: "Proyectos" },
+    { 
+      icon: <FaFolder size={20} />, 
+      label: "Mis Proyectos",
+      path: "/student/my-projects",
+    },
     {
       icon: <FaRegBell size={20} />,
       label: "Notificaciones",

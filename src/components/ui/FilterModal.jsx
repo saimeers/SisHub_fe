@@ -150,7 +150,7 @@ const FilterModal = ({ isOpen, onClose, onApplyFilters, currentFilters = {} }) =
             </button>
             <button
               onClick={handleApply}
-              className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+              className="flex-1 px-4 py-2 bg-red-400 text-white rounded-lg hover:bg-red-700 transition-colors"
             >
               Aplicar
             </button>

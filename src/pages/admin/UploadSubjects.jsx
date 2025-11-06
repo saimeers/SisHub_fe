@@ -1,11 +1,11 @@
 import React from "react";
 import AdminLayout from "../../modules/admin/layouts/AdminLayout";
-import UploadSubjectsHeader from "../../modules/admin/components/UploadSubjectsHeader";
-import UploadSubjectsControls from "../../modules/admin/components/UploadSubjectsControls";
-import UploadSubjectsTable from "../../modules/admin/components/UploadSubjectsTable";
-import UploadSubjectsMobile from "../../modules/admin/components/UploadSubjectsMobile";
-import UploadSubjectsPagination from "../../modules/admin/components/UploadSubjectsPagination";
-import UploadSubjectsActions from "../../modules/admin/components/UploadSubjectsActions";
+import UploadSubjectsHeader from "../../modules/admin/components/uploadSubjects/UploadSubjectsHeader";
+import UploadSubjectsControls from "../../modules/admin/components/uploadSubjects/UploadSubjectsControls";
+import UploadSubjectsTable from "../../modules/admin/components/uploadSubjects/UploadSubjectsTable";
+import UploadSubjectsMobile from "../../modules/admin/components/uploadSubjects/UploadSubjectsMobile";
+import UploadSubjectsPagination from "../../modules/admin/components/uploadSubjects/UploadSubjectsPagination";
+import UploadSubjectsActions from "../../modules/admin/components/uploadSubjects/UploadSubjectsActions";
 import { useUploadSubjects } from "../../modules/admin/hooks/useUploadSubjects";
 
 const UploadSubjects = () => {
@@ -40,7 +40,7 @@ const UploadSubjects = () => {
   return (
     <AdminLayout title="Cargar Materias">
       <div className="space-y-6">
-        <UploadSubjectsHeader 
+        <UploadSubjectsHeader
           onFileUpload={handleFileUpload}
           isSubmitting={isSubmitting}
         />
@@ -106,5 +106,3 @@ const UploadSubjects = () => {
 };
 
 export default UploadSubjects;
-
-

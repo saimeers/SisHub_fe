@@ -47,8 +47,6 @@ const Sidebar = () => {
       label: "Mis Grupos",
       path: "/professor/my-groups",
     },
-    { icon: <FaFolder size={20} />, label: "Proyectos" },
-    { icon: <IoIosSchool size={20} />, label: "Estudiantes" },
     {
       icon: <FaRegBell size={20} />,
       label: "Notificaciones",
