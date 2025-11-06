@@ -151,7 +151,6 @@ const GroupDetail = () => {
 const handleViewItem = async (item, type) => {
   try {
     let itemData;
-
     if (type === "idea" && item.id_idea) {
       const ideaCompleta = await obtenerIdea(item.id_idea);
       itemData = ideaCompleta.data || ideaCompleta;
@@ -159,7 +158,6 @@ const handleViewItem = async (item, type) => {
       itemData = item;
     }
 
-    console.log("datos del proyecto a continuar", itemData);
 
     // Tomar siempre la fuente de la idea, ya sea directa o dentro de Proyecto
     const idea = itemData.Idea || itemData;
@@ -230,6 +228,7 @@ const handleViewItem = async (item, type) => {
 
   const handleAdoptPropuesta = async () => {
     if (!selectedItem || !userData?.codigo) return;
+    console.log("Item seleccionado: ",selectedItem);
 
     const result = await Swal.fire({
       title: "¿Adoptar esta propuesta?",
@@ -245,7 +244,7 @@ const handleViewItem = async (item, type) => {
     if (result.isConfirmed) {
       try {
         await adoptarPropuesta(
-          selectedItem.id_proyecto,
+          selectedItem.proyectos[0].id_proyecto,
           userData.codigo,
           groupParams
         );

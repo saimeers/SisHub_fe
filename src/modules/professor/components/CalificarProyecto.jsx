@@ -396,8 +396,10 @@ const CalificarProyecto = ({
                 <div
                   key={entregable.id_entregable}
                   className={`border rounded-xl p-5 transition-colors ${
-                    isGuardado ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'
-                  }`}
+
+                    isGuardado ? 'bg-green-50 border-green-200' : 'bg-zinc-100 border-zinc-300'
+                    
+                    }`}
                 >
                   {/* Header del entregable */}
                   <div className="flex items-start justify-between mb-4">
