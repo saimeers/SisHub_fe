@@ -6,6 +6,7 @@ import { useSubjectOperations } from "./useSubjectOperations";
 import { useSubjectFileUpload } from "./useSubjectFileUpload";
 import { useSubjectSubmit } from "./useSubjectSubmit";
 import { getSubjectCodes, fetchSubjects } from "../../../services/materiaServices";
+import { listarAreas } from "../../../services/areaServices";
 
 export const useSubjectForm = () => {
   const navigate = useNavigate();
@@ -32,6 +33,7 @@ export const useSubjectForm = () => {
   const [selectedPrerequisites, setSelectedPrerequisites] = useState([]);
   const [editingPrerequisites, setEditingPrerequisites] = useState([]);
   const [isLoadingCodes, setIsLoadingCodes] = useState(false);
+  const [areas, setAreas] = useState([]);
 
   // Cargar materias existentes al montar el componente
   useEffect(() => {
@@ -47,6 +49,15 @@ export const useSubjectForm = () => {
         const subjectsList = Array.isArray(subjects) ? subjects : [];
         setExistingSubjects(subjectsList);
         
+        // Cargar áreas
+        try {
+          const listAreas = await listarAreas();
+          setAreas(Array.isArray(listAreas) ? listAreas : []);
+        } catch (err) {
+          console.warn("No se pudieron cargar las áreas:", err);
+          setAreas([]);
+        }
+        
         console.log("📚 Materias existentes cargadas:", subjectsList.length);
       } catch (err) {
         console.warn("No se pudieron cargar los datos existentes:", err);
@@ -59,89 +70,101 @@ export const useSubjectForm = () => {
   }, []);
 
   useEffect(() => {
-    const loadFilteredCodes = async () => {
-      if (!newSubject.semestre) {
+    const computePrereqOptions = () => {
+      const semestreNum = parseInt(newSubject.semestre);
+      if (!Number.isInteger(semestreNum)) {
         setExistingCodes([]);
         return;
       }
 
-      setIsLoadingCodes(true);
-      try {
-        const codes = await getSubjectCodes(newSubject.semestre);
-        const codesList = Array.isArray(codes) ? codes : [];
-        setExistingCodes(codesList);
-        console.log(`🔄 Prerrequisitos para semestre ${newSubject.semestre}:`, codesList.length);
+      // Solo el semestre 1 NO debe tener prerrequisitos
+      if (semestreNum <= 1) {
+        setExistingCodes([]);
+        setSelectedPrerequisites([{ value: "ninguno", label: "Ninguno" }]);
+        setNewSubject(prev => ({ ...prev, prerrequisitos: "Ninguno" }));
+        return;
+      }
 
-        // Limpiar prerrequisitos seleccionados que ya no son válidos
-        if (selectedPrerequisites.length > 0 && !selectedPrerequisites.some(p => p.value === "ninguno")) {
-          const validPrereqs = selectedPrerequisites.filter(
-            prereq => codesList.some(code => code.codigo === prereq.value)
-          );
+      // Usar materias ya cargadas y permitir como prerrequisito las de semestres anteriores
+      const candidates = existingSubjects
+        .filter(s => Number.parseInt(s.semestre) < semestreNum)
+        .map(s => ({ codigo: s.codigo, nombre: s.nombre }));
 
-          if (validPrereqs.length !== selectedPrerequisites.length) {
-            if (validPrereqs.length > 0) {
-              setSelectedPrerequisites(validPrereqs);
-              const codes = validPrereqs.map(opt => opt.value).join(", ");
-              setNewSubject(prev => ({ ...prev, prerrequisitos: codes }));
-            } else {
-              setSelectedPrerequisites([{ value: "ninguno", label: "Ninguno" }]);
-              setNewSubject(prev => ({ ...prev, prerrequisitos: "Ninguno" }));
-            }
+      setExistingCodes(candidates);
+
+      // Limpiar selecciones no válidas
+      if (selectedPrerequisites.length > 0 && !selectedPrerequisites.some(p => p.value === "ninguno")) {
+        const validPrereqs = selectedPrerequisites.filter(pr =>
+          candidates.some(c => c.codigo === pr.value)
+        );
+
+        if (validPrereqs.length !== selectedPrerequisites.length) {
+          if (validPrereqs.length > 0) {
+            setSelectedPrerequisites(validPrereqs);
+            const codes = validPrereqs.map(opt => opt.value).join(", ");
+            setNewSubject(prev => ({ ...prev, prerrequisitos: codes }));
+          } else {
+            setSelectedPrerequisites([{ value: "ninguno", label: "Ninguno" }]);
+            setNewSubject(prev => ({ ...prev, prerrequisitos: "Ninguno" }));
           }
         }
-      } catch (err) {
-        console.warn("Error al cargar códigos filtrados:", err);
-        setExistingCodes([]);
-      } finally {
-        setIsLoadingCodes(false);
       }
     };
 
-    loadFilteredCodes();
-  }, [newSubject.semestre]);
+    setIsLoadingCodes(true);
+    try {
+      computePrereqOptions();
+    } finally {
+      setIsLoadingCodes(false);
+    }
+  }, [newSubject.semestre, existingSubjects]);
 
   useEffect(() => {
-    const loadFilteredCodesForEdit = async () => {
-      if (!editingSubject?.semestre) {
+    const computeEditPrereqOptions = () => {
+      if (!editingSubject?.semestre) return;
+
+      const semestreNum = parseInt(editingSubject.semestre);
+      if (!Number.isInteger(semestreNum)) return;
+
+      if (semestreNum <= 1) {
+        setExistingCodes([]);
+        setEditingPrerequisites([{ value: "ninguno", label: "Ninguno" }]);
+        setEditingSubject(prev => ({ ...prev, prerrequisitos: "Ninguno" }));
         return;
       }
 
-      setIsLoadingCodes(true);
-      try {
-        const codes = await getSubjectCodes(editingSubject.semestre);
-        const codesList = Array.isArray(codes) ? codes : [];
+      const candidates = existingSubjects
+        .filter(s => Number.parseInt(s.semestre) < semestreNum)
+        .filter(s => s.codigo !== editingSubject.codigo)
+        .map(s => ({ codigo: s.codigo, nombre: s.nombre }));
 
-        // Filtrar el código de la materia que se está editando
-        const filteredCodes = codesList.filter(code => code.codigo !== editingSubject.codigo);
-        setExistingCodes(filteredCodes);
-        console.log(`🔄 Prerrequisitos para edición semestre ${editingSubject.semestre}:`, filteredCodes.length);
+      setExistingCodes(candidates);
 
-        // Limpiar prerrequisitos seleccionados que ya no son válidos
-        if (editingPrerequisites.length > 0 && !editingPrerequisites.some(p => p.value === "ninguno")) {
-          const validPrereqs = editingPrerequisites.filter(
-            prereq => filteredCodes.some(code => code.codigo === prereq.value)
-          );
+      if (editingPrerequisites.length > 0 && !editingPrerequisites.some(p => p.value === "ninguno")) {
+        const validPrereqs = editingPrerequisites.filter(pr =>
+          candidates.some(c => c.codigo === pr.value)
+        );
 
-          if (validPrereqs.length !== editingPrerequisites.length) {
-            if (validPrereqs.length > 0) {
-              setEditingPrerequisites(validPrereqs);
-              const codes = validPrereqs.map(opt => opt.value).join(", ");
-              setEditingSubject(prev => ({ ...prev, prerrequisitos: codes }));
-            } else {
-              setEditingPrerequisites([{ value: "ninguno", label: "Ninguno" }]);
-              setEditingSubject(prev => ({ ...prev, prerrequisitos: "Ninguno" }));
-            }
+        if (validPrereqs.length !== editingPrerequisites.length) {
+          if (validPrereqs.length > 0) {
+            setEditingPrerequisites(validPrereqs);
+            const codes = validPrereqs.map(opt => opt.value).join(", ");
+            setEditingSubject(prev => ({ ...prev, prerrequisitos: codes }));
+          } else {
+            setEditingPrerequisites([{ value: "ninguno", label: "Ninguno" }]);
+            setEditingSubject(prev => ({ ...prev, prerrequisitos: "Ninguno" }));
           }
         }
-      } catch (err) {
-        console.warn("Error al cargar códigos filtrados para edición:", err);
-      } finally {
-        setIsLoadingCodes(false);
       }
     };
 
-    loadFilteredCodesForEdit();
-  }, [editingSubject?.semestre]);
+    setIsLoadingCodes(true);
+    try {
+      computeEditPrereqOptions();
+    } finally {
+      setIsLoadingCodes(false);
+    }
+  }, [editingSubject?.semestre, existingSubjects]);
 
   // Crear opciones de prerrequisitos
   const prerequisiteOptions = useMemo(() => {
@@ -156,6 +179,21 @@ export const useSubjectForm = () => {
       ...options
     ];
   }, [existingCodes]);
+
+  const areaOptions = useMemo(
+    () => areas.map((a) => ({ value: a.id_area, label: a.nombre })),
+    [areas]
+  );
+
+  const handleAreaSelectChange = (option) => {
+    const value = option ? option.value : "";
+    setNewSubject((prev) => ({ ...prev, id_area: value }));
+  };
+
+  const handleEditAreaSelectChange = (option) => {
+    const value = option ? option.value : "";
+    setEditingSubject((prev) => ({ ...prev, id_area: value }));
+  };
 
 
   const { handleFileUpload } = useSubjectFileUpload({
@@ -368,5 +406,8 @@ export const useSubjectForm = () => {
     selectedPrerequisites,
     editingPrerequisites,
     isLoadingCodes,
+    areaOptions,
+    handleAreaSelectChange,
+    handleEditAreaSelectChange,
   };
 };

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, NavLink } from "react-router-dom";
 import { GoHomeFill } from "react-icons/go";
-import { FaBook, FaFolder, FaSignOutAlt } from "react-icons/fa";
+import { FaBook, FaFolder, FaSignOutAlt, FaRegBell } from "react-icons/fa";
 import { MdGroups2 } from "react-icons/md";
 import { IoIosSchool } from "react-icons/io";
 import UserProfile from "../../../components/ui/UserProfile";
@@ -47,6 +47,11 @@ const Sidebar = () => {
       label: "Mis Grupos",
       path: "/professor/my-groups",
     },
+    {
+      icon: <FaRegBell size={20} />,
+      label: "Notificaciones",
+      path: "/professor/notifications",
+    },
   ];
 
   return (
@@ -82,28 +87,37 @@ const Sidebar = () => {
           </div>
 
           <nav className="flex flex-col items-center mt-4">
-            {menuItems.map((item, idx) => (
-              <div
-                key={idx}
-                className={`flex items-center ${
-                  collapsed ? "justify-center" : "justify-start"
-                } gap-3 px-4 py-2 hover:bg-[#CC4040] cursor-pointer rounded-md w-11/12 transition-colors`}
-                title={collapsed ? item.label : ""}
-                onClick={() => item.path && navigate(item.path)}
-                role="button"
-                tabIndex={0}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    item.path && navigate(item.path);
+            {menuItems.map((item, idx) => {
+              const className = `flex items-center ${
+                collapsed ? "justify-center" : "justify-start"
+              } gap-3 px-4 py-2 hover:bg-[#CC4040] rounded-md w-11/12 transition-colors`;
+              return item.path ? (
+                <NavLink
+                  key={idx}
+                  to={item.path}
+                  className={({ isActive }) =>
+                    `${className} ${isActive ? "bg-[#CC4040]" : ""}`
                   }
-                }}
-              >
-                {item.icon}
-                {!collapsed && (
-                  <span className="whitespace-nowrap">{item.label}</span>
-                )}
-              </div>
-            ))}
+                  title={collapsed ? item.label : ""}
+                >
+                  {item.icon}
+                  {!collapsed && (
+                    <span className="whitespace-nowrap">{item.label}</span>
+                  )}
+                </NavLink>
+              ) : (
+                <div
+                  key={idx}
+                  className={`${className} cursor-default`}
+                  title={collapsed ? item.label : ""}
+                >
+                  {item.icon}
+                  {!collapsed && (
+                    <span className="whitespace-nowrap">{item.label}</span>
+                  )}
+                </div>
+              );
+            })}
           </nav>
         </div>
 

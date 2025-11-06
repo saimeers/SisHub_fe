@@ -30,7 +30,7 @@ import DashboardProfessor from "./pages/professor/Dashboard";
 import SubjectsProfessor from "./pages/professor/Subjects";
 import MyGroupsProfessor from "./pages/professor/MyGroups";
 import GroupDetailProfessor from "./pages/professor/GroupDetail";
-import MyProjectsProfessor from "./pages/professor/MyProjects";
+import NotificationsProfessor from "./pages/professor/Notifications";
 
 // estudiante
 import DashboardStudent from "./pages/student/Dashboard";
@@ -39,6 +39,7 @@ import StudentMyGroups from "./pages/student/MyGroups";
 import SubjectsStudent from "./pages/student/Subjects";
 import GroupDetailStudent from "./pages/student/GroupDetail";
 import MyProjectsStudent from "./pages/student/MyProjects";
+import NotificationsStudent from "./pages/student/Notifications";
 
 // stand by
 import CuentaPendiente from "./pages/standby/CuentaPendiente";
@@ -135,6 +136,7 @@ function App() {
               path="my-group/:codigo_materia/:nombre/:periodo/:anio"
               element={<GroupDetailProfessor />}
             />
+            <Route path="notifications" element={<NotificationsProfessor />} />
             <Route path="my-projects" element={<MyProjectsProfessor />} />
             <Route path="calificado" element={<Calificado />} />
           </Route>
@@ -153,6 +155,7 @@ function App() {
               element={<GroupDetailStudent />}
             />
             <Route path="my-projects" element={<MyProjectsStudent />} />
+            <Route path="notifications" element={<NotificationsStudent />} />
           </Route>
 
           {/* ==================== RUTAS ESPECIALES ==================== */}

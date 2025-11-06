@@ -28,7 +28,9 @@ const AdminLayout = ({ children, title }) => {
           variants={pageVariants}
           transition={{ duration: 0.25, ease: "easeInOut" }}
         >
-          <div className="max-w-7xl mx-auto">{children}</div>
+          <div className="max-w-screen-2xl mx-auto w-full">
+            {children}
+          </div>
         </motion.main>
       </div>
     </div>
