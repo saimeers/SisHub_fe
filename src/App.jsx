@@ -137,7 +137,6 @@ function App() {
               element={<GroupDetailProfessor />}
             />
             <Route path="notifications" element={<NotificationsProfessor />} />
-            <Route path="my-projects" element={<MyProjectsProfessor />} />
             <Route path="calificado" element={<Calificado />} />
           </Route>
 
