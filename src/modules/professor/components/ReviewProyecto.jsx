@@ -11,8 +11,6 @@ const ReviewProyecto = ({
   onBack,
   onReviewComplete
 }) => {
-
-  console.log("proyect id en review:", projectId);
   const [loading, setLoading] = useState(true);
   const [proyecto, setProyecto] = useState(null);
   const [observacion, setObservacion] = useState('');
@@ -43,9 +41,6 @@ const ReviewProyecto = ({
   const submitReview = async (accion) => {
     try {
       setSubmitting(true);
-      console.log("Codigo: ", currentUserCode);
-      console.log("accion: ", accion);
-      console.log("proyecto id al enviar: ", projectId);
       await revisarProyecto(
         projectId,
         accion,

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { obtenerEntregablesProyecto } from "../../services/EntregableService";
+import { obtenerEntregablesProyecto, obtenerEntregables } from "../../services/EntregableService";
 import { verDetallesProyecto } from "../../services/projectServices";
 import { Loader2, Download, Eye, EyeOff, FileText, Video, Music, Image, Code } from "lucide-react";
 import { toast } from "react-toastify";
@@ -25,6 +25,7 @@ const ProjectDevelopmentView = ({ projectId, activityId, onBack }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [expandedIndex, setExpandedIndex] = useState(null);
+  console.log("ProjectDevelopmentView state:", { proyecto, entregables, loading, error });
 
   useEffect(() => {
     let mounted = true;
@@ -34,18 +35,22 @@ const ProjectDevelopmentView = ({ projectId, activityId, onBack }) => {
       try {
         // Obtener datos del proyecto
         const proyectoData = await verDetallesProyecto(projectId);
+        console.log("Datos del proyecto obtenidos:", proyectoData);
         if (!mounted) return;
         setProyecto(proyectoData);
 
-        // Obtener entregables del proyecto para esta actividad
-        const entregablesData = await obtenerEntregablesProyecto(projectId, activityId);
+        const entregablesData = await (!activityId
+          ? obtenerEntregables(projectId)
+          : obtenerEntregablesProyecto(projectId, activityId));
+
+        console.log(entregablesData);
         if (!mounted) return;
-        
-        // Filtrar solo DOCUMENTO, VIDEO, AUDIO, IMAGEN (documentación)
-        const documentos = (Array.isArray(entregablesData) ? entregablesData : [])
-          .filter(e => ['DOCUMENTO', 'VIDEO', 'AUDIO', 'IMAGEN'].includes(e.tipo));
-        
-        setEntregables(documentos);
+
+        // Filtrar solo DOCUMENTO, VIDEO, AUDIO, IMAGEN, REPOSITORIO 
+        const entregables = (Array.isArray(entregablesData) ? entregablesData : [])
+          .filter(e => ['DOCUMENTO', 'VIDEO', 'AUDIO', 'IMAGEN', 'REPOSITORIO'].includes(e.tipo));
+
+        setEntregables(entregables);
       } catch (e) {
         if (!mounted) return;
         console.error("Error al cargar entregables:", e);
@@ -55,12 +60,13 @@ const ProjectDevelopmentView = ({ projectId, activityId, onBack }) => {
         if (mounted) setLoading(false);
       }
     };
-    if (projectId && activityId) load();
+    if (projectId) load();
     return () => {
       mounted = false;
     };
   }, [projectId, activityId]);
 
+  console.log("Rendering ProjectDevelopmentView with state:", { proyecto, entregables, loading, error });
   const getYouTubeEmbedUrl = (url) => {
     if (!url) return null;
     const patterns = [
@@ -77,7 +83,7 @@ const ProjectDevelopmentView = ({ projectId, activityId, onBack }) => {
   const handleDownload = (entregable) => {
     const url = entregable.url_archivo || entregable.url_video || entregable.url_audio || entregable.url_imagen;
     if (!url) return;
-    
+
     const link = document.createElement("a");
     link.href = url;
     link.download = entregable.nombre_archivo || "archivo";
@@ -93,7 +99,8 @@ const ProjectDevelopmentView = ({ projectId, activityId, onBack }) => {
     if (entregable.tipo === 'VIDEO' && entregable.url_video) return true;
     if (entregable.tipo === 'AUDIO' && entregable.url_audio) return true;
     if (entregable.tipo === 'IMAGEN' && entregable.url_imagen) return true;
-    
+    if (entregable.tipo === 'REPOSITORIO' && entregable.url_repositorio) return true;
+    if (entregable.tipo === 'REPOSITORIO') { return !!(entregable.url_repositorio || entregable.url_archivo);}
     if (!entregable.url_archivo) return false;
     const ext = getExt(entregable.nombre_archivo || "");
     return ["pdf", "png", "jpg", "jpeg", "webp", "doc", "docx", "mp4", "webm", "mp3", "wav"].includes(ext);
@@ -189,16 +196,62 @@ const ProjectDevelopmentView = ({ projectId, activityId, onBack }) => {
         );
       }
     }
+    // REPOSITORIO
+    if (entregable.tipo === 'REPOSITORIO') {
+      // Si tiene URL al repositorio (GitHub, GitLab, etc.)
+      if (entregable.url_repositorio) {
+        return (
+          <div className="space-y-2">
+            <p className="text-sm text-gray-700">
+              Repositorio disponible en:
+            </p>
+            <a
+              href={entregable.url_repositorio}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 hover:underline break-all"
+            >
+              {entregable.url_repositorio}
+            </a>
+            {entregable.url_repositorio.includes("github.com") && (
+              <iframe
+                src={entregable.url_repositorio}
+                title="Vista del repositorio"
+                className="w-full h-[500px] border rounded-lg mt-2"
+              />
+            )}
+          </div>
+        );
+      }
+
+      // Si tiene un archivo .zip asociado
+      if (entregable.url_archivo && entregable.nombre_archivo?.endsWith(".zip")) {
+        return (
+          <div className="text-sm text-gray-700">
+            <p>Archivo comprimido disponible para descarga:</p>
+            <button
+              onClick={() => handleDownload(entregable)}
+              className="mt-2 inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 text-sm font-medium"
+            >
+              <Download className="w-4 h-4" />
+              Descargar ZIP
+            </button>
+          </div>
+        );
+      }
+    }
+
 
     return <div className="text-sm text-gray-600">No hay vista previa disponible.</div>;
   };
 
   const getIcon = (tipo) => {
-    switch(tipo) {
+    switch (tipo) {
       case 'VIDEO': return Video;
       case 'AUDIO': return Music;
       case 'IMAGEN': return Image;
       case 'DOCUMENTO': return FileText;
+      case 'REPOSITORIO': return Code;
       default: return FileText;
     }
   };
@@ -249,7 +302,7 @@ const ProjectDevelopmentView = ({ projectId, activityId, onBack }) => {
       <div className="space-y-4">
         {entregables.length === 0 ? (
           <div className="py-16 text-center text-gray-600 bg-gray-50 rounded-2xl">
-            No hay entregables de documentación
+            No hay entregables de desarrollo
           </div>
         ) : (
           entregables.map((entregable, idx) => {

@@ -55,7 +55,6 @@ const MyGroups = () => {
       setError("");
       try {
         const list = await listarGruposPorUsuario(userData.codigo);
-        console.log("Grupos del profesor:", list);
         setGroups(Array.isArray(list) ? list : []);
       } catch (err) {
         console.error("Error al cargar grupos:", err);

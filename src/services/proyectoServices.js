@@ -72,6 +72,30 @@ export const revisarProyecto = async (id_proyecto, accion, observacion, codigo_u
   }
 };
 
+export const obtenerUltimoHistorial = async (id_proyecto) => {
+  // ✅ Validar que id_idea exista
+  if (!id_proyecto) {
+    console.warn("⚠️ obtenerUltimoHistorial llamado sin id_idea");
+    return null;
+  }
+
+  try {
+    const response = await axiosInstance.get(`proyectos/${id_proyecto}/ultimo-historial`);
+    return response.data;
+  } catch (error) {
+    console.error("Error al obtener historial:", error);
+    
+    // ✅ Si no hay historial (404), retornar null en lugar de lanzar error
+    if (error.response?.status === 404) {
+      console.log("ℹ️ No hay historial registrado para este proyecto");
+      return null;
+    }
+    
+    // Para otros errores, lanzar
+    throw error;
+  }
+};
+
 export const calificarProyecto = async (id_proyecto, observacion, codigo_usuario) => {
   try {
     const response = await axiosInstance.post(`/proyectos/${id_proyecto}/calificar`, {

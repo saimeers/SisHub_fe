@@ -7,7 +7,7 @@ import {
   actualizarIdea,
   rechazarObservacion
 } from '../../../services/ideaServices';
-import { getHistorialProyecto } from '../../../services/proyectoServices';
+import { obtenerUltimoHistorial } from '../../../services/proyectoServices';
 import IdeaForm from '../../../components/ui/IdeaForm';
 
 const CorregirProyecto = ({ 
@@ -72,23 +72,14 @@ const CorregirProyecto = ({
 
         // Cargar historial del proyecto
         try {
-          const historial = await getHistorialProyecto(idProyecto);
+          const historial = await obtenerUltimoHistorial(idProyecto);
           console.log('📝 Historial del proyecto:', historial);
-
-          if (historial && historial.length > 0) {
-            const ultimoHistorial = historial[0];
+          const ultimoHistorial = historial;
             setObservationData({
               text: ultimoHistorial.observacion || 'Sin observaciones',
-              date: new Date(ultimoHistorial.fecha).toLocaleDateString('es-ES'),
+              date: ultimoHistorial.fecha,
               professor: ultimoHistorial.Usuario?.nombre || 'Docente',
             });
-          } else {
-            setObservationData({
-              text: 'Sin observaciones registradas',
-              date: new Date().toLocaleDateString('es-ES'),
-              professor: 'Docente',
-            });
-          }
         } catch (historialError) {
           console.warn('⚠️ Error al cargar historial:', historialError);
           setObservationData({

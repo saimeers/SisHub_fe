@@ -4,10 +4,8 @@ import AdminLayout from "../../modules/admin/layouts/AdminLayout";
 import GroupParticipants from "../../components/ui/GroupParticipants";
 import { listarParticipantesGrupo } from "../../services/groupUserServices";
 import { useToast } from "../../hooks/useToast";
-import ProjectTabContent from "../../components/ui/ProjectTabContent";
-import ActivityCard from "../../components/ui/ActivityCard";
 
-const GroupDetail = () => {
+  const GroupDetail = () => {
   const { codigo_materia, nombre, periodo, anio } = useParams();
   const navigate = useNavigate();
   const { error } = useToast();
@@ -70,7 +68,6 @@ const GroupDetail = () => {
   }, [codigo_materia, nombre, periodo, anio, error]);
 
   const tabs = [
-    { id: "proyecto", label: "Actividad" },
     { id: "participantes", label: "Participantes" },
   ];
 
@@ -127,17 +124,6 @@ const GroupDetail = () => {
             </div>
           )}
 
-          {activeTab === "proyecto" && (
-            <div className="max-w-4xl mx-auto">
-              <div className="mb-8">
-                <ActivityCard
-                  title="Actividad 1"
-                  description="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco."
-                />
-              </div>
-              <ProjectTabContent perfil="admin" onCrearActividad={() => {}} />
-            </div>
-          )}
         </div>
 
         {/* Botón volver 

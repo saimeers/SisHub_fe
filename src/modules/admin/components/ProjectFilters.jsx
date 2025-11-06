@@ -42,7 +42,6 @@ const ProjectFilters = ({
 
   // Sincronizar el código local con el prop cuando cambia (incluyendo cuando se limpia)
   React.useEffect(() => {
-    console.log("🔄 Sincronizando código de estudiante:", studentCode);
     setLocalStudentCode(studentCode);
   }, [studentCode]);
 

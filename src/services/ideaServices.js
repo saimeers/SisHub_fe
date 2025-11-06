@@ -59,6 +59,7 @@ export const obtenerIdea = async (idIdea) => {
 export const listarIdeasLibres = async () => {
   try {
     const response = await axiosInstance.get(`${IDEAS_BASE}/libres`);
+    console.log("Backend ideas libres:", response.data);
     return response.data;
   } catch (error) {
     console.error("Error al listar ideas libres:", error);
