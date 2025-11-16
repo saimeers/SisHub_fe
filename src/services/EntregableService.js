@@ -2,7 +2,6 @@ import axiosInstance from "../config/axios";
 import axios from "../config/axios";
 
 const ENTREGABLES_BASE = "/entregables";
-const MAGIC_LOOPS_URL = "https://magicloops.dev/api/loop/a9c624e9-b32e-4412-bd02-2f630cbd0391/run";
 
 /**
  * Obtiene los tipos de entregables disponibles
@@ -113,7 +112,7 @@ export const obtenerEntregables = async (id_proyecto, id_actividad) => {
  */
 export const analizarDocumentoConIA = async (texto, items) => {
   try {
-    const response = await axios.post(MAGIC_LOOPS_URL, {
+    const response = await axios.post(import.meta.env.VITE_URL_ENTREGABLE, {
       text: texto,
       items: items
     }, {
