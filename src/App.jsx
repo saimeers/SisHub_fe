@@ -23,6 +23,7 @@ import UploadGroups from "./modules/admin/components/uploadGroups/UploadGroups";
 import UploadSubjects from "./pages/admin/UploadSubjects";
 import UploadStudents from "./pages/admin/UploadStudents";
 import ProjectsAdmin from "./pages/admin/Projects";
+import Forecast from "./pages/admin/Forecast";
 
 // docente
 import GroupsProfessor from "./pages/professor/Groups";
@@ -98,6 +99,7 @@ function App() {
             element={<ProtectedRoute allowedRoles={["ADMIN"]} />}
           >
             <Route path="dashboard" element={<AdminDashboard />} />
+            <Route path="forecast" element={<Forecast />} />
             <Route path=":codigo_materia/groups" element={<GroupsAdmin />} />
             <Route
               path=":codigo_materia/create-group"
