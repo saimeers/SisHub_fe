@@ -3,8 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { GoHomeFill } from "react-icons/go";
 import { FaBook, FaFolder, FaSignOutAlt } from "react-icons/fa";
 import { MdGroups2 } from "react-icons/md";
-import { IoIosSchool } from "react-icons/io";
-import { ImStatsDots } from "react-icons/im";
+import { SiCodemagic } from "react-icons/si";
 import UserProfile from "../../../components/ui/UserProfile";
 import { useAuthForm } from "../../../modules/auth/hooks/useAuth";
 import { Menu } from "lucide-react";
@@ -54,7 +53,10 @@ const Sidebar = () => {
       path: "/admin/projects",
     },
 
-    { icon: <ImStatsDots size={20} />, label: "Estadísticas" },
+    { icon: <SiCodemagic size={20} />, 
+      label: "Predicción",
+      path: "/admin/forecast"
+    },
   ];
 
   return (
