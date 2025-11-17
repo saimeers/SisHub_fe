@@ -24,7 +24,7 @@ import UploadSubjects from "./pages/admin/UploadSubjects";
 import UploadStudents from "./pages/admin/UploadStudents";
 import ProjectsAdmin from "./pages/admin/Projects";
 import Forecast from "./pages/admin/Forecast";
-import StudentProfile from "./pages/admin/studentProfile";
+import StudentProfile from "./pages/admin/StudentProfile";
 
 // docente
 import GroupsProfessor from "./pages/professor/Groups";
