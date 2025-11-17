@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { GoHomeFill } from "react-icons/go";
-import { FaBook, FaFolder, FaSignOutAlt } from "react-icons/fa";
+import { FaBook, FaFolder, FaSignOutAlt, FaUserGraduate } from "react-icons/fa";
 import { MdGroups2 } from "react-icons/md";
 import { SiCodemagic } from "react-icons/si";
 import UserProfile from "../../../components/ui/UserProfile";
@@ -52,10 +52,16 @@ const Sidebar = () => {
       label: "Proyectos",
       path: "/admin/projects",
     },
+    {
+      icon: <FaUserGraduate size={20} />,
+      label: "Estudiantes",
+      path: "/admin/students",
+    },
 
-    { icon: <SiCodemagic size={20} />, 
+    {
+      icon: <SiCodemagic size={20} />,
       label: "Predicción",
-      path: "/admin/forecast"
+      path: "/admin/forecast",
     },
   ];
 

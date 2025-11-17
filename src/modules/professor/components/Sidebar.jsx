@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { GoHomeFill } from "react-icons/go";
-import { FaBook, FaFolder, FaSignOutAlt } from "react-icons/fa";
+import { FaBook, FaFolder, FaSignOutAlt, FaUserGraduate } from "react-icons/fa";
 import { MdGroups2 } from "react-icons/md";
-import { IoIosSchool } from "react-icons/io";
 import UserProfile from "../../../components/ui/UserProfile";
-import { useAuthForm } from "../../../modules/auth/hooks/useAuth"; 
+import { useAuthForm } from "../../../modules/auth/hooks/useAuth";
 import { Menu } from "lucide-react";
 
 const Sidebar = () => {
@@ -46,6 +45,11 @@ const Sidebar = () => {
       icon: <MdGroups2 size={20} />,
       label: "Mis Grupos",
       path: "/professor/my-groups",
+    },
+    {
+      icon: <FaUserGraduate size={20} />,
+      label: "Estudiantes",
+      path: "/professor/students",
     },
   ];
 

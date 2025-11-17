@@ -24,6 +24,7 @@ import UploadSubjects from "./pages/admin/UploadSubjects";
 import UploadStudents from "./pages/admin/UploadStudents";
 import ProjectsAdmin from "./pages/admin/Projects";
 import Forecast from "./pages/admin/Forecast";
+import StudentProfile from "./pages/admin/studentProfile";
 
 // docente
 import GroupsProfessor from "./pages/professor/Groups";
@@ -32,6 +33,7 @@ import SubjectsProfessor from "./pages/professor/Subjects";
 import MyGroupsProfessor from "./pages/professor/MyGroups";
 import GroupDetailProfessor from "./pages/professor/GroupDetail";
 import MyProjectsProfessor from "./pages/professor/MyProjects";
+import StudentProfileProfessor from "./pages/professor/StudentProfile";
 
 // estudiante
 import DashboardStudent from "./pages/student/Dashboard";
@@ -40,6 +42,7 @@ import StudentMyGroups from "./pages/student/MyGroups";
 import SubjectsStudent from "./pages/student/Subjects";
 import GroupDetailStudent from "./pages/student/GroupDetail";
 import MyProjectsStudent from "./pages/student/MyProjects";
+import Profile from "./pages/student/Profile";
 
 // stand by
 import CuentaPendiente from "./pages/standby/CuentaPendiente";
@@ -119,12 +122,13 @@ function App() {
             <Route path="upload-groups" element={<UploadGroups />} />
             <Route path="upload-subjects" element={<UploadSubjects />} />
             <Route path="projects" element={<ProjectsAdmin />} />
+            <Route path="students" element={<StudentProfile />} />
           </Route>
 
           {/* ==================== RUTAS DOCENTE ==================== */}
           <Route
             path="/professor"
-            element={<ProtectedRoute allowedRoles={["DOCENTE","ADMIN"]} />}
+            element={<ProtectedRoute allowedRoles={["DOCENTE", "ADMIN"]} />}
           >
             <Route path="dashboard" element={<DashboardProfessor />} />
             <Route
@@ -139,6 +143,7 @@ function App() {
             />
             <Route path="my-projects" element={<MyProjectsProfessor />} />
             <Route path="calificado" element={<Calificado />} />
+            <Route path="Students" element={<StudentProfileProfessor />} />
           </Route>
 
           {/* ==================== RUTAS ESTUDIANTE ==================== */}
@@ -155,6 +160,7 @@ function App() {
               element={<GroupDetailStudent />}
             />
             <Route path="my-projects" element={<MyProjectsStudent />} />
+            <Route path="profile" element={<Profile />} />
           </Route>
 
           {/* ==================== RUTAS ESPECIALES ==================== */}
