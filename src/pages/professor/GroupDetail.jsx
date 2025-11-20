@@ -1032,11 +1032,7 @@ const IdeasListView = ({
   );
 };
 
-console.log("🔧 Handlers definidos:", {
-  handleReviewIdea: typeof handleReviewIdea,
-  handleBackFromReview: typeof handleBackFromReview,
-  handleReviewComplete: typeof handleReviewComplete,
-});
+
 
 const ActivityDetail = ({ actividad, esquemaInfo, onEdit, onViewIdeas }) => {
   const buildItemsHierarchy = () => {

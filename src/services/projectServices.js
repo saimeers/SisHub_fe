@@ -94,6 +94,122 @@ export const liberarProyecto = async (idProyecto, codigo_usuario) => {
   }
 };
 
+/**
+ * Exporta proyectos a Excel
+ * @param {string} tipo - Tipo de filtro: "todos", "fecha", "semestre"
+ * @param {Object} filtros - Objeto con los filtros según el tipo
+ * @param {string} filtros.fechaInicio - Fecha de inicio (formato YYYY-MM-DD) - requerido si tipo="fecha"
+ * @param {string} filtros.fechaFin - Fecha de fin (formato YYYY-MM-DD) - requerido si tipo="fecha"
+ * @param {number|string} filtros.anio - Año del semestre - requerido si tipo="semestre"
+ * @param {number|string} filtros.periodo - Período del semestre (1 o 2) - requerido si tipo="semestre"
+ * @returns {Promise<Blob>} - Archivo Excel como Blob
+ */
+export const exportarProyectosExcel = async (tipo, filtros = {}) => {
+  try {
+    const params = new URLSearchParams({ tipo });
+
+    if (tipo === "fecha") {
+      if (!filtros.fechaInicio || !filtros.fechaFin) {
+        throw new Error("Debe proporcionar fechaInicio y fechaFin");
+      }
+      params.append("fechaInicio", filtros.fechaInicio);
+      params.append("fechaFin", filtros.fechaFin);
+    } else if (tipo === "semestre") {
+      if (!filtros.anio || !filtros.periodo) {
+        throw new Error("Debe proporcionar anio y periodo");
+      }
+      params.append("anio", filtros.anio);
+      params.append("periodo", filtros.periodo);
+    }
+
+    const response = await axiosInstance.get(
+      `${PROJECTS_BASE}/exportar/proyectos?${params.toString()}`,
+      {
+        responseType: "blob", // Importante para archivos binarios
+      }
+    );
+
+    return response.data;
+  } catch (error) {
+    console.error("Error al exportar proyectos a Excel:", error);
+    
+    // Si el error tiene un mensaje JSON, intentar parsearlo
+    if (error.response && error.response.data) {
+      const contentType = error.response.headers["content-type"];
+      if (contentType?.includes("application/json")) {
+        const reader = new FileReader();
+        const text = await new Promise((resolve, reject) => {
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = reject;
+          reader.readAsText(error.response.data);
+        });
+        const errorData = JSON.parse(text);
+        throw new Error(errorData.error || errorData.message || "Error al exportar proyectos");
+      }
+    }
+    
+    throw error;
+  }
+};
+
+/**
+ * Exporta proyectos a PDF
+ * @param {string} tipo - Tipo de filtro: "todos", "fecha", "semestre"
+ * @param {Object} filtros - Objeto con los filtros según el tipo
+ * @param {string} filtros.fechaInicio - Fecha de inicio (formato YYYY-MM-DD) - requerido si tipo="fecha"
+ * @param {string} filtros.fechaFin - Fecha de fin (formato YYYY-MM-DD) - requerido si tipo="fecha"
+ * @param {number|string} filtros.anio - Año del semestre - requerido si tipo="semestre"
+ * @param {number|string} filtros.periodo - Período del semestre (1 o 2) - requerido si tipo="semestre"
+ * @returns {Promise<Blob>} - Archivo PDF como Blob
+ */
+export const exportarProyectosPDF = async (tipo, filtros = {}) => {
+  try {
+    const params = new URLSearchParams({ tipo });
+
+    if (tipo === "fecha") {
+      if (!filtros.fechaInicio || !filtros.fechaFin) {
+        throw new Error("Debe proporcionar fechaInicio y fechaFin");
+      }
+      params.append("fechaInicio", filtros.fechaInicio);
+      params.append("fechaFin", filtros.fechaFin);
+    } else if (tipo === "semestre") {
+      if (!filtros.anio || !filtros.periodo) {
+        throw new Error("Debe proporcionar anio y periodo");
+      }
+      params.append("anio", filtros.anio);
+      params.append("periodo", filtros.periodo);
+    }
+
+    const response = await axiosInstance.get(
+      `${PROJECTS_BASE}/exportar/pdf?${params.toString()}`,
+      {
+        responseType: "blob", // Importante para archivos binarios
+      }
+    );
+
+    return response.data;
+  } catch (error) {
+    console.error("Error al exportar proyectos a PDF:", error);
+    
+    // Si el error tiene un mensaje JSON, intentar parsearlo
+    if (error.response && error.response.data) {
+      const contentType = error.response.headers["content-type"];
+      if (contentType?.includes("application/json")) {
+        const reader = new FileReader();
+        const text = await new Promise((resolve, reject) => {
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = reject;
+          reader.readAsText(error.response.data);
+        });
+        const errorData = JSON.parse(text);
+        throw new Error(errorData.error || errorData.message || "Error al exportar proyectos");
+      }
+    }
+    
+    throw error;
+  }
+};
+
 export default {
   listarProyectosParaDirector,
   listarProyectosParaEstudiante,
@@ -101,4 +217,6 @@ export default {
   listarProyectosPorGrupo,
   verDetallesProyecto,
   liberarProyecto,
+  exportarProyectosExcel,
+  exportarProyectosPDF,
 };
