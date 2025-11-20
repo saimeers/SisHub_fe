@@ -77,9 +77,9 @@ const EntregablesInvestigativo = ({
       setAnalisisResultado(resultado);
 
       if (resultado.analisis) {
-        toast.success('✅ Documento válido. Todos los ítems están presentes');
+        toast.success('Documento válido. Todos los ítems están presentes');
       } else {
-        toast.warning('⚠️ El documento no cumple con todos los requisitos');
+        toast.warning('El documento no cumple con todos los requisitos');
       }
     } catch (error) {
       console.error('Error al analizar:', error);

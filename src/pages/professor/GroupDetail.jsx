@@ -258,7 +258,7 @@ const GroupDetail = () => {
         listarIdeasGrupo(groupParams),
         listarProyectosPorGrupo(groupParams),
       ]);
-      console.log("idea principal:",ideasResp);
+      console.log("idea principal:", ideasResp);
       console.log("proyecto principal:", projectsResp);
       // Ideas retorna: { total, grupo, data: [...] }
       const ideas = ideasResp?.data ?? [];
@@ -387,6 +387,8 @@ const GroupDetail = () => {
                   <div className="text-center py-12">
                     <p className="text-gray-500">Verificando actividad...</p>
                   </div>
+                ) : currentView === "checkActivity" && tieneActividad === false ? (
+                  <NoActivityMessage onCreateActivity={() => setCurrentView("createActivity")} />
                 ) : currentView === "createActivity" ? (
                   <ActivityForm
                     groupParams={groupParams}
@@ -426,6 +428,17 @@ const GroupDetail = () => {
                     onReviewIdea={handleReviewIdea}
                     userData={userData}
                     groupParams={groupParams}
+                    onProjectsUpdate={async () => {
+                      setLoadingProjects(true);
+                      try {
+                        const projectsResp = await listarProyectosPorGrupo(groupParams);
+                        setGroupProjects(Array.isArray(projectsResp) ? projectsResp : []);
+                      } catch (err) {
+                        console.error("Error al recargar proyectos:", err);
+                      } finally {
+                        setLoadingProjects(false);
+                      }
+                    }}
                   />
                 ) : null}
               </div>
@@ -444,8 +457,9 @@ const IdeasListView = ({
   projects,
   onBack,
   onReviewIdea,
-   userData,
+  userData,
   groupParams,
+  onProjectsUpdate,
 }) => {
   const [currentView, setCurrentView] = useState("list"); // list | details | documents | development | versions
   const [selectedProjectId, setSelectedProjectId] = useState(null);
@@ -453,6 +467,13 @@ const IdeasListView = ({
   const [statusInfoMessage, setStatusInfoMessage] = useState("");
   const [documentsInfoMessage, setDocumentsInfoMessage] = useState("");
   const [developmentInfoMessage, setDevelopmentInfoMessage] = useState("");
+
+  const reloadProjects = async () => {
+    if (onProjectsUpdate) {
+      await onProjectsUpdate();
+    }
+  };
+
   const [filterText, setFilterText] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
   const hasIdeas = ideas && ideas.length > 0;
@@ -505,6 +526,7 @@ const IdeasListView = ({
       proy?.estado
     );
 
+
     const textOk = filterText
       ? [title, description, technologies]
         .join(" ")
@@ -529,17 +551,8 @@ const IdeasListView = ({
           currentUserCode={userData?.codigo}
           onBack={() => setCurrentView("list")}
           onCalificacionComplete={async () => {
-            // Recargar proyectos después de calificar
-            setLoadingProjects(true);
-            try {
-              const projectsResp = await listarProyectosPorGrupo(groupParams);
-              setGroupProjects(Array.isArray(projectsResp) ? projectsResp : []);
-              toast.success("Proyecto calificado exitosamente");
-            } catch (err) {
-              console.error("Error al recargar proyectos:", err);
-            } finally {
-              setLoadingProjects(false);
-            }
+            await reloadProjects();
+            toast.success("Proyecto calificado exitosamente");
             setCurrentView("list");
           }}
         />
@@ -553,17 +566,8 @@ const IdeasListView = ({
           currentUserCode={userData?.codigo}
           onBack={() => setCurrentView("list")}
           onReviewComplete={async () => {
-            // Recargar proyectos después de revisar
-            setLoadingProjects(true);
-            try {
-              const projectsResp = await listarProyectosPorGrupo(groupParams);
-              setGroupProjects(Array.isArray(projectsResp) ? projectsResp : []);
-              toast.success("Proyecto revisado exitosamente");
-            } catch (err) {
-              console.error("Error al recargar proyectos:", err);
-            } finally {
-              setLoadingProjects(false);
-            }
+            await reloadProjects();
+            toast.success("Proyecto revisado exitosamente");
             setCurrentView("list");
           }}
         />
@@ -700,7 +704,7 @@ const IdeasListView = ({
               : proy?.tags || [];
 
           const progress = typeof proy?.porcentaje === "number" ? proy.porcentaje : 0;
-          console.log("proyecto",proy)
+          console.log("proyecto", proy)
           const alcanceTexto = proy?.Tipo_alcance?.nombre || proy?.tipo_alcance || undefined;
           const statusTexto = getProjectShortStatus(
             proy?.Idea?.estado,
@@ -715,7 +719,7 @@ const IdeasListView = ({
             console.log("estado proyecto v1:", proj);
             console.log("estado idea v1:", idea);
             console.log("id_actividad:", proy.id_actividad);
-            
+
             setSelectedProjectId(proy.id_proyecto);
 
             // 📍 REEMPLAZAR toda esta lógica con:
@@ -741,7 +745,7 @@ const IdeasListView = ({
             // CASO 4: REVISION + EN_CURSO → CalificarProyecto
             if (idea === "REVISION" && proj === "EN_CURSO") {
               // Necesitamos obtener el id_actividad del proyecto
-              setSelectedActivityId(proy.id_actividad); 
+              setSelectedActivityId(proy.id_actividad);
               setCurrentView("calificarProyecto");
               return;
             }
@@ -780,27 +784,31 @@ const IdeasListView = ({
                 const idea = ideaState ? ideaState : null;
                 const proj = projectState ? projectState : null;
 
+                console.log("📄 Click documents:", { projectId: proy.id_proyecto, activityId: proy.id_actividad });
+
                 setSelectedProjectId(proy.id_proyecto);
+                setSelectedActivityId(proy.id_actividad);
+
                 if (idea === "REVISION" && proj === "EN_CURSO") {
                   setDocumentsInfoMessage("Entregables enviados a calificar. Usa el botón principal para calificar.");
                   setCurrentView("documentsInfo");
                 } else {
-                  setSelectedActivityId(proy.id_actividad); 
                   setCurrentView("documents");
                 }
               }}
               onCodeClick={() => {
                 const idea = proy?.Idea?.estado || null;
                 const proj = proy?.estado || null;
-                console.log("estado idea v2:", idea);
-                console.log("estado projecto v2:", proj);
+
+                console.log("💻 Click code:", { projectId: proy.id_proyecto, activityId: proy.id_actividad });
+
                 setSelectedProjectId(proy.id_proyecto);
+                setSelectedActivityId(proy.id_actividad); // ✅ AGREGAR ESTA LÍNEA ANTES DEL IF
 
                 if (idea === "REVISION" && proj === "EN_CURSO") {
                   setDevelopmentInfoMessage("Entregables enviados a calificar. Usa el botón principal para calificar.");
                   setCurrentView("developmentInfo");
                 } else {
-                  setSelectedActivityId(proy.id_actividad); 
                   setCurrentView("development");
                 }
               }}
@@ -1038,8 +1046,7 @@ const ActivityDetail = ({ actividad, esquemaInfo, onEdit, onViewIdeas }) => {
       (ai) => ai.Item.id_item
     );
     const allItems = esquemaInfo.Items;
-    
-    // Filtrar solo los items seleccionados y construir jerarquía
+
     const itemsMap = {};
     allItems.forEach((item) => {
       if (selectedItemIds.includes(item.id_item)) {
@@ -1063,123 +1070,142 @@ const ActivityDetail = ({ actividad, esquemaInfo, onEdit, onViewIdeas }) => {
 
   return (
     <div
-      className="rounded-2xl shadow-[0_10px_25px_rgba(0,0,0,0.08)] overflow-hidden bg-white"
+      className="group rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden bg-white border border-gray-200 cursor-pointer transform hover:-translate-y-1"
       onClick={onViewIdeas}
     >
+      {/* Header compacto con gradiente */}
       <div
-        className="relative px-6 py-10 text-center text-white"
+        className="relative px-6 py-6 text-white"
         style={{
-          background:
-            "linear-gradient(90deg, #ed3a3aff 0%, #d94228ff 50%, #b62121ff 100%)",
+          background: "linear-gradient(135deg, #dc2626 0%, #991b1b 100%)",
         }}
       >
-        <h2 className="text-2xl md:text-3xl font-extrabold tracking-wide">
-          {actividad.titulo}
-        </h2>
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onEdit();
-          }}
-          className="absolute right-6 top-6 p-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors"
-          title="Editar actividad"
-        >
-          <svg
-            className="w-6 h-6"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl font-bold tracking-wide">
+            {actividad.titulo}
+          </h2>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onEdit();
+            }}
+            className="p-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors"
+            title="Editar actividad"
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
-            />
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-            />
-          </svg>
-        </button>
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+              />
+            </svg>
+          </button>
+        </div>
       </div>
-      <div className="px-8 py-6 space-y-6">
-        <div>
-          <h3 className="text-sm font-semibold text-gray-500 mb-2">
-            DESCRIPCIÓN
-          </h3>
-          <p className="text-gray-700 leading-relaxed">
-            {actividad.descripcion}
-          </p>
-        </div>
 
-        <div className="grid grid-cols-2 gap-6">
-          <div>
-            <h3 className="text-sm font-semibold text-gray-500 mb-2">
-              FECHA INICIO
-            </h3>
-            <p className="text-gray-900 font-medium">
-              {new Date(actividad.fecha_inicio).toLocaleDateString("es-ES", {
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-              })}
-            </p>
+      {/* Contenido compacto */}
+      <div className="px-6 py-5 space-y-4">
+        {/* Descripción */}
+        <p className="text-sm text-gray-700 line-clamp-2">
+          {actividad.descripcion}
+        </p>
+
+        {/* Grid de información */}
+        <div className="grid grid-cols-2 gap-4 text-sm">
+          <div className="flex items-center gap-2">
+            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <div>
+              <p className="text-gray-500 text-xs">Inicio</p>
+              <p className="font-medium text-gray-900">
+                {new Date(actividad.fecha_inicio).toLocaleDateString("es-ES", {
+                  day: "2-digit",
+                  month: "short",
+                })}
+              </p>
+            </div>
           </div>
-          <div>
-            <h3 className="text-sm font-semibold text-gray-500 mb-2">
-              FECHA CIERRE
-            </h3>
-            <p className="text-gray-900 font-medium">
-              {new Date(actividad.fecha_cierre).toLocaleDateString("es-ES", {
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-              })}
-            </p>
+
+          <div className="flex items-center gap-2">
+            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <div>
+              <p className="text-gray-500 text-xs">Cierre</p>
+              <p className="font-medium text-gray-900">
+                {new Date(actividad.fecha_cierre).toLocaleDateString("es-ES", {
+                  day: "2-digit",
+                  month: "short",
+                })}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+            <div>
+              <p className="text-gray-500 text-xs">Equipo</p>
+              <p className="font-medium text-gray-900">
+                {actividad.maximo_integrantes} máx
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <div>
+              <p className="text-gray-500 text-xs">Alcance</p>
+              <p className="font-medium text-gray-900">
+                {actividad.id_tipo_alcance === 1 ? "Investigativo" : "Desarrollo"}
+              </p>
+            </div>
           </div>
         </div>
 
-        <div>
-          <h3 className="text-sm font-semibold text-gray-500 mb-2">
-            MAX. INTEGRANTE POR EQUIPO
-          </h3>
-          <p className="text-gray-900 font-medium">
-            {actividad.maximo_integrantes} estudiantes
-          </p>
-        </div>
-
-        <div>
-          <h3 className="text-sm font-semibold text-gray-500 mb-2">
-            TIPO DE ALCANCE
-          </h3>
-
-          <p className="text-gray-900 font-medium">
-            {actividad.id_tipo_alcance === 1 ? "Investigativo" : "Desarrollo"}
-          </p>
-        </div>
-
-        {esquemaInfo && (
-          <div>
-            <h3 className="text-sm font-semibold text-gray-500 mb-2">
-              ESQUEMA
-            </h3>
-            <p className="text-gray-900 font-medium">
-              {esquemaInfo.id_esquema}
-            </p>
-          </div>
-        )}
-
+        {/* Ítems seleccionados */}
         {selectedItemsHierarchy.length > 0 && (
-          <div>
-            <h3 className="text-sm font-semibold text-gray-500 mb-3">
-              ÍTEMS SELECCIONADOS ({actividad.Actividad_items?.length || 0})
-            </h3>
-            <ItemsDisplayTree items={selectedItemsHierarchy} />
+          <div className="pt-4 border-t border-gray-100">
+            <div className="flex items-center gap-2 mb-3">
+              <svg className="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+              </svg>
+              <h3 className="text-sm font-semibold text-gray-900">
+                Ítems Seleccionados ({actividad.Actividad_items?.length || 0})
+              </h3>
+            </div>
+            <div className="bg-gray-50 rounded-lg p-3 max-h-48 overflow-y-auto">
+              <ItemsDisplayTree items={selectedItemsHierarchy} />
+            </div>
           </div>
         )}
+
+        {/* Footer con badge */}
+        <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-50 text-green-700 rounded-lg text-xs font-medium">
+            <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+            </svg>
+            Actividad Activa
+          </span>
+          
+          <span className="text-xs text-gray-500 group-hover:text-red-600 transition-colors font-medium flex items-center gap-1">
+            Ver proyectos
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </span>
+        </div>
       </div>
     </div>
   );
@@ -1206,6 +1232,42 @@ const ItemsDisplayTree = ({ items, level = 0 }) => {
           )}
         </div>
       ))}
+    </div>
+  );
+};
+
+const NoActivityMessage = ({ onCreateActivity }) => {
+  return (
+    <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl border-2 border-dashed border-gray-300 p-12 text-center">
+      <div className="max-w-md mx-auto">
+        <div className="w-20 h-20 mx-auto mb-6 bg-red-100 rounded-full flex items-center justify-center">
+          <svg
+            className="w-10 h-10 text-red-600"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+            />
+          </svg>
+        </div>
+        <h3 className="text-2xl font-bold text-gray-900 mb-3">
+          No hay actividad creada
+        </h3>
+        <p className="text-gray-600 mb-6">
+          Crea una actividad para que los estudiantes puedan comenzar a trabajar en sus proyectos
+        </p>
+        <button
+          onClick={onCreateActivity}
+          className="px-8 py-3 bg-gradient-to-r from-red-600 to-red-700 text-white font-semibold rounded-xl hover:from-red-700 hover:to-red-800 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+        >
+          Crear Actividad
+        </button>
+      </div>
     </div>
   );
 };

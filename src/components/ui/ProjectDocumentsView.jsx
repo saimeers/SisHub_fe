@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { obtenerEntregablesProyecto } from "../../services/EntregableService";
+import { obtenerEntregablesProyecto, obtenerEntregables } from "../../services/EntregableService";
 import { verDetallesProyecto } from "../../services/projectServices";
 import { Loader2, Download, Eye, EyeOff, FileText, ExternalLink } from "lucide-react";
 import { toast } from "react-toastify";
@@ -37,13 +37,16 @@ const ProjectDocumentsView = ({ projectId, activityId, onBack }) => {
         setProyecto(proyectoData);
 
         // Obtener entregables del proyecto para esta actividad
-        const entregablesData = await obtenerEntregablesProyecto(projectId, activityId);
+        const entregablesData = await (!activityId
+          ? obtenerEntregables(projectId)
+          : obtenerEntregablesProyecto(projectId, activityId));
+
         if (!mounted) return;
-        
+
         // Filtrar SOLO documentos (tipo investigativo)
         const docs = (Array.isArray(entregablesData) ? entregablesData : [])
           .filter(e => e.tipo === 'DOCUMENTO');
-        
+
         setDocumentos(docs);
       } catch (e) {
         if (!mounted) return;
@@ -54,7 +57,7 @@ const ProjectDocumentsView = ({ projectId, activityId, onBack }) => {
         if (mounted) setLoading(false);
       }
     };
-    if (projectId && activityId) load();
+    if (projectId) load();
     return () => {
       mounted = false;
     };
@@ -63,7 +66,7 @@ const ProjectDocumentsView = ({ projectId, activityId, onBack }) => {
   const handleDownload = (documento) => {
     const url = documento.url_archivo;
     if (!url) return;
-    
+
     const link = document.createElement("a");
     link.href = url;
     link.download = documento.nombre_archivo || "documento";

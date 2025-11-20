@@ -2,7 +2,6 @@ import axiosInstance from "../config/axios";
 import axios from "../config/axios";
 
 const ENTREGABLES_BASE = "/entregables";
-const MAGIC_LOOPS_URL = "https://magicloops.dev/api/loop/a9c624e9-b32e-4412-bd02-2f630cbd0391/run";
 
 /**
  * Obtiene los tipos de entregables disponibles
@@ -79,6 +78,23 @@ export const deshabilitarEntregable = async (id_entregable, codigo_usuario) => {
 export const obtenerEntregablesProyecto = async (id_proyecto, id_actividad) => {
   try {
     const response = await axios.get(`${ENTREGABLES_BASE}/proyecto/${id_proyecto}/actividad/${id_actividad}`);
+    console.log("data que llega para entregables", response);
+    return Array.isArray(response.data) ? response.data : [];
+  } catch (error) {
+    // Si es 404, retornar array vacío (no hay entregables aún)
+    if (error.response?.status === 404) {
+      console.log("No se encontraron entregables para este proyecto (es la primera vez)");
+      return [];
+    }
+    console.error("Error al obtener entregables:", error);
+    throw error;
+  }
+};
+
+export const obtenerEntregables = async (id_proyecto, id_actividad) => {
+  try {
+    const response = await axios.get(`${ENTREGABLES_BASE}/proyecto/${id_proyecto}`);
+    console.log("data que llega para entregables", response);
     return Array.isArray(response.data) ? response.data : [];
   } catch (error) {
     // Si es 404, retornar array vacío (no hay entregables aún)
@@ -96,7 +112,7 @@ export const obtenerEntregablesProyecto = async (id_proyecto, id_actividad) => {
  */
 export const analizarDocumentoConIA = async (texto, items) => {
   try {
-    const response = await axios.post(MAGIC_LOOPS_URL, {
+    const response = await axios.post(import.meta.env.VITE_URL_ENTREGABLE, {
       text: texto,
       items: items
     }, {
