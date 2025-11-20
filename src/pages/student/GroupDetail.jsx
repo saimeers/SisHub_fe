@@ -656,7 +656,7 @@ const handleViewItem = async (item, type) => {
           : "Cargando grupo..."
       }
     >
-      <div className="w-full max-w-5xl mx-auto py-10 px-6 bg-white rounded-2xl shadow-sm">
+      <div className="w-full max-w-4xl mx-auto py-10 px-6 bg-white rounded-2xl shadow-sm">
         <div className="flex justify-center mb-8">
           <div className="flex justify-center space-x-2 bg-gray-100 p-1 rounded-full w-fit mx-auto">
             {tabs.map((tab) => (
