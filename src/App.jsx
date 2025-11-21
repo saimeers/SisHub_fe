@@ -24,8 +24,8 @@ import UploadSubjects from "./pages/admin/UploadSubjects";
 import UploadStudents from "./pages/admin/UploadStudents";
 import ProjectsAdmin from "./pages/admin/Projects";
 import Forecast from "./pages/admin/Forecast";
-import StudentProfile from "./pages/admin/StudentProfile";
-
+import StudentList from "./pages/admin/StudentList";
+import StudentProfile from "./pages/admin/studentProfile";
 // docente
 import GroupsProfessor from "./pages/professor/Groups";
 import DashboardProfessor from "./pages/professor/Dashboard";
@@ -122,7 +122,8 @@ function App() {
             <Route path="upload-groups" element={<UploadGroups />} />
             <Route path="upload-subjects" element={<UploadSubjects />} />
             <Route path="projects" element={<ProjectsAdmin />} />
-            <Route path="students" element={<StudentProfile />} />
+            <Route path="students" element={<StudentList />} />
+            <Route path="students/:id" element={<StudentProfile />} />
           </Route>
 
           {/* ==================== RUTAS DOCENTE ==================== */}

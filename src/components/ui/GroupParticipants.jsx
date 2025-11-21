@@ -1,6 +1,6 @@
 import React from "react";
 
-const GroupParticipants = ({ participants, isLoading }) => {
+const GroupParticipants = ({ participants, isLoading, onParticipantClick }) => {
   if (isLoading) {
     return (
       <div className="text-center py-4 text-gray-500">Cargando participantes...</div>
@@ -23,11 +23,13 @@ const GroupParticipants = ({ participants, isLoading }) => {
       {participants.map((p, index) => {
         // Debug: Mostrar cada participante individual
         console.log(`🔍 Participante ${index}:`, p);
-        
+
         return (
           <div
             key={index}
-            className="grid grid-cols-[1fr_3fr_auto] items-center bg-gray-100 rounded-md px-6 py-3 shadow-sm hover:bg-gray-200 transition"
+            onClick={() => onParticipantClick && onParticipantClick(p)}
+            className={`grid grid-cols-[1fr_3fr_auto] items-center bg-gray-100 rounded-md px-6 py-3 shadow-sm hover:bg-gray-200 transition ${onParticipantClick ? "cursor-pointer" : ""
+              }`}
           >
             {/* Código */}
             <div className="text-sm font-medium text-gray-700">{p.codigo}</div>
