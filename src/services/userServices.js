@@ -219,3 +219,15 @@ export const buscarEstudiantePorCodigo = async (codigo) => {
   }
 };
 
+export const obtenerInformacionPerfil = async (codigo) => {
+  try {
+    if (!codigo) {
+      throw new Error("Debe proporcionar un código de estudiante válido");
+    }
+    const response = await axiosInstance.get(`/usuarios/informacion/perfil/${codigo}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error al obtener información del perfil:", error.message);
+    throw error;
+  }
+};
