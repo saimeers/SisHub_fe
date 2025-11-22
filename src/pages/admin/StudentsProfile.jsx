@@ -72,11 +72,12 @@ const StudentProfile = () => {
                   <strong>Documento:</strong> {documento}
                 </p>
                 <p>
-                  <strong>Total de proyectos:</strong>{" "}
+                  <strong>Total de proyectos realizados:</strong>{" "}
                   {cantidadProyectos ?? "0"}
                 </p>
                 <p>
-                  <strong>Veces como líder:</strong> {cantidadVecesLider ?? "0"}
+                  <strong>Número de veces siendo líder:</strong>{" "}
+                  {cantidadVecesLider ?? "0"}
                 </p>
               </div>
             </div>
@@ -158,19 +159,18 @@ const StudentProfile = () => {
             {/* COLUMNA 3 – Descripción del proyecto */}
             <div className="bg-gray-100 rounded-xl p-5">
               <h3 className="font-semibold text-gray-700 mb-2">
-                Descripción{" "}
-                <span className="text-sm text-gray-500">(obj_general)</span>
+                Objetivo General{" "}
               </h3>
 
               {!proyectoSeleccionado ? (
                 <p className="text-gray-400">
-                  Selecciona un proyecto para obtener su información general.
+                  Selecciona un proyecto para obtener su objetivo general.
                 </p>
               ) : (
                 <p className="text-gray-700 leading-relaxed">
-                  {proyectoSeleccionado.obj_general
-                    ? proyectoSeleccionado.obj_general
-                    : "Este proyecto no tiene una descripción registrada."}
+                  {proyectoSeleccionado.objetivo_general
+                    ? proyectoSeleccionado.objetivo_general
+                    : "Este proyecto no tiene un objetivo general registrado."}
                 </p>
               )}
             </div>
