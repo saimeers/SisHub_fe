@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FileText, Download, ExternalLink, Eye, EyeOff, Music, Video, Image, Code, Loader2, Award } from 'lucide-react';
+import { FaArrowLeft } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import { verDetallesProyecto } from '../../services/projectServices';
 import { historicoEntregables } from '../../services/EntregableService';
@@ -230,10 +231,12 @@ const ProyectoCalificado = ({
           </div>
           {onBack && (
             <button
+              type="button"
               onClick={onBack}
-              className="px-4 py-2 rounded-full text-sm font-medium border border-gray-300 bg-white hover:bg-gray-50"
+              className="px-4 py-2 rounded-lg bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 text-sm font-medium shadow-sm flex items-center gap-2"
             >
-              ← Volver
+              <FaArrowLeft className="text-sm" />
+              Volver
             </button>
           )}
         </div>

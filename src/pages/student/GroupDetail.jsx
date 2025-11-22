@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { FaArrowLeft } from "react-icons/fa";
 import StudentLayout from "../../modules/student/layouts/StudentLayout";
 import GroupParticipants from "../../components/ui/GroupParticipants";
 import CorregirProyecto from "../../modules/student/components/CorregirProyecto";
@@ -748,9 +749,10 @@ const handleViewItem = async (item, type) => {
                       <button
                         type="button"
                         onClick={backToActivities}
-                        className="px-4 py-2 rounded-full text-sm font-medium border border-gray-300 bg-white hover:bg-gray-50"
+                        className="px-4 py-2 rounded-lg bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 text-sm font-medium shadow-sm flex items-center gap-2"
                       >
-                        ← Volver a Actividad
+                        <FaArrowLeft className="text-sm" />
+                        Volver a Actividad
                       </button>
                       <Button text="+ Proponer Idea" onClick={openCreateIdea} />
                     </div>
@@ -800,9 +802,10 @@ const handleViewItem = async (item, type) => {
                         onClick={() =>
                           setCurrentView(viewMode ? "ideas" : "ideas")
                         }
-                        className="px-4 py-2 rounded-full text-sm font-medium border border-gray-300 bg-white hover:bg-gray-50"
+                        className="px-4 py-2 rounded-lg bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 text-sm font-medium shadow-sm flex items-center gap-2"
                       >
-                        ← Volver
+                        <FaArrowLeft className="text-sm" />
+                        Volver
                       </button>
                     </div>
                     <IdeaForm

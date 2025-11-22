@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FileText, Send, Loader2 } from 'lucide-react';
+import { FaArrowLeft } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import EntregablesInvestigativo from './EntregablesInvestigativo';
 import EntregablesDesarrollo from './EntregablesDesarrollo';
@@ -112,9 +113,10 @@ const ProyectoEnCurso = ({
             <button
               type="button"
               onClick={onBack}
-              className="px-4 py-2 rounded-full text-sm font-medium border border-gray-300 bg-white hover:bg-gray-50"
+              className="px-4 py-2 rounded-lg bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 text-sm font-medium shadow-sm flex items-center gap-2"
             >
-              ← Volver
+              <FaArrowLeft className="text-sm" />
+              Volver
             </button>
           )}
         </div>
