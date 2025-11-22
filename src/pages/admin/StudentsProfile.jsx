@@ -42,18 +42,15 @@ const StudentProfile = () => {
     lineasInvestigacion = [],
     proyectosPeriodo = [],
     resumenPerfil,
-    fotoPerfil
+    fotoPerfil,
   } = datos;
 
   return (
     <AdminLayout title="Perfil del Estudiante">
       <div className="w-full max-w-6xl mx-auto mt-10">
-
-        {/* CARD PRINCIPAL */}
         <div className="bg-white px-10 py-10 rounded-2xl shadow-sm">
-
-          {/* Header */}
-          <div className="flex gap-8 items-center">
+          {/* HEADER */}
+          <div className="flex gap-8 items-center bg-gray-100 p-6 rounded-xl">
             <img
               src={
                 fotoPerfil ||
@@ -68,26 +65,27 @@ const StudentProfile = () => {
               <p className="text-gray-600">{correo}</p>
 
               <div className="mt-4 grid grid-cols-2 gap-4 text-sm">
-                <p><strong>Código:</strong> {codigo}</p>
-                <p><strong>Documento:</strong> {documento}</p>
                 <p>
-                  <strong>Total de proyectos realizados:</strong>{" "}
+                  <strong>Código:</strong> {codigo}
+                </p>
+                <p>
+                  <strong>Documento:</strong> {documento}
+                </p>
+                <p>
+                  <strong>Total de proyectos:</strong>{" "}
                   {cantidadProyectos ?? "0"}
                 </p>
                 <p>
-                  <strong>Número de veces siendo líder:</strong>{" "}
-                  {cantidadVecesLider ?? "0"}
+                  <strong>Veces como líder:</strong> {cantidadVecesLider ?? "0"}
                 </p>
               </div>
             </div>
           </div>
 
-          {/* 2 COLUMNAS */}
-          <div className="mt-12 grid grid-cols-1 lg:grid-cols-2 gap-12">
-
-            {/* Columna izquierda */}
+          {/* 3 COLUMNAS */}
+          <div className="mt-12 grid grid-cols-1 lg:grid-cols-3 gap-10">
+            {/* 🔹 COLUMNA 1 – Tecnologías usadas */}
             <div>
-              {/* Tecnologías */}
               <h2 className="text-lg font-semibold mb-4">Tecnologías usadas</h2>
 
               {tecnologias.length > 0 ? (
@@ -105,33 +103,17 @@ const StudentProfile = () => {
                   ))}
                 </div>
               ) : (
-                <p className="text-gray-400">No tiene tecnologías registradas.</p>
+                <p className="text-gray-400">
+                  No tiene tecnologías registradas.
+                </p>
               )}
-
-              {/* Líneas de investigación */}
-              <div className="mt-10">
-                <h2 className="text-lg font-semibold mb-3">Líneas de investigación</h2>
-
-                {lineasInvestigacion.length > 0 ? (
-                  <div className="flex gap-2 flex-wrap">
-                    {lineasInvestigacion.map((linea, i) => (
-                      <span
-                        key={i}
-                        className="px-3 py-1 text-sm bg-blue-100 text-blue-700 rounded-full"
-                      >
-                        {linea}
-                      </span>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-gray-400">No tiene líneas de investigación.</p>
-                )}
-              </div>
             </div>
 
-            {/* Columna derecha */}
+            {/* COLUMNA 2 – Proyectos por semestre */}
             <div>
-              <h2 className="text-lg font-semibold mb-4">Proyectos por semestre</h2>
+              <h2 className="text-lg font-semibold mb-4">
+                Proyectos por semestre
+              </h2>
 
               {proyectosPeriodo.length > 0 ? (
                 <div className="flex flex-col gap-6">
@@ -147,7 +129,14 @@ const StudentProfile = () => {
                             <button
                               key={p.id_proyecto}
                               onClick={() => setProyectoSeleccionado(p)}
-                              className="w-full text-left bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-lg transition"
+                              className={`w-full text-left px-4 py-2 rounded-lg transition
+                                ${
+                                  proyectoSeleccionado?.id_proyecto ===
+                                  p.id_proyecto
+                                    ? "bg-blue-200 font-semibold"
+                                    : "bg-gray-100 hover:bg-gray-200"
+                                }
+                              `}
                             >
                               {p.titulo}
                             </button>
@@ -160,27 +149,29 @@ const StudentProfile = () => {
                       )}
                     </div>
                   ))}
-
-                  {/* Descripción */}
-                  <div className="bg-gray-100 rounded-xl p-5 mt-2">
-                    <h3 className="font-semibold text-gray-700 mb-2">
-                      Descripción <span className="text-sm text-gray-500">(obj_general)</span>
-                    </h3>
-
-                    {proyectoSeleccionado ? (
-                      <p className="text-gray-600">
-                        Seleccionaste el proyecto:{" "}
-                        <strong>{proyectoSeleccionado.titulo}</strong>
-                      </p>
-                    ) : (
-                      <p className="text-gray-400">
-                        Selecciona un proyecto para ver detalles
-                      </p>
-                    )}
-                  </div>
                 </div>
               ) : (
                 <p className="text-gray-400">No tiene proyectos registrados.</p>
+              )}
+            </div>
+
+            {/* COLUMNA 3 – Descripción del proyecto */}
+            <div className="bg-gray-100 rounded-xl p-5">
+              <h3 className="font-semibold text-gray-700 mb-2">
+                Descripción{" "}
+                <span className="text-sm text-gray-500">(obj_general)</span>
+              </h3>
+
+              {!proyectoSeleccionado ? (
+                <p className="text-gray-400">
+                  Selecciona un proyecto para obtener su información general.
+                </p>
+              ) : (
+                <p className="text-gray-700 leading-relaxed">
+                  {proyectoSeleccionado.obj_general
+                    ? proyectoSeleccionado.obj_general
+                    : "Este proyecto no tiene una descripción registrada."}
+                </p>
               )}
             </div>
           </div>
@@ -193,7 +184,9 @@ const StudentProfile = () => {
                 {resumenPerfil}
               </p>
             ) : (
-              <p className="text-gray-400">El estudiante no tiene un resumen registrado.</p>
+              <p className="text-gray-400">
+                El estudiante no tiene un resumen registrado.
+              </p>
             )}
           </div>
         </div>
