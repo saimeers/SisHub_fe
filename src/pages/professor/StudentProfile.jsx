@@ -1,8 +1,12 @@
+import React from "react";
 import ProfessorLayout from "../../modules/professor/layouts/ProfessorLayout";
+import ProfileView from "../../components/ui/ProfileView";
 
 const StudentProfile = () => {
   return (
-    <ProfessorLayout title="Estudiantes de ing de sistemas"></ProfessorLayout>
+    <ProfessorLayout title="Perfil del Estudiante">
+      <ProfileView backPath="/professor/students" />
+    </ProfessorLayout>
   );
 };
 

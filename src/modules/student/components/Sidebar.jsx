@@ -51,11 +51,6 @@ const Sidebar = () => {
       label: "Mis Proyectos",
       path: "/student/my-projects",
     },
-    {
-      icon: <FaUser size={20} />,
-      label: "Mi perfil",
-      path: "/student/profile",
-    },
   ];
 
   return (

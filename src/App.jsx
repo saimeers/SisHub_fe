@@ -34,6 +34,7 @@ import SubjectsProfessor from "./pages/professor/Subjects";
 import MyGroupsProfessor from "./pages/professor/MyGroups";
 import GroupDetailProfessor from "./pages/professor/GroupDetail";
 import MyProjectsProfessor from "./pages/professor/MyProjects";
+import StudentListProfessor from "./pages/professor/StudentList";
 import StudentProfileProfessor from "./pages/professor/StudentProfile";
 
 // estudiante
@@ -43,7 +44,6 @@ import StudentMyGroups from "./pages/student/MyGroups";
 import SubjectsStudent from "./pages/student/Subjects";
 import GroupDetailStudent from "./pages/student/GroupDetail";
 import MyProjectsStudent from "./pages/student/MyProjects";
-import Profile from "./pages/student/Profile";
 
 // stand by
 import CuentaPendiente from "./pages/standby/CuentaPendiente";
@@ -145,7 +145,8 @@ function App() {
             />
             <Route path="my-projects" element={<MyProjectsProfessor />} />
             <Route path="calificado" element={<Calificado />} />
-            <Route path="Students" element={<StudentProfileProfessor />} />
+            <Route path="students" element={<StudentListProfessor />} />
+            <Route path="students/:id" element={<StudentProfileProfessor />} />
           </Route>
 
           {/* ==================== RUTAS ESTUDIANTE ==================== */}
@@ -162,7 +163,6 @@ function App() {
               element={<GroupDetailStudent />}
             />
             <Route path="my-projects" element={<MyProjectsStudent />} />
-            <Route path="profile" element={<Profile />} />
           </Route>
 
           {/* ==================== RUTAS ESPECIALES ==================== */}
