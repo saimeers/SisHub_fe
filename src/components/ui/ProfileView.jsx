@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { obtenerInformacionPerfil } from "../../services/userServices";
+import { obtenerInformacionPerfil, descargarPerfilEstudiantePDF } from "../../services/userServices";
 import { useAuth } from "../../contexts/AuthContext";
 import ProjectDetailsView from "./ProjectDetailsView";
 import { FaArrowLeft } from "react-icons/fa";
 import { MdEmail, MdDescription } from "react-icons/md";
+import { toast } from "react-toastify";
 
 // Gradientes para las líneas de investigación (coherentes con la app)
 const gradientesLineas = [
@@ -23,6 +24,7 @@ const ProfileView = ({ studentId, showBackButton = true, backPath }) => {
     const [datos, setDatos] = useState(null);
     const [currentView, setCurrentView] = useState("profile");
     const [selectedProjectId, setSelectedProjectId] = useState(null);
+    const [isExporting, setIsExporting] = useState(false);
 
     // Use the prop studentId if provided, otherwise use the URL param id, otherwise use current user's codigo
     const targetId = studentId || id || userData?.codigo;
@@ -82,6 +84,30 @@ const ProfileView = ({ studentId, showBackButton = true, backPath }) => {
         );
     }
 
+    const handleExportPDF = async () => {
+        try {
+            setIsExporting(true);
+            const blob = await descargarPerfilEstudiantePDF(targetId);
+
+            // Create a download link
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `perfil_${codigo}_${nombre.replace(/\s+/g, '_')}.pdf`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
+
+            toast.success('Perfil exportado exitosamente');
+        } catch (error) {
+            console.error('Error al exportar perfil:', error);
+            toast.error('Error al exportar el perfil. Por favor, intente nuevamente.');
+        } finally {
+            setIsExporting(false);
+        }
+    };
+
     return (
         <div className="w-full max-w-6xl mx-auto mt-10">
             {/* Botones de acción */}
@@ -99,23 +125,53 @@ const ProfileView = ({ studentId, showBackButton = true, backPath }) => {
 
                 <button
                     type="button"
-                    className="px-4 py-2 rounded-lg bg-[#B70000] hover:bg-red-800 text-white text-sm font-medium shadow-sm flex items-center gap-2 transition-colors"
+                    onClick={handleExportPDF}
+                    disabled={isExporting}
+                    className="px-4 py-2 rounded-lg bg-[#B70000] hover:bg-red-800 text-white text-sm font-medium shadow-sm flex items-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-4 w-4"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                    >
-                        <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                        />
-                    </svg>
-                    Exportar Perfil
+                    {isExporting ? (
+                        <>
+                            <svg
+                                className="animate-spin h-4 w-4"
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                            >
+                                <circle
+                                    className="opacity-25"
+                                    cx="12"
+                                    cy="12"
+                                    r="10"
+                                    stroke="currentColor"
+                                    strokeWidth="4"
+                                />
+                                <path
+                                    className="opacity-75"
+                                    fill="currentColor"
+                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                />
+                            </svg>
+                            Exportando...
+                        </>
+                    ) : (
+                        <>
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                className="h-4 w-4"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                                />
+                            </svg>
+                            Exportar Perfil
+                        </>
+                    )}
                 </button>
             </div>
 
@@ -303,25 +359,25 @@ const ProfileView = ({ studentId, showBackButton = true, backPath }) => {
                             </p>
                         )}
                     </div>
+                </div>
 
-                    {/* Resumen - Ocupa todo el ancho */}
-                    <div className="mt-8 bg-gray-50 p-6 rounded-xl col-span-1 lg:col-span-2 border border-gray-200">
-                        <div className="flex items-center gap-3 mb-4">
-                            <div className="bg-gradient-to-br from-indigo-500 to-purple-600 p-2 rounded-lg shadow-sm">
-                                <MdDescription className="text-white text-xl" />
-                            </div>
-                            <h2 className="text-lg font-bold text-gray-800">Resumen</h2>
+                {/* Resumen - Ocupa todo el ancho */}
+                <div className="mt-8 bg-gray-50 p-6 rounded-xl border border-gray-200">
+                    <div className="flex items-center gap-3 mb-4">
+                        <div className="bg-gradient-to-br from-indigo-500 to-purple-600 p-2 rounded-lg shadow-sm">
+                            <MdDescription className="text-white text-xl" />
                         </div>
-                        {resumenPerfil ? (
-                            <p className="text-gray-700 leading-relaxed whitespace-pre-line">
-                                {resumenPerfil}
-                            </p>
-                        ) : (
-                            <p className="text-gray-400 italic">
-                                El estudiante no tiene un resumen registrado.
-                            </p>
-                        )}
+                        <h2 className="text-lg font-bold text-gray-800">Resumen</h2>
                     </div>
+                    {resumenPerfil ? (
+                        <p className="text-gray-700 leading-relaxed whitespace-pre-line">
+                            {resumenPerfil}
+                        </p>
+                    ) : (
+                        <p className="text-gray-400 italic">
+                            El estudiante no tiene un resumen registrado.
+                        </p>
+                    )}
                 </div>
             </div>
 

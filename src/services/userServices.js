@@ -1,4 +1,3 @@
-
 import axiosInstance from "../config/axios";
 
 export const registrarUsuario = async (userData) => {
@@ -27,7 +26,7 @@ export const obtenerUsuario = async () => {
     const data = response.data;
 
     if (!data || !data.usuario) {
-      console.info("⚠️ Usuario no encontrado o sin datos válidos.");
+      console.info(" Usuario no encontrado o sin datos válidos.");
       return null;
     }
 
@@ -54,9 +53,9 @@ export const obtenerUsuario = async () => {
         return null;
       }
 
-      console.warn(`❌ Error ${status}: ${msg}`);
+      console.warn(`Error ${status}: ${msg}`);
     } else {
-      console.error("🚨 Error desconocido:", error.message);
+      console.error(" Error desconocido:", error.message);
     }
 
     return null;
@@ -96,7 +95,7 @@ export const listarDocentes = async () => {
 export const habilitarUsuario = async (codigo) => {
   try {
     const response = await axiosInstance.patch(`/usuarios/${codigo}/estado`, {
-      habilitar: true
+      habilitar: true,
     });
     return response.data;
   } catch (error) {
@@ -108,7 +107,7 @@ export const habilitarUsuario = async (codigo) => {
 export const deshabilitarUsuario = async (codigo) => {
   try {
     const response = await axiosInstance.patch(`/usuarios/${codigo}/estado`, {
-      habilitar: false
+      habilitar: false,
     });
     return response.data;
   } catch (error) {
@@ -139,22 +138,16 @@ export const rechazarPostulacion = async (codigo) => {
 
 export const cargarDocentesMasivamente = async (docentes) => {
   try {
-    console.log("🚀 Servicio - Enviando petición con:", { docentes });
-    console.log("📦 URL:", axiosInstance.defaults.baseURL + "/usuarios/cargar-docentes");
-
     const response = await axiosInstance.post(
       "/usuarios/cargar-docentes",
       { docentes },
       {
         timeout: 60000,
         headers: {
-          'Content-Type': 'application/json'
-        }
+          "Content-Type": "application/json",
+        },
       }
     );
-
-    console.log("✅ Servicio - Respuesta recibida:", response.status, response.data);
-
     // El backend retorna { progressId, totalDocentes, ... }
     return response.data;
   } catch (error) {
@@ -163,7 +156,7 @@ export const cargarDocentesMasivamente = async (docentes) => {
       code: error.code,
       hasResponse: !!error.response,
       status: error.response?.status,
-      data: error.response?.data
+      data: error.response?.data,
     });
     throw error;
   }
@@ -171,22 +164,16 @@ export const cargarDocentesMasivamente = async (docentes) => {
 
 export const matricularEstudiantesMasivamente = async (matriculas) => {
   try {
-    console.log("🚀 Servicio - Enviando petición con:", { matriculas });
-    console.log("📦 URL:", axiosInstance.defaults.baseURL + "/grupos-usuarios/matricular-masivamente");
-
     const response = await axiosInstance.post(
       "/grupos-usuarios/matricular-masivamente",
       { matriculas }, // Enviar con la clave "matriculas"
       {
         timeout: 60000,
         headers: {
-          'Content-Type': 'application/json'
-        }
+          "Content-Type": "application/json",
+        },
       }
     );
-
-    console.log("✅ Servicio - Respuesta recibida:", response.status, response.data);
-
     // El backend retorna { progressId, totalEstudiantes, totalGrupos, ... }
     return response.data;
   } catch (error) {
@@ -195,7 +182,7 @@ export const matricularEstudiantesMasivamente = async (matriculas) => {
       code: error.code,
       hasResponse: !!error.response,
       status: error.response?.status,
-      data: error.response?.data
+      data: error.response?.data,
     });
     throw error;
   }
@@ -213,7 +200,7 @@ export const buscarEstudiantePorCodigo = async (codigo) => {
     console.error("Error al buscar estudiante por código:", {
       message: error.message,
       status: error.response?.status,
-      data: error.response?.data
+      data: error.response?.data,
     });
     throw error;
   }
@@ -224,10 +211,32 @@ export const obtenerInformacionPerfil = async (codigo) => {
     if (!codigo) {
       throw new Error("Debe proporcionar un código de estudiante válido");
     }
-    const response = await axiosInstance.get(`/usuarios/informacion/perfil/${codigo}`);
+    const response = await axiosInstance.get(
+      `/usuarios/informacion/perfil/${codigo}`
+    );
     return response.data;
   } catch (error) {
     console.error("Error al obtener información del perfil:", error.message);
+    throw error;
+  }
+};
+export const descargarPerfilEstudiantePDF = async (codigo) => {
+  try {
+    if (!codigo) {
+      throw new Error("Debe proporcionar un código de estudiante válido");
+    }
+    const response = await axiosInstance.get(
+      `/usuarios/informacion/perfil/${codigo}/pdf`,
+      {
+        responseType: "blob", // Importante para manejar archivos binarios
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error(
+      "Error al descargar el perfil del estudiante en PDF:",
+      error.message
+    );
     throw error;
   }
 };

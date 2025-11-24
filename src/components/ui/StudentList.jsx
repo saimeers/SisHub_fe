@@ -3,38 +3,42 @@ import { useNavigate } from "react-router-dom";
 import GroupParticipants from "./GroupParticipants";
 import SearchBar from "./SearchBar";
 import { toast } from "react-toastify";
+import StudentFiltersModal from "./StudentFiltersModal";
+
+
 
 const StudentList = ({ basePath, fetchStudents }) => {
     const [students, setStudents] = useState([]);
     const [filteredStudents, setFilteredStudents] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
+    const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+    const [filterCriteria, setFilterCriteria] = useState({
+        role: "",
+        tecnologia: "",
+        lineaInvestigacion: "",
+    });
+    const [availableTechnologies, setAvailableTechnologies] = useState([]);
+    const [availableLines, setAvailableLines] = useState([]);
     const navigate = useNavigate();
 
     useEffect(() => {
         let mounted = true;
 
         const loadStudents = async () => {
-            console.log("🚀 StudentList: Starting loadStudents");
             if (!fetchStudents) {
-                console.error("❌ StudentList: fetchStudents prop is missing");
                 setLoading(false);
                 return;
             }
 
             setLoading(true);
             try {
-                console.log("📡 StudentList: Calling fetchStudents...");
                 const resp = await fetchStudents();
-                console.log("✅ StudentList: fetchStudents response:", resp);
-
                 let list = [];
                 if (Array.isArray(resp)) list = resp;
                 else if (Array.isArray(resp?.data)) list = resp.data;
                 else if (Array.isArray(resp?.estudiantes)) list = resp.estudiantes;
                 else if (Array.isArray(resp?.usuarios)) list = resp.usuarios;
-
-                console.log("📋 StudentList: Raw list extracted:", list);
 
                 if (mounted) {
                     const formattedList = list.map((s) => {
@@ -44,24 +48,26 @@ const StudentList = ({ basePath, fetchStudents }) => {
                             codigo: s.codigo || "N/A",
                             nombre: s.nombre || "Sin nombre",
                             foto:
-                                s.foto ||
-                                s.foto_url ||
-                                s.imagen ||
-                                s.avatar ||
-                                s.url_foto ||
+                                s.fotoPerfil ||
                                 null,
                         };
                     }).filter(Boolean);
-                    console.log("✨ StudentList: Formatted list:", formattedList);
                     setStudents(formattedList);
                     setFilteredStudents(formattedList);
+                    // Extract unique technologies and research lines for filter options
+                    const techSet = new Set();
+                    const lineSet = new Set();
+                    formattedList.forEach((s) => {
+                        (s.tecnologias || []).forEach((t) => techSet.add(t));
+                        (s.lineasInvestigacion || []).forEach((l) => lineSet.add(l));
+                    });
+                    setAvailableTechnologies(Array.from(techSet));
+                    setAvailableLines(Array.from(lineSet));
                 }
             } catch (err) {
-                console.error("❌ StudentList: Error loading students:", err);
                 toast.error("No se pudieron cargar los estudiantes");
             } finally {
                 if (mounted) {
-                    console.log("🏁 StudentList: Finished loading");
                     setLoading(false);
                 }
             }
@@ -69,39 +75,60 @@ const StudentList = ({ basePath, fetchStudents }) => {
 
         loadStudents();
 
-        return () => {
-            mounted = false;
-        };
-    }, [fetchStudents]);
 
+    }, [fetchStudents]);
     useEffect(() => {
-        if (searchTerm.trim() === "") {
-            setFilteredStudents(students);
-        } else {
+        let result = students;
+        if (searchTerm.trim() !== "") {
             const lowerTerm = searchTerm.toLowerCase();
-            const filtered = students.filter(
+            result = result.filter(
                 (s) =>
                     (s.nombre && s.nombre.toLowerCase().includes(lowerTerm)) ||
                     (s.codigo && s.codigo.toString().toLowerCase().includes(lowerTerm))
             );
-            setFilteredStudents(filtered);
         }
-    }, [searchTerm, students]);
+        if (filterCriteria.role) {
+            const isLider = filterCriteria.role === "lider";
+            result = result.filter((s) => Boolean(s.roles?.esLider) === isLider);
+        }
+        if (filterCriteria.tecnologia) {
+            result = result.filter((s) => (s.tecnologias || []).includes(filterCriteria.tecnologia));
+        }
+        if (filterCriteria.lineaInvestigacion) {
+            result = result.filter((s) => (s.lineasInvestigacion || []).includes(filterCriteria.lineaInvestigacion));
+        }
 
-    const handleStudentClick = (student) => {
-        navigate(`${basePath}/${student.codigo}`);
+        setFilteredStudents(result);
+    }, [searchTerm, students, filterCriteria]);
+
+    const handleClearFilters = () => {
+        setSearchTerm("");
+        setFilterCriteria({ role: "", tecnologia: "", lineaInvestigacion: "" });
     };
 
     const handleSearch = (term) => {
         setSearchTerm(term);
     };
 
-    const handleClearFilters = () => {
-        setSearchTerm("");
+    const handleStudentClick = (student) => {
+        navigate(`${basePath}/${student.codigo}`);
     };
 
-    console.log("StudentList render - students:", students);
-    console.log("StudentList render - filteredStudents:", filteredStudents);
+    const handleOpenFilters = () => {
+        setIsFiltersOpen(true);
+    };
+
+    const handleApplyFilters = (filters) => {
+        setFilterCriteria(filters);
+        setIsFiltersOpen(false);
+    };
+
+    // Check if any filters are active
+    const hasActiveFilters =
+        searchTerm.trim() !== "" ||
+        filterCriteria.role !== "" ||
+        filterCriteria.tecnologia !== "" ||
+        filterCriteria.lineaInvestigacion !== "";
 
     return (
         <div className="w-full max-w-5xl mx-auto mt-10 py-6 px-6 bg-white rounded-2xl shadow-sm">
@@ -111,12 +138,12 @@ const StudentList = ({ basePath, fetchStudents }) => {
                     {/* Botón "Todos" / "Limpiar filtros" */}
                     <button
                         onClick={handleClearFilters}
-                        className={`px-4 py-2 rounded-full border text-sm font-medium transition-colors ${searchTerm
+                        className={`px-4 py-2 rounded-full border text-sm font-medium transition-colors ${hasActiveFilters
                             ? "border-green-300 text-green-600 hover:bg-green-50"
                             : "border-gray-300 text-gray-700 hover:bg-gray-100"
                             }`}
                     >
-                        {searchTerm ? "Limpiar filtros" : "Todos"}
+                        {hasActiveFilters ? "Limpiar filtros" : "Todos"}
                     </button>
 
                     {/* Barra de búsqueda */}
@@ -128,7 +155,7 @@ const StudentList = ({ basePath, fetchStudents }) => {
 
                     {/* Botón de filtros */}
                     <button
-                        onClick={() => { }}
+                        onClick={handleOpenFilters}
                         className={`px-4 py-2 rounded-full border text-sm font-medium transition-colors border-gray-300 text-gray-700 hover:bg-gray-100`}
                     >
                         Filtros
@@ -149,6 +176,13 @@ const StudentList = ({ basePath, fetchStudents }) => {
                     />
                 </div>
             </div>
+            <StudentFiltersModal
+                isOpen={isFiltersOpen}
+                onClose={() => setIsFiltersOpen(false)}
+                onApplyFilters={handleApplyFilters}
+                technologies={availableTechnologies}
+                researchLines={availableLines}
+            />
         </div>
     );
 };
