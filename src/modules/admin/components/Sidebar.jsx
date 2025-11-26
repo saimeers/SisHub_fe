@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { GoHomeFill } from "react-icons/go";
-import { FaBook, FaFolder, FaSignOutAlt, FaUserGraduate } from "react-icons/fa";
+import { FaBook, FaFolder, FaSignOutAlt, FaUserGraduate, FaUsers } from "react-icons/fa";
 import { MdGroups2 } from "react-icons/md";
 import { SiCodemagic } from "react-icons/si";
 import UserProfile from "../../../components/ui/UserProfile";
@@ -40,6 +40,11 @@ const Sidebar = () => {
       icon: <GoHomeFill size={20} />,
       label: "Inicio",
       path: "/admin/dashboard",
+    },
+    {
+      icon: <FaUsers size={20} />,
+      label: "Usuarios",
+      path: "/admin/users",
     },
     { icon: <FaBook size={20} />, label: "Materias", path: "/admin/subjects" },
     {

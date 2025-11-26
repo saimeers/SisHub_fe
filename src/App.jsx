@@ -26,6 +26,7 @@ import ProjectsAdmin from "./pages/admin/Projects";
 import Forecast from "./pages/admin/Forecast";
 import StudentList from "./pages/admin/StudentList";
 import StudentProfile from "./pages/admin/StudentsProfile";
+import UsersAdmin from "./pages/admin/Users";
 
 // docente
 import GroupsProfessor from "./pages/professor/Groups";
@@ -113,6 +114,7 @@ function App() {
             <Route path="subjects" element={<SubjectsAdmin />} />
             <Route path="subjects/create" element={<FormCreateSubject />} />
             <Route path="subjects/edit/:codigo" element={<FormEditSubject />} />
+            <Route path="users" element={<UsersAdmin />} />
             <Route
               path="groups/:codigo_materia/:nombre/:periodo/:anio"
               element={<GroupDetail />}
