@@ -126,7 +126,6 @@ const ReviewIdea = ({ idIdea, currentUserCode, onBack, onReviewComplete }) => {
           {onBack && (
             <button
               type="button"
-              type="button"
               onClick={onBack}
               className="px-4 py-2 rounded-lg bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 text-sm font-medium shadow-sm flex items-center gap-2"
             >
