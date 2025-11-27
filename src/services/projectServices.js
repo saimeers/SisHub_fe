@@ -119,7 +119,9 @@ export const exportarProyectosExcel = async (tipo, filtros = {}) => {
         throw new Error("Debe proporcionar anio y periodo");
       }
       params.append("anio", filtros.anio);
-      params.append("periodo", filtros.periodo);
+      // Asegurar que periodo tenga dos dígitos ('01'|'02')
+      const periodoStr = String(filtros.periodo).padStart(2, "0");
+      params.append("periodo", periodoStr);
     }
 
     const response = await axiosInstance.get(
@@ -177,7 +179,8 @@ export const exportarProyectosPDF = async (tipo, filtros = {}) => {
         throw new Error("Debe proporcionar anio y periodo");
       }
       params.append("anio", filtros.anio);
-      params.append("periodo", filtros.periodo);
+      const periodoStrPdf = String(filtros.periodo).padStart(2, "0");
+      params.append("periodo", periodoStrPdf);
     }
 
     const response = await axiosInstance.get(

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { FiX, FiDownload, FiCalendar } from "react-icons/fi";
 import { FaFileExcel, FaFilePdf } from "react-icons/fa";
+import { useToast } from "../../../hooks/useToast";
 
 const ExportProjectsModal = ({ isOpen, onClose, onExport }) => {
   const [formato, setFormato] = useState("excel"); // "excel" o "pdf"
@@ -9,34 +10,37 @@ const ExportProjectsModal = ({ isOpen, onClose, onExport }) => {
   const [fechaFin, setFechaFin] = useState("");
   const [semestre, setSemestre] = useState(""); // Formato: "2025-02"
   const [isExporting, setIsExporting] = useState(false);
+  const toast = useToast();
 
-  // Validar y parsear semestre
   const parseSemestre = (semestreStr) => {
     if (!semestreStr || !semestreStr.includes("-")) {
       return null;
     }
-    const [anio, periodo] = semestreStr.split("-");
-    if (!anio || !periodo || (periodo !== "1" && periodo !== "2")) {
-      return null;
-    }
-    return { anio: parseInt(anio), periodo: parseInt(periodo) };
+    const [anio, periodoStr] = semestreStr.split("-");
+    // Año debe tener 4 dígitos
+    if (!/^[0-9]{4}$/.test(anio)) return null;
+    // Aceptar periodo '1'|'2' o '01'|'02'
+    if (!/^(?:0?[1-2])$/.test(periodoStr)) return null;
+    // Devolver periodo con dos dígitos ('01'|'02') para que la URL reciba ambos dígitos
+    const periodoPadded = periodoStr.padStart(2, "0");
+    return { anio: parseInt(anio, 10), periodo: periodoPadded };
   };
 
   const handleExport = async () => {
     // Validaciones
     if (tipoFiltro === "fecha") {
       if (!fechaInicio || !fechaFin) {
-        alert("Por favor, seleccione ambas fechas");
+        toast.warning("Formato inválido: seleccione fecha de inicio y fecha de fin");
         return;
       }
       if (new Date(fechaInicio) > new Date(fechaFin)) {
-        alert("La fecha de inicio debe ser anterior a la fecha de fin");
+        toast.warning("La fecha de inicio debe ser anterior a la fecha de fin");
         return;
       }
     } else if (tipoFiltro === "semestre") {
       const semestreData = parseSemestre(semestre);
       if (!semestreData) {
-        alert("Por favor, ingrese un semestre válido (formato: YYYY-P, ejemplo: 2025-02)");
+        toast.warning("Formato inválido: ingrese semestre en formato YYYY-01 o YYYY-02 (ej: 2025-02)");
         return;
       }
     }
@@ -53,10 +57,19 @@ const ExportProjectsModal = ({ isOpen, onClose, onExport }) => {
       }
 
       await onExport(formato, tipoFiltro, filtros);
+      toast.success("Exportación completada. Archivo descargado.");
       onClose();
     } catch (error) {
       console.error("Error al exportar:", error);
-      alert(error.message || "Error al exportar proyectos");
+
+      if (error && error.response && error.response.status === 404) {
+        toast.info("No hay datos para exportar.");
+      } else if (error && error.response && error.response.data) {
+        const msg = error.response.data.message || error.response.data.error;
+        toast.error(msg || "Error al exportar proyectos");
+      } else {
+        toast.error(error?.message || "Error al exportar proyectos");
+      }
     } finally {
       setIsExporting(false);
     }
@@ -257,8 +270,8 @@ const ExportProjectsModal = ({ isOpen, onClose, onExport }) => {
                   value={semestre}
                   onChange={(e) => {
                     const value = e.target.value;
-                    // Permitir formato YYYY-P o YYYY-PP
-                    if (value === "" || /^\d{4}-[12]$/.test(value)) {
+                    // Permitir solo números y guion durante la escritura; validación final en submit
+                    if (value === "" || /^[0-9-]*$/.test(value)) {
                       setSemestre(value);
                     }
                   }}
