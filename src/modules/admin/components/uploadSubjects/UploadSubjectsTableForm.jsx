@@ -19,7 +19,10 @@ const UploadSubjectsTableForm = ({
   onPrerequisitesChange,
   onEditPrerequisitesChange,
   selectedPrerequisites = [],
-  editingPrerequisites = []
+  editingPrerequisites = [],
+  areaOptions = [],
+  onAreaSelectChange,
+  onEditAreaSelectChange,
 }) => {
   return (
     <div className="bg-white rounded-lg shadow overflow-visible relative z-10">
@@ -189,13 +192,12 @@ const UploadSubjectsTableForm = ({
               </select>
             </td>
             <td className="px-4 py-3">
-              <input
-                type="text"
-                name="id_area"
-                value={newSubject.id_area}
-                onChange={onInputChange}
-                placeholder="ID Área"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+              <SelectField
+                value={areaOptions.find((a) => String(a.value) === String(newSubject.id_area)) || null}
+                onChange={onAreaSelectChange}
+                options={areaOptions}
+                placeholder="Seleccionar área"
+                isClearable={true}
               />
             </td>
             <td className="px-4 py-3">
@@ -356,11 +358,14 @@ const UploadSubjectsTableForm = ({
                     </select>
                   </td>
                   <td className="px-4 py-3">
-                    <input
-                      type="text"
-                      value={editingSubject.id_area}
-                      onChange={(e) => onEditInputChange(e, 'id_area')}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+                    <SelectField
+                      value={
+                        areaOptions.find((a) => String(a.value) === String(editingSubject.id_area)) || null
+                      }
+                      onChange={onEditAreaSelectChange}
+                      options={areaOptions}
+                      placeholder="Seleccionar área"
+                      isClearable={true}
                     />
                   </td>
                   <td className="px-4 py-3 space-x-2">

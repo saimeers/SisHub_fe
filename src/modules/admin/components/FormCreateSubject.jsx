@@ -39,6 +39,9 @@ const FormCreateSubject = () => {
     handleEditPrerequisitesChange,
     selectedPrerequisites,
     editingPrerequisites,
+    areaOptions,
+    handleAreaSelectChange,
+    handleEditAreaSelectChange,
   } = useSubjectForm();
 
   return (
@@ -79,6 +82,9 @@ const FormCreateSubject = () => {
           onEditPrerequisitesChange={handleEditPrerequisitesChange}
           selectedPrerequisites={selectedPrerequisites}
           editingPrerequisites={editingPrerequisites}
+          areaOptions={areaOptions}
+          onAreaSelectChange={handleAreaSelectChange}
+          onEditAreaSelectChange={handleEditAreaSelectChange}
         />
 
         {totalPages > 1 && (

@@ -114,6 +114,7 @@ const EntregablesInvestigativo = ({
       let response;
       if (entregableDocumento) {
         // Actualizar documento existente
+        console.log('Actualizando entregable ID:', entregableDocumento.id_entregable);
         response = await actualizarEntregable(
           entregableDocumento.id_entregable,
           formData,

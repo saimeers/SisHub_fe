@@ -1,7 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, NavLink } from "react-router-dom";
 import { GoHomeFill } from "react-icons/go";
-import { FaBook, FaFolder, FaSignOutAlt, FaUserGraduate } from "react-icons/fa";
+import {
+  FaBook,
+  FaFolder,
+  FaSignOutAlt,
+  FaUserGraduate,
+  FaRegBell,
+} from "react-icons/fa";
 import { MdGroups2 } from "react-icons/md";
 import UserProfile from "../../../components/ui/UserProfile";
 import { useAuthForm } from "../../../modules/auth/hooks/useAuth";
@@ -51,6 +57,11 @@ const Sidebar = () => {
       icon: <FaUserGraduate size={20} />,
       label: "Estudiantes",
       path: "/professor/students",
+    },
+    {
+      icon: <FaRegBell size={20} />,
+      label: "Notificaciones",
+      path: "/professor/notifications",
     },
   ];
 
