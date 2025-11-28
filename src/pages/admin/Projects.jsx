@@ -10,18 +10,22 @@ import ProjectDetailsView from "../../components/ui/ProjectDetailsView";
 import {
   listarProyectosParaDirector,
   listarProyectosParaEstudiante,
+  exportarProyectosExcel,
+  exportarProyectosPDF,
 } from "../../services/projectServices";
+import ExportProjectsModal from "../../modules/admin/components/ExportProjectsModal";
 
 const Projects = () => {
   const [projects, setProjects] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchError, setSearchError] = useState(null);
 
-  // Vistas: list | details | versions | documents | development
   const [currentView, setCurrentView] = useState("list");
   const [selectedProjectId, setSelectedProjectId] = useState(null);
+  
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
 
-  // Función para buscar proyectos por código de estudiante (memoizada)
+  // Función para buscar proyectos por código de estudiante
   const handleSearchByStudent = useCallback(async (codigo) => {
     console.log("🔍 Buscando proyectos para estudiante:", codigo);
     setIsLoading(true);
@@ -53,7 +57,6 @@ const Projects = () => {
       console.log("✅ Proyectos mapeados:", mapped.length, mapped);
       setProjects(mapped);
 
-      // Mostrar mensaje si no hay resultados
       if (mapped.length === 0) {
         setSearchError(
           `No se encontraron proyectos para el estudiante con código ${codigo}`
@@ -66,16 +69,14 @@ const Projects = () => {
     } finally {
       setIsLoading(false);
     }
-  }, []); // Sin dependencias porque no usa ningún estado externo
+  }, []); 
 
   // Función para recargar todos los proyectos
   const reloadAllProjects = useCallback(async () => {
-    console.log("🔄 Recargando todos los proyectos...");
     setIsLoading(true);
     setSearchError(null);
     try {
       const data = await listarProyectosParaDirector();
-      console.log("📦 Proyectos recargados:", data);
 
       const mapped = Array.isArray(data)
         ? data.map((p) => ({
@@ -94,7 +95,6 @@ const Projects = () => {
           }))
         : [];
 
-      console.log("✅ Proyectos recargados:", mapped.length);
       setProjects(mapped);
     } catch (e) {
       console.error("❌ Error al recargar proyectos:", e);
@@ -123,25 +123,21 @@ const Projects = () => {
   // Función para limpiar filtros y recargar proyectos
   const handleClearAll = useCallback(() => {
     clearFilters();
-    setSearchError(null); // Limpiar el error también
-    // Si estaba buscando por estudiante, recargar todos los proyectos
+    setSearchError(null); 
     if (isSearchingStudent) {
       reloadAllProjects();
     }
   }, [clearFilters, isSearchingStudent, reloadAllProjects]);
 
-  // Cargar todos los proyectos inicialmente
   useEffect(() => {
     let mounted = true;
 
     const fetchProjects = async () => {
-      console.log("📋 Cargando todos los proyectos...");
       setIsLoading(true);
       setSearchError(null);
       try {
         const data = await listarProyectosParaDirector();
         if (!mounted) return;
-        console.log("📦 Proyectos del director:", data);
 
         const mapped = Array.isArray(data)
           ? data.map((p) => ({
@@ -160,7 +156,6 @@ const Projects = () => {
             }))
           : [];
 
-        console.log("✅ Proyectos iniciales cargados:", mapped.length);
         setProjects(mapped);
       } catch (e) {
         console.error("❌ Error al cargar proyectos:", e);
@@ -199,14 +194,34 @@ const Projects = () => {
     setCurrentView("versions");
   };
 
-  console.log("🎯 Estado actual:", {
-    isLoading,
-    projectsCount: projects.length,
-    filteredCount: filteredProjects.length,
-    isSearchingStudent,
-    searchTerm,
-    searchError,
-  });
+  // Función para manejar la exportación
+  const handleExport = async (formato, tipoFiltro, filtros) => {
+    try {
+      let blob;
+      const nombreArchivo = formato === "excel" ? "proyectos.xlsx" : "proyectos.pdf";
+      
+      if (formato === "excel") {
+        blob = await exportarProyectosExcel(tipoFiltro, filtros);
+      } else {
+        blob = await exportarProyectosPDF(tipoFiltro, filtros);
+      }
+
+      // Crear URL del blob y descargar
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = nombreArchivo;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Error al exportar:", error);
+      throw error;
+    }
+  };
+
+  
 
   const renderContent = () => {
     if (currentView === "details" && selectedProjectId) {
@@ -244,19 +259,46 @@ const Projects = () => {
 
     return (
       <>
-        {/* Componente de filtros */}
-        <ProjectFilters
-          onSearch={handleSearch}
-          onSearchByStudent={handleSearchByStudentCode}
-          onApplyFilters={handleApplyFilters}
-          onClearAll={handleClearAll}
-          searchTerm={searchTerm}
-          studentCode={studentCode}
-          filters={filters}
-          filterOptions={filterOptions}
-          isSearchingStudent={isSearchingStudent}
-          loadingTipos={loadingTipos}
-        />
+        {/* Botón de exportar y filtros */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-2">
+          <div className="flex-1">
+            {/* Componente de filtros */}
+            <ProjectFilters
+              onSearch={handleSearch}
+              onSearchByStudent={handleSearchByStudentCode}
+              onApplyFilters={handleApplyFilters}
+              onClearAll={handleClearAll}
+              searchTerm={searchTerm}
+              studentCode={studentCode}
+              filters={filters}
+              filterOptions={filterOptions}
+              isSearchingStudent={isSearchingStudent}
+              loadingTipos={loadingTipos}
+            />
+          </div>
+          
+          {/* Botón de exportar */}
+          <button
+            onClick={() => setIsExportModalOpen(true)}
+            className="bg-[#B70000] hover:bg-red-800 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center gap-2 whitespace-nowrap"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-5 w-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+              />
+            </svg>
+            Exportar Proyectos
+          </button>
+        </div>
 
         {/* Error de búsqueda - diseño mejorado centrado */}
         {searchError && (
@@ -346,7 +388,16 @@ const Projects = () => {
   return (
     <AdminLayout title="Proyectos">
       <div className="w-full max-w-6xl mx-auto py-8 px-6">
-        <div className="flex flex-col gap-4">{renderContent()}</div>
+        <div className="flex flex-col gap-4">
+          {renderContent()}
+          
+          {/* Modal de exportación */}
+          <ExportProjectsModal
+            isOpen={isExportModalOpen}
+            onClose={() => setIsExportModalOpen(false)}
+            onExport={handleExport}
+          />
+        </div>
       </div>
     </AdminLayout>
   );

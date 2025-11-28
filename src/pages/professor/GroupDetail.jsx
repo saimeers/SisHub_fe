@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { FaArrowLeft } from "react-icons/fa";
 import ProfessorLayout from "../../modules/professor/layouts/ProfessorLayout";
 import ReviewIdea from "../../modules/professor/components/ReviewIdea";
 import GroupParticipants from "../../components/ui/GroupParticipants";
@@ -339,7 +340,7 @@ const GroupDetail = () => {
           : "Cargando grupo..."
       }
     >
-      <div className="w-full max-w-7xl mx-auto py-10 px-6 bg-white rounded-2xl shadow-sm">
+      <div className="w-full max-w-4xl mx-auto py-10 px-6 bg-white rounded-2xl shadow-sm">
         <div className="flex justify-center mb-8">
           <div className="flex justify-center space-x-2 bg-gray-100 p-1 rounded-full w-fit mx-auto">
             {tabs.map((tab) => (
@@ -590,10 +591,12 @@ const IdeasListView = ({
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-lg font-semibold text-gray-800">Estado del proyecto</h3>
             <button
+              type="button"
               onClick={() => setCurrentView("list")}
-              className="px-4 py-2 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors text-sm font-medium"
+              className="px-4 py-2 rounded-lg bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 text-sm font-medium shadow-sm flex items-center gap-2"
             >
-              ← Volver
+              <FaArrowLeft className="text-sm" />
+              Volver
             </button>
           </div>
           <div className="p-6 bg-gray-50 rounded-xl border border-gray-200">
@@ -608,10 +611,12 @@ const IdeasListView = ({
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-lg font-semibold text-gray-800">Entregables</h3>
             <button
+              type="button"
               onClick={() => setCurrentView("list")}
-              className="px-4 py-2 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors text-sm font-medium"
+              className="px-4 py-2 rounded-lg bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 text-sm font-medium shadow-sm flex items-center gap-2"
             >
-              ← Volver
+              <FaArrowLeft className="text-sm" />
+              Volver
             </button>
           </div>
           <div className="p-6 bg-gray-50 rounded-xl border border-gray-200">
@@ -626,10 +631,12 @@ const IdeasListView = ({
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-lg font-semibold text-gray-800">Desarrollo</h3>
             <button
+              type="button"
               onClick={() => setCurrentView("list")}
-              className="px-4 py-2 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors text-sm font-medium"
+              className="px-4 py-2 rounded-lg bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 text-sm font-medium shadow-sm flex items-center gap-2"
             >
-              ← Volver
+              <FaArrowLeft className="text-sm" />
+              Volver
             </button>
           </div>
           <div className="p-6 bg-gray-50 rounded-xl border border-gray-200">
@@ -1032,11 +1039,7 @@ const IdeasListView = ({
   );
 };
 
-console.log("🔧 Handlers definidos:", {
-  handleReviewIdea: typeof handleReviewIdea,
-  handleBackFromReview: typeof handleBackFromReview,
-  handleReviewComplete: typeof handleReviewComplete,
-});
+
 
 const ActivityDetail = ({ actividad, esquemaInfo, onEdit, onViewIdeas }) => {
   const buildItemsHierarchy = () => {

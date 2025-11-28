@@ -1,10 +1,12 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { FaArrowLeft } from "react-icons/fa";
 import StudentLayout from "../../modules/student/layouts/StudentLayout";
 import GroupParticipants from "../../components/ui/GroupParticipants";
 import CorregirProyecto from "../../modules/student/components/CorregirProyecto";
 import ProyectoCalificado from "../../components/ui/ProyectoCalificado";
 import AccessDenied from "../../components/ui/AccessDenied";
+import ProfileView from "../../components/ui/ProfileView";
 import { listarParticipantesGrupo } from "../../services/groupUserServices";
 import { listarGruposPorUsuario } from "../../services/groupServices";
 import {
@@ -84,6 +86,10 @@ const GroupDetail = () => {
   const [selectedItem, setSelectedItem] = useState(null);
   const [ideaReadOnly, setIdeaReadOnly] = useState(false);
 
+  // Estado para vista de perfil de participante
+  const [selectedParticipant, setSelectedParticipant] = useState(null);
+  const [showingProfile, setShowingProfile] = useState(false);
+
   const groupParams = { codigo_materia, nombre, periodo, anio };
 
   // Verificar actividad del grupo
@@ -148,48 +154,48 @@ const GroupDetail = () => {
     }
   };
 
-const handleViewItem = async (item, type) => {
-  try {
-    let itemData;
-    if (type === "idea" && item.id_idea) {
-      const ideaCompleta = await obtenerIdea(item.id_idea);
-      itemData = ideaCompleta.data || ideaCompleta;
-    } else {
-      itemData = item;
-    }
+  const handleViewItem = async (item, type) => {
+    try {
+      let itemData;
+      if (type === "idea" && item.id_idea) {
+        const ideaCompleta = await obtenerIdea(item.id_idea);
+        itemData = ideaCompleta.data || ideaCompleta;
+      } else {
+        itemData = item;
+      }
 
 
-    // Tomar siempre la fuente de la idea, ya sea directa o dentro de Proyecto
-    const idea = itemData.Idea || itemData;
+      // Tomar siempre la fuente de la idea, ya sea directa o dentro de Proyecto
+      const idea = itemData.Idea || itemData;
 
-    // Convertir objetivos_especificos en array (por salto de línea o coma)
-    const objetivosArray =
-      Array.isArray(idea.objetivos_especificos)
-        ? idea.objetivos_especificos
-        : typeof idea.objetivos_especificos === "string"
+      // Convertir objetivos_especificos en array (por salto de línea o coma)
+      const objetivosArray =
+        Array.isArray(idea.objetivos_especificos)
           ? idea.objetivos_especificos
+          : typeof idea.objetivos_especificos === "string"
+            ? idea.objetivos_especificos
               .split(/\r?\n|,/)
               .map((line) => line.trim())
               .filter(Boolean)
-          : [""];
+            : [""];
 
-    setIdeaInitialData({
-      titulo: idea.titulo || "",
-      problematica: idea.problema || "",
-      justificacion: idea.justificacion || "",
-      objetivo_general: idea.objetivo_general || "",
-      objetivos_especificos:  objetivosArray,
-    });
+      setIdeaInitialData({
+        titulo: idea.titulo || "",
+        problematica: idea.problema || "",
+        justificacion: idea.justificacion || "",
+        objetivo_general: idea.objetivo_general || "",
+        objetivos_especificos: objetivosArray,
+      });
 
-    setSelectedItem(item);
-    setViewMode(type);
-    setIdeaReadOnly(true);
-    setCurrentView("ideaForm");
-  } catch (err) {
-    console.error("Error al cargar item:", err);
-    toast.error("Error al cargar la información");
-  }
-};
+      setSelectedItem(item);
+      setViewMode(type);
+      setIdeaReadOnly(true);
+      setCurrentView("ideaForm");
+    } catch (err) {
+      console.error("Error al cargar item:", err);
+      toast.error("Error al cargar la información");
+    }
+  };
 
 
   const handleAdoptIdea = async () => {
@@ -228,7 +234,7 @@ const handleViewItem = async (item, type) => {
 
   const handleAdoptPropuesta = async () => {
     if (!selectedItem || !userData?.codigo) return;
-    console.log("Item seleccionado: ",selectedItem);
+    console.log("Item seleccionado: ", selectedItem);
 
     const result = await Swal.fire({
       title: "¿Adoptar esta propuesta?",
@@ -279,7 +285,7 @@ const handleViewItem = async (item, type) => {
         loadIdeas();
       } catch (err) {
         toast.error(err.message || "Error al continuar el proyecto");
-      } 
+      }
     }
   };
 
@@ -299,7 +305,7 @@ const handleViewItem = async (item, type) => {
 
       const response = await verificarIdeaYProyecto(userData.codigo, groupParams);
       const { proyecto, idea, equipo } = response.data || response;
-      console.log("codigo del estudiante:",userData.codigo, groupParams);
+      console.log("codigo del estudiante:", userData.codigo, groupParams);
       console.log("📋 Estado del estudiante:", { proyecto, idea, equipo });
 
       // ✅ CASO 1: No tiene ni idea ni proyecto → Mostrar banco de ideas
@@ -383,7 +389,7 @@ const handleViewItem = async (item, type) => {
           setCurrentEquipo(equipo);
           setCurrentIdeaData(idea);
           setCurrentView("proyectoEnCurso");
-          console.log("pre",actividad.id_actividad, proyecto.id_proyecto);
+          console.log("pre", actividad.id_actividad, proyecto.id_proyecto);
           return;
         }
 
@@ -535,6 +541,11 @@ const handleViewItem = async (item, type) => {
     }
   };
 
+  const handleParticipantClick = (participant) => {
+    setSelectedParticipant(participant);
+    setShowingProfile(true);
+  };
+
   useEffect(() => {
     const loadGroupData = async () => {
       if (hasLoaded.current) return;
@@ -655,7 +666,7 @@ const handleViewItem = async (item, type) => {
           : "Cargando grupo..."
       }
     >
-      <div className="w-full max-w-5xl mx-auto py-10 px-6 bg-white rounded-2xl shadow-sm">
+      <div className="w-full max-w-4xl mx-auto py-10 px-6 bg-white rounded-2xl shadow-sm">
         <div className="flex justify-center mb-8">
           <div className="flex justify-center space-x-2 bg-gray-100 p-1 rounded-full w-fit mx-auto">
             {tabs.map((tab) => (
@@ -663,8 +674,8 @@ const handleViewItem = async (item, type) => {
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={`px-6 py-2 rounded-full text-sm font-medium transition-all duration-200 ${activeTab === tab.id
-                    ? "bg-white shadow text-gray-900"
-                    : "text-gray-600 hover:text-gray-800"
+                  ? "bg-white shadow text-gray-900"
+                  : "text-gray-600 hover:text-gray-800"
                   }`}
               >
                 {tab.label}
@@ -677,23 +688,48 @@ const handleViewItem = async (item, type) => {
           <div className="rounded-xl">
             {activeTab === "participantes" && (
               <div className="mt-8">
-                <div className="mb-4 grid grid-cols-2 text-sm font-semibold text-gray-600 px-4">
-                  <span>Código</span>
-                  <span>Nombre</span>
-                </div>
-                <div className="flex flex-col gap-3">
-                  {isLoading ? (
-                    <p className="text-gray-500 text-center py-6">
-                      Cargando participantes...
-                    </p>
-                  ) : participants.length > 0 ? (
-                    <GroupParticipants participants={participants} />
-                  ) : (
-                    <p className="text-gray-500 text-center py-6">
-                      No hay participantes registrados
-                    </p>
-                  )}
-                </div>
+                {showingProfile && selectedParticipant ? (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowingProfile(false);
+                        setSelectedParticipant(null);
+                      }}
+                      className="mb-6 px-4 py-2 rounded-lg bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 text-sm font-medium shadow-sm flex items-center gap-2"
+                    >
+                      <FaArrowLeft className="text-sm" />
+                      Volver a Participantes
+                    </button>
+                    <ProfileView
+                      studentId={selectedParticipant.codigo}
+                      showBackButton={false}
+                    />
+                  </>
+                ) : (
+                  <>
+                    <div className="mb-4 grid grid-cols-2 text-sm font-semibold text-gray-600 px-4">
+                      <span>Código</span>
+                      <span>Nombre</span>
+                    </div>
+                    <div className="flex flex-col gap-3">
+                      {isLoading ? (
+                        <p className="text-gray-500 text-center py-6">
+                          Cargando participantes...
+                        </p>
+                      ) : participants.length > 0 ? (
+                        <GroupParticipants
+                          participants={participants}
+                          onParticipantClick={handleParticipantClick}
+                        />
+                      ) : (
+                        <p className="text-gray-500 text-center py-6">
+                          No hay participantes registrados
+                        </p>
+                      )}
+                    </div>
+                  </>
+                )}
               </div>
             )}
 
@@ -748,9 +784,10 @@ const handleViewItem = async (item, type) => {
                       <button
                         type="button"
                         onClick={backToActivities}
-                        className="px-4 py-2 rounded-full text-sm font-medium border border-gray-300 bg-white hover:bg-gray-50"
+                        className="px-4 py-2 rounded-lg bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 text-sm font-medium shadow-sm flex items-center gap-2"
                       >
-                        ← Volver a Actividad
+                        <FaArrowLeft className="text-sm" />
+                        Volver a Actividad
                       </button>
                       <Button text="+ Proponer Idea" onClick={openCreateIdea} />
                     </div>
@@ -800,9 +837,10 @@ const handleViewItem = async (item, type) => {
                         onClick={() =>
                           setCurrentView(viewMode ? "ideas" : "ideas")
                         }
-                        className="px-4 py-2 rounded-full text-sm font-medium border border-gray-300 bg-white hover:bg-gray-50"
+                        className="px-4 py-2 rounded-lg bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 text-sm font-medium shadow-sm flex items-center gap-2"
                       >
-                        ← Volver
+                        <FaArrowLeft className="text-sm" />
+                        Volver
                       </button>
                     </div>
                     <IdeaForm

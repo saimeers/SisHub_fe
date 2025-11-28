@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { MessageSquare, Send, Edit3, Calendar, User, AlertTriangle } from 'lucide-react';
+import { FaArrowLeft } from 'react-icons/fa';
 import Swal from 'sweetalert2';
 import { toast } from 'react-toastify';
 import {
@@ -255,9 +256,10 @@ const CorregirProyecto = ({
               <button
                 type="button"
                 onClick={onBack}
-                className="px-4 py-2 rounded-full text-sm font-medium border border-gray-300 bg-white hover:bg-gray-50"
+                className="px-4 py-2 rounded-lg bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 text-sm font-medium shadow-sm flex items-center gap-2"
               >
-                ← Volver
+                <FaArrowLeft className="text-sm" />
+                Volver
               </button>
             )}
           </div>

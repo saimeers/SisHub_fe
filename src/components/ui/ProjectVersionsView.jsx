@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { verDetallesProyecto } from "../../services/projectServices";
 import { historicoEntregables } from "../../services/EntregableService";
 import { Loader2, FileText, Video, Music, Image, Code, Calendar, User } from "lucide-react";
+import { FaArrowLeft } from "react-icons/fa";
 import { toast } from "react-toastify";
 
 const StatusBadge = ({ status }) => {
@@ -105,12 +106,16 @@ const ProjectVersionsView = ({ projectId, onBack }) => {
       <div className="py-16 text-center">
         <p className="text-red-600">{error}</p>
         {onBack && (
-          <button
-            onClick={onBack}
-            className="mt-4 px-4 py-2 text-red-600 hover:underline"
-          >
-            Volver
-          </button>
+          <div className="flex justify-end mt-4">
+            <button
+              type="button"
+              onClick={onBack}
+              className="px-4 py-2 rounded-lg bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 text-sm font-medium shadow-sm flex items-center gap-2"
+            >
+              <FaArrowLeft className="text-sm" />
+              Volver
+            </button>
+          </div>
         )}
       </div>
     );
@@ -127,9 +132,10 @@ const ProjectVersionsView = ({ projectId, onBack }) => {
           <button
             type="button"
             onClick={onBack}
-            className="px-4 py-2 rounded-lg bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 text-sm font-medium shadow-sm"
+            className="px-4 py-2 rounded-lg bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 text-sm font-medium shadow-sm flex items-center gap-2"
           >
-            ← Volver
+            <FaArrowLeft className="text-sm" />
+            Volver
           </button>
         )}
       </div>

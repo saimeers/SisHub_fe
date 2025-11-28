@@ -24,6 +24,9 @@ import UploadSubjects from "./pages/admin/UploadSubjects";
 import UploadStudents from "./pages/admin/UploadStudents";
 import ProjectsAdmin from "./pages/admin/Projects";
 import Forecast from "./pages/admin/Forecast";
+import StudentList from "./pages/admin/StudentList";
+import StudentProfile from "./pages/admin/StudentsProfile";
+import UsersAdmin from "./pages/admin/Users";
 
 // docente
 import GroupsProfessor from "./pages/professor/Groups";
@@ -31,6 +34,9 @@ import DashboardProfessor from "./pages/professor/Dashboard";
 import SubjectsProfessor from "./pages/professor/Subjects";
 import MyGroupsProfessor from "./pages/professor/MyGroups";
 import GroupDetailProfessor from "./pages/professor/GroupDetail";
+import MyProjectsProfessor from "./pages/professor/MyProjects";
+import StudentListProfessor from "./pages/professor/StudentList";
+import StudentProfileProfessor from "./pages/professor/StudentProfile";
 import NotificationsProfessor from "./pages/professor/Notifications";
 
 // estudiante
@@ -110,6 +116,7 @@ function App() {
             <Route path="subjects" element={<SubjectsAdmin />} />
             <Route path="subjects/create" element={<FormCreateSubject />} />
             <Route path="subjects/edit/:codigo" element={<FormEditSubject />} />
+            <Route path="users" element={<UsersAdmin />} />
             <Route
               path="groups/:codigo_materia/:nombre/:periodo/:anio"
               element={<GroupDetail />}
@@ -120,12 +127,14 @@ function App() {
             <Route path="upload-groups" element={<UploadGroups />} />
             <Route path="upload-subjects" element={<UploadSubjects />} />
             <Route path="projects" element={<ProjectsAdmin />} />
+            <Route path="students" element={<StudentList />} />
+            <Route path="students/:id" element={<StudentProfile />} />
           </Route>
 
           {/* ==================== RUTAS DOCENTE ==================== */}
           <Route
             path="/professor"
-            element={<ProtectedRoute allowedRoles={["DOCENTE","ADMIN"]} />}
+            element={<ProtectedRoute allowedRoles={["DOCENTE", "ADMIN"]} />}
           >
             <Route path="dashboard" element={<DashboardProfessor />} />
             <Route
@@ -140,6 +149,8 @@ function App() {
             />
             <Route path="notifications" element={<NotificationsProfessor />} />
             <Route path="calificado" element={<Calificado />} />
+            <Route path="students" element={<StudentListProfessor />} />
+            <Route path="students/:id" element={<StudentProfileProfessor />} />
           </Route>
 
           {/* ==================== RUTAS ESTUDIANTE ==================== */}

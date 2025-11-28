@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { GoHomeFill } from "react-icons/go";
-import { FaBook, FaFolder, FaSignOutAlt } from "react-icons/fa";
+import { FaBook, FaFolder, FaSignOutAlt, FaUserGraduate, FaUsers } from "react-icons/fa";
 import { MdGroups2 } from "react-icons/md";
 import { SiCodemagic } from "react-icons/si";
 import UserProfile from "../../../components/ui/UserProfile";
@@ -12,6 +12,7 @@ const Sidebar = () => {
   const [collapsed, setCollapsed] = useState(false);
   const { handleSignOut } = useAuthForm();
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     const handleResize = () => {
@@ -41,6 +42,11 @@ const Sidebar = () => {
       label: "Inicio",
       path: "/admin/dashboard",
     },
+    {
+      icon: <FaUsers size={20} />,
+      label: "Usuarios",
+      path: "/admin/users",
+    },
     { icon: <FaBook size={20} />, label: "Materias", path: "/admin/subjects" },
     {
       icon: <MdGroups2 size={20} />,
@@ -52,10 +58,16 @@ const Sidebar = () => {
       label: "Proyectos",
       path: "/admin/projects",
     },
+    {
+      icon: <FaUserGraduate size={20} />,
+      label: "Estudiantes",
+      path: "/admin/students",
+    },
 
-    { icon: <SiCodemagic size={20} />, 
+    {
+      icon: <SiCodemagic size={20} />,
       label: "Predicción",
-      path: "/admin/forecast"
+      path: "/admin/forecast",
     },
   ];
 
@@ -92,21 +104,28 @@ const Sidebar = () => {
           </div>
 
           <nav className="flex flex-col items-center mt-4">
-            {menuItems.map((item, idx) => (
-              <div
-                key={idx}
-                onClick={() => handleNavigation(item.path)}
-                className={`flex items-center ${
-                  collapsed ? "justify-center" : "justify-start"
-                } gap-3 px-4 py-2 hover:bg-[#CC4040] cursor-pointer rounded-md w-11/12 transition-colors`}
-                title={collapsed ? item.label : ""}
-              >
-                {item.icon}
-                {!collapsed && (
-                  <span className="whitespace-nowrap">{item.label}</span>
-                )}
-              </div>
-            ))}
+            {menuItems.map((item, idx) => {
+              const isActive = location.pathname.startsWith(item.path);
+              return (
+                <div
+                  key={idx}
+                  onClick={() => handleNavigation(item.path)}
+                  className={`flex items-center ${
+                    collapsed ? "justify-center" : "justify-start"
+                  } gap-3 px-4 py-2 cursor-pointer rounded-md w-11/12 transition-colors duration-200 ${
+                    isActive
+                      ? "bg-white text-[#B70000] shadow-sm font-semibold"
+                      : "text-white hover:bg-[#CC4040]"
+                  }`}
+                  title={collapsed ? item.label : ""}
+                >
+                  {item.icon}
+                  {!collapsed && (
+                    <span className="whitespace-nowrap">{item.label}</span>
+                  )}
+                </div>
+              );
+            })}
           </nav>
         </div>
 

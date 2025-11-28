@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FileText, CheckCircle, AlertCircle, XCircle, Download, ExternalLink, Eye, EyeOff, Loader2, Music, Video, Image, Code } from 'lucide-react';
+import { FaArrowLeft } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import Swal from 'sweetalert2';
 import { verDetallesProyecto } from '../../../services/projectServices';
@@ -275,7 +276,16 @@ const ReviewProyecto = ({
       <div className="text-center py-12">
         <p className="text-gray-500">No se encontró el proyecto</p>
         {onBack && (
-          <button onClick={onBack} className="mt-4 text-red-600 hover:underline">Volver</button>
+          <div className="flex justify-end mt-4">
+            <button
+              type="button"
+              onClick={onBack}
+              className="px-4 py-2 rounded-lg bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 text-sm font-medium shadow-sm flex items-center gap-2"
+            >
+              <FaArrowLeft className="text-sm" />
+              Volver
+            </button>
+          </div>
         )}
       </div>
     );
@@ -294,10 +304,12 @@ const ReviewProyecto = ({
           </div>
           {onBack && (
             <button
+              type="button"
               onClick={onBack}
-              className="px-4 py-2 rounded-full text-sm font-medium border border-gray-300 bg-white hover:bg-gray-50"
+              className="px-4 py-2 rounded-lg bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 text-sm font-medium shadow-sm flex items-center gap-2"
             >
-              ← Volver
+              <FaArrowLeft className="text-sm" />
+              Volver
             </button>
           )}
         </div>

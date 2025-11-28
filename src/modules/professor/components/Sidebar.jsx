@@ -1,17 +1,23 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, NavLink } from "react-router-dom";
+import { useNavigate, useLocation, NavLink } from "react-router-dom";
 import { GoHomeFill } from "react-icons/go";
-import { FaBook, FaFolder, FaSignOutAlt, FaRegBell } from "react-icons/fa";
+import {
+  FaBook,
+  FaFolder,
+  FaSignOutAlt,
+  FaUserGraduate,
+  FaRegBell,
+} from "react-icons/fa";
 import { MdGroups2 } from "react-icons/md";
-import { IoIosSchool } from "react-icons/io";
 import UserProfile from "../../../components/ui/UserProfile";
-import { useAuthForm } from "../../../modules/auth/hooks/useAuth"; 
+import { useAuthForm } from "../../../modules/auth/hooks/useAuth";
 import { Menu } from "lucide-react";
 
 const Sidebar = () => {
   const [collapsed, setCollapsed] = useState(false);
   const navigate = useNavigate();
   const { handleSignOut } = useAuthForm();
+  const location = useLocation();
 
   useEffect(() => {
     const handleResize = () => {
@@ -46,6 +52,11 @@ const Sidebar = () => {
       icon: <MdGroups2 size={20} />,
       label: "Mis Grupos",
       path: "/professor/my-groups",
+    },
+    {
+      icon: <FaUserGraduate size={20} />,
+      label: "Estudiantes",
+      path: "/professor/students",
     },
     {
       icon: <FaRegBell size={20} />,
@@ -88,28 +99,26 @@ const Sidebar = () => {
 
           <nav className="flex flex-col items-center mt-4">
             {menuItems.map((item, idx) => {
-              const className = `flex items-center ${
-                collapsed ? "justify-center" : "justify-start"
-              } gap-3 px-4 py-2 hover:bg-[#CC4040] rounded-md w-11/12 transition-colors`;
-              return item.path ? (
-                <NavLink
-                  key={idx}
-                  to={item.path}
-                  className={({ isActive }) =>
-                    `${className} ${isActive ? "bg-[#CC4040]" : ""}`
-                  }
-                  title={collapsed ? item.label : ""}
-                >
-                  {item.icon}
-                  {!collapsed && (
-                    <span className="whitespace-nowrap">{item.label}</span>
-                  )}
-                </NavLink>
-              ) : (
+              const isActive = location.pathname.startsWith(item.path);
+              return (
                 <div
                   key={idx}
-                  className={`${className} cursor-default`}
+                  className={`flex items-center ${
+                    collapsed ? "justify-center" : "justify-start"
+                  } gap-3 px-4 py-2 cursor-pointer rounded-md w-11/12 transition-colors duration-200 ${
+                    isActive
+                      ? "bg-white text-[#B70000] shadow-sm font-semibold"
+                      : "text-white hover:bg-[#CC4040]"
+                  }`}
                   title={collapsed ? item.label : ""}
+                  onClick={() => item.path && navigate(item.path)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      item.path && navigate(item.path);
+                    }
+                  }}
                 >
                   {item.icon}
                   {!collapsed && (

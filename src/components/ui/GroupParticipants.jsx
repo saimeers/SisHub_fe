@@ -1,9 +1,11 @@
 import React from "react";
 
-const GroupParticipants = ({ participants, isLoading }) => {
+const GroupParticipants = ({ participants, isLoading, onParticipantClick }) => {
   if (isLoading) {
     return (
-      <div className="text-center py-4 text-gray-500">Cargando participantes...</div>
+      <div className="text-center py-4 text-gray-500">
+        Cargando participantes...
+      </div>
     );
   }
 
@@ -15,19 +17,19 @@ const GroupParticipants = ({ participants, isLoading }) => {
     );
   }
 
-  // Debug: Mostrar los datos que llegan del backend
-  console.log("📊 Datos de participantes recibidos:", participants);
-
   return (
     <div className="space-y-3">
       {participants.map((p, index) => {
-        // Debug: Mostrar cada participante individual
-        console.log(`🔍 Participante ${index}:`, p);
-        
+        const codigo = String(p.codigo);
+        const isTeacher = codigo.length < 7;
+        const canClick = !isTeacher && onParticipantClick;
+
         return (
           <div
             key={index}
-            className="grid grid-cols-[1fr_3fr_auto] items-center bg-gray-100 rounded-md px-6 py-3 shadow-sm hover:bg-gray-200 transition"
+            onClick={() => canClick && onParticipantClick(p)}
+            className={`grid grid-cols-[1fr_3fr_auto] items-center bg-gray-100 rounded-md px-6 py-3 shadow-sm transition ${canClick ? "cursor-pointer hover:bg-gray-200" : "cursor-default"
+              }`}
           >
             {/* Código */}
             <div className="text-sm font-medium text-gray-700">{p.codigo}</div>
@@ -48,11 +50,9 @@ const GroupParticipants = ({ participants, isLoading }) => {
                 alt={`Foto de ${p.nombre}`}
                 className="w-10 h-10 rounded-full object-cover border border-gray-300"
                 onError={(e) => {
-                  console.log(`❌ Error cargando imagen para ${p.nombre}:`, e.target.src);
+                  e.target.src = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
                 }}
-                onLoad={() => {
-                  console.log(`✅ Imagen cargada para ${p.nombre}`);
-                }}
+
               />
             </div>
           </div>

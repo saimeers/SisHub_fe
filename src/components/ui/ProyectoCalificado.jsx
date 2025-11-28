@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FileText, Download, ExternalLink, Eye, EyeOff, Music, Video, Image, Code, Loader2, Award } from 'lucide-react';
+import { FaArrowLeft } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import { verDetallesProyecto } from '../../services/projectServices';
 import { historicoEntregables } from '../../services/EntregableService';
@@ -187,7 +188,7 @@ const ProyectoCalificado = ({
   };
 
   const getEntregableIcon = (tipo) => {
-    switch(tipo) {
+    switch (tipo) {
       case 'VIDEO': return Video;
       case 'AUDIO': return Music;
       case 'IMAGEN': return Image;
@@ -218,6 +219,7 @@ const ProyectoCalificado = ({
     );
   }
 
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -229,10 +231,12 @@ const ProyectoCalificado = ({
           </div>
           {onBack && (
             <button
+              type="button"
               onClick={onBack}
-              className="px-4 py-2 rounded-full text-sm font-medium border border-gray-300 bg-white hover:bg-gray-50"
+              className="px-4 py-2 rounded-lg bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 text-sm font-medium shadow-sm flex items-center gap-2"
             >
-              ← Volver
+              <FaArrowLeft className="text-sm" />
+              Volver
             </button>
           )}
         </div>
@@ -315,11 +319,10 @@ const ProyectoCalificado = ({
                           {entregable.fecha_subida}
                         </span>
                         {entregable.Estado?.descripcion && (
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            entregable.Estado.descripcion === 'APROBADO' 
-                              ? 'bg-green-100 text-green-700' 
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${entregable.Estado.descripcion === 'APROBADO'
+                              ? 'bg-green-100 text-green-700'
                               : 'bg-gray-100 text-gray-700'
-                          }`}>
+                            }`}>
                             {entregable.Estado.descripcion}
                           </span>
                         )}
@@ -362,7 +365,12 @@ const ProyectoCalificado = ({
                           Calificación
                         </label>
                         <div className="flex items-center gap-2">
-                          <span className="text-2xl font-bold text-green-600">
+                          <span className={`text-2xl font-bold ${entregable.calificacion < 3
+                              ? "text-red-600"
+                              : entregable.calificacion < 4
+                                ? "text-yellow-500"
+                                : "text-green-600"
+                            }`}>
                             {entregable.calificacion}
                           </span>
                           <span className="text-sm text-gray-500">/ 5.0</span>

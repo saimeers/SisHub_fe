@@ -49,7 +49,6 @@ const useProjectFilters = (
         project.tags.forEach((tag) => allTags.add(tag));
       }
       
-      // Agregar estados únicos
       if (project.status) {
         allEstados.add(project.status);
       }
@@ -60,7 +59,6 @@ const useProjectFilters = (
         const projectYear = new Date(project.createdAt).getFullYear();
         allAños.add(projectYear.toString());
       } else {
-        // Si no hay fecha, agregar año actual
         allAños.add(currentYear.toString());
       }
     });
@@ -82,21 +80,10 @@ const useProjectFilters = (
     };
   }, [projects, tiposAlcanceBackend]);
 
-  // Aplicar filtros y búsqueda
-  const filteredProjects = useMemo(() => {
-    console.log(
-      "🔧 Aplicando filtros. isSearchingStudent:",
-      isSearchingStudent
-    );
 
-    // Si está buscando por estudiante, devolver los proyectos tal cual
-    // (ya vienen filtrados del backend)
+  const filteredProjects = useMemo(() => {
+
     if (isSearchingStudent) {
-      console.log(
-        "✅ Modo búsqueda por estudiante, retornando",
-        projects.length,
-        "proyectos"
-      );
       return projects;
     }
 
@@ -152,21 +139,17 @@ const useProjectFilters = (
           const projectYear = new Date(project.createdAt).getFullYear();
           return projectYear === filterYear;
         }
-        // Si no hay fecha, considerar año actual
         const currentYear = new Date().getFullYear();
         return currentYear === filterYear;
       });
     }
 
-    console.log("✅ Filtros aplicados, retornando", result.length, "proyectos");
     return result;
   }, [projects, searchTerm, filters, isSearchingStudent]);
 
   const handleSearch = useCallback(
     (value) => {
-      console.log("🔎 Búsqueda general actualizada:", value);
       setSearchTerm(value);
-      // Si había búsqueda por estudiante, limpiarla
       if (isSearchingStudent) {
         setIsSearchingStudent(false);
         setStudentCode("");
@@ -177,10 +160,9 @@ const useProjectFilters = (
 
   const handleSearchByStudentCode = useCallback(
     (code) => {
-      console.log("👨‍🎓 Buscando por código de estudiante:", code);
       setStudentCode(code);
       setIsSearchingStudent(true);
-      // Limpiar búsqueda general y filtros
+     
       setSearchTerm("");
       setFilters({
         tipoAlcance: "",
@@ -189,7 +171,6 @@ const useProjectFilters = (
         avance: "",
         año: "",
       });
-      // Llamar a la función de búsqueda del padre
       if (onSearchByStudent) {
         onSearchByStudent(code);
       }
@@ -199,16 +180,11 @@ const useProjectFilters = (
 
   const handleApplyFilters = useCallback(
     (newFilters) => {
-      console.log("🎯 Filtros aplicados:", newFilters);
       setFilters(newFilters);
-      // Si había una búsqueda por estudiante, limpiarla y recargar proyectos
       if (isSearchingStudent) {
-        console.log(
-          "🔄 Limpiando búsqueda por estudiante y recargando todos los proyectos"
-        );
+
         setIsSearchingStudent(false);
         setStudentCode("");
-        // Llamar a la función para recargar todos los proyectos
         if (onClearStudentSearch) {
           onClearStudentSearch();
         }
@@ -218,7 +194,6 @@ const useProjectFilters = (
   );
 
   const clearAllFilters = useCallback(() => {
-    console.log("🧹 Limpiando todos los filtros");
     const wasSearchingStudent = isSearchingStudent;
 
     setSearchTerm("");
@@ -232,11 +207,7 @@ const useProjectFilters = (
     });
     setIsSearchingStudent(false);
 
-    // Si estaba buscando por estudiante, recargar todos los proyectos
     if (wasSearchingStudent && onClearStudentSearch) {
-      console.log(
-        "🔄 Recargando todos los proyectos después de limpiar búsqueda de estudiante"
-      );
       onClearStudentSearch();
     }
   }, [isSearchingStudent, onClearStudentSearch]);

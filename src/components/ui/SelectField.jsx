@@ -52,7 +52,7 @@ const SelectField = ({
       borderRadius: "8px",
       boxShadow: "0 8px 16px -4px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.05)",
       marginTop: "4px",
-      zIndex: 1000,
+      zIndex: 99999,
     }),
     menuList: (provided) => ({
       ...provided,
@@ -64,8 +64,8 @@ const SelectField = ({
       backgroundColor: state.isSelected
         ? "#C03030"
         : state.isFocused
-        ? "#fef2f2"
-        : "transparent",
+          ? "#fef2f2"
+          : "transparent",
       color: state.isSelected ? "#ffffff" : "#374151",
       padding: "10px 12px",
       borderRadius: "6px",
