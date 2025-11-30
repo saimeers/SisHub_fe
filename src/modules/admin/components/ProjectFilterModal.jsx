@@ -139,7 +139,7 @@ const ProjectFilterModal = ({
           </div>
 
           {/* Contenido scrolleable */}
-         <div className="flex-1 overflow-y-auto px-2">
+          <div className="flex-1 overflow-visible px-2">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Filtro por tipo de alcance */}
               <div className="space-y-2">

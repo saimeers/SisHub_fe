@@ -6,7 +6,7 @@ import { obtenerTodosLosEstudiantes } from "../../services/userServices";
 const StudentListPage = () => {
   return (
     <AdminLayout title="Estudiantes de ingeniería de sistemas">
-      <StudentList basePath="/admin/students" fetchStudents={obtenerTodosLosEstudiantes} />
+      <StudentList basePath="/admin/students" fetchStudents={obtenerTodosLosEstudiantes} showExportButton={true} />
     </AdminLayout>
   );
 };

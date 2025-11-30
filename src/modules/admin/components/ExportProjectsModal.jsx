@@ -48,7 +48,7 @@ const ExportProjectsModal = ({ isOpen, onClose, onExport }) => {
     setIsExporting(true);
     try {
       let filtros = {};
-      
+
       if (tipoFiltro === "fecha") {
         filtros = { fechaInicio, fechaFin };
       } else if (tipoFiltro === "semestre") {
@@ -89,7 +89,7 @@ const ExportProjectsModal = ({ isOpen, onClose, onExport }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-md bg-black bg-opacity-30">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-md">
       <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-2xl max-h-[90vh] flex flex-col">
         {/* Header */}
         <div className="flex justify-between items-center mb-6 flex-shrink-0">
@@ -118,21 +118,18 @@ const ExportProjectsModal = ({ isOpen, onClose, onExport }) => {
                 <button
                   onClick={() => setFormato("excel")}
                   disabled={isExporting}
-                  className={`flex flex-col items-center justify-center p-6 rounded-xl border-2 transition-all ${
-                    formato === "excel"
-                      ? "border-green-500 bg-green-50"
-                      : "border-gray-300 hover:border-gray-400 bg-white"
-                  } ${isExporting ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+                  className={`flex flex-col items-center justify-center p-6 rounded-xl border-2 transition-all ${formato === "excel"
+                    ? "border-green-500 bg-green-50"
+                    : "border-gray-300 hover:border-gray-400 bg-white"
+                    } ${isExporting ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
                 >
                   <FaFileExcel
-                    className={`text-4xl mb-2 ${
-                      formato === "excel" ? "text-green-600" : "text-gray-400"
-                    }`}
+                    className={`text-4xl mb-2 ${formato === "excel" ? "text-green-600" : "text-gray-400"
+                      }`}
                   />
                   <span
-                    className={`font-medium ${
-                      formato === "excel" ? "text-green-700" : "text-gray-600"
-                    }`}
+                    className={`font-medium ${formato === "excel" ? "text-green-700" : "text-gray-600"
+                      }`}
                   >
                     Excel (.xlsx)
                   </span>
@@ -140,21 +137,18 @@ const ExportProjectsModal = ({ isOpen, onClose, onExport }) => {
                 <button
                   onClick={() => setFormato("pdf")}
                   disabled={isExporting}
-                  className={`flex flex-col items-center justify-center p-6 rounded-xl border-2 transition-all ${
-                    formato === "pdf"
-                      ? "border-red-500 bg-red-50"
-                      : "border-gray-300 hover:border-gray-400 bg-white"
-                  } ${isExporting ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+                  className={`flex flex-col items-center justify-center p-6 rounded-xl border-2 transition-all ${formato === "pdf"
+                    ? "border-red-500 bg-red-50"
+                    : "border-gray-300 hover:border-gray-400 bg-white"
+                    } ${isExporting ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
                 >
                   <FaFilePdf
-                    className={`text-4xl mb-2 ${
-                      formato === "pdf" ? "text-red-600" : "text-gray-400"
-                    }`}
+                    className={`text-4xl mb-2 ${formato === "pdf" ? "text-red-600" : "text-gray-400"
+                      }`}
                   />
                   <span
-                    className={`font-medium ${
-                      formato === "pdf" ? "text-red-700" : "text-gray-600"
-                    }`}
+                    className={`font-medium ${formato === "pdf" ? "text-red-700" : "text-gray-600"
+                      }`}
                   >
                     PDF (.pdf)
                   </span>
